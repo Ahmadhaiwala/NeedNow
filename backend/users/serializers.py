@@ -4,7 +4,7 @@ from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer for User model - handles Clerk integration
+    Serializer for User model - handles Neon Auth integration
     """
     full_name = serializers.ReadOnlyField()
     display_name = serializers.ReadOnlyField()
@@ -13,50 +13,39 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'username',
-            'profile_image_url', 'is_active', 'created_at',
-            'full_name', 'display_name'
+            'profile_image_url', 'provider', 'is_active', 'created_at',
+            'full_name', 'display_name', 'neon_auth_id'
         ]
-        read_only_fields = ['id', 'created_at', 'full_name', 'display_name']
+        read_only_fields = ['id', 'created_at', 'full_name', 'display_name', 'neon_auth_id']
 
 
-class ClerkWebhookUserSerializer(serializers.Serializer):
+class NeonAuthUserSerializer(serializers.Serializer):
     """
-    Serializer for handling Clerk webhook user data
+    Serializer for handling Neon Auth user data
     """
-    id = serializers.CharField()
-    email_addresses = serializers.ListField(
-        child=serializers.DictField()
-    )
-    first_name = serializers.CharField(allow_blank=True, required=False)
-    last_name = serializers.CharField(allow_blank=True, required=False)
-    username = serializers.CharField(allow_blank=True, required=False)
-    image_url = serializers.URLField(allow_blank=True, required=False)
+    sub = serializers.CharField()  # Neon Auth user ID
+    email = serializers.EmailField()
+    given_name = serializers.CharField(allow_blank=True, required=False)
+    family_name = serializers.CharField(allow_blank=True, required=False)
+    preferred_username = serializers.CharField(allow_blank=True, required=False)
+    picture = serializers.URLField(allow_blank=True, required=False)
+    provider = serializers.CharField(allow_blank=True, required=False)
     
     def create_or_update_user(self):
         """
-        Create or update user from Clerk webhook data
+        Create or update user from Neon Auth data
         """
         data = self.validated_data
         
-        # Extract primary email
-        primary_email = None
-        for email_obj in data.get('email_addresses', []):
-            if email_obj.get('id') == data.get('primary_email_address_id'):
-                primary_email = email_obj.get('email_address')
-                break
-        
-        if not primary_email and data.get('email_addresses'):
-            primary_email = data['email_addresses'][0].get('email_address')
-        
-        # Create or update user
         user, created = User.objects.update_or_create(
-            id=data['id'],
+            email=data['email'],
             defaults={
-                'email': primary_email or '',
-                'first_name': data.get('first_name', ''),
-                'last_name': data.get('last_name', ''),
-                'username': data.get('username', ''),
-                'profile_image_url': data.get('image_url', ''),
+                'neon_auth_id': data['sub'],
+                'first_name': data.get('given_name', ''),
+                'last_name': data.get('family_name', ''),
+                'username': data.get('preferred_username', ''),
+                'profile_image_url': data.get('picture', ''),
+                'provider': data.get('provider', 'neon-auth'),
             }
         )
         

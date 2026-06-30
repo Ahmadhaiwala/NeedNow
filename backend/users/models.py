@@ -1,16 +1,27 @@
 from django.db import models
 from django.utils import timezone
+import uuid
 
 class User(models.Model):
     """
-    Core User model for NeedNow - Clerk integration
-    Keeps it simple for now, focusing on Clerk sync
+    User model for NeedNow - Neon Auth integration
+    This model syncs with Neon Auth's Better Auth backend
     """
-    # Primary identifier from Clerk
-    id = models.CharField(
-        max_length=255, 
+    # Primary identifier - use UUID for Neon compatibility
+    id = models.UUIDField(
         primary_key=True,
-        help_text="Clerk User ID"
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique user identifier"
+    )
+    
+    # Neon Auth fields (synced from Neon Auth)
+    neon_auth_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Neon Auth user ID"
     )
     
     # Timestamps
@@ -23,7 +34,7 @@ class User(models.Model):
         help_text="When the user profile was last updated"
     )
     
-    # Basic Profile Information (synced from Clerk)
+    # Basic Profile Information (synced from Neon Auth)
     email = models.EmailField(
         unique=True,
         help_text="User's primary email address"
@@ -47,7 +58,14 @@ class User(models.Model):
     )
     profile_image_url = models.URLField(
         blank=True,
-        help_text="URL to user's profile image from Clerk"
+        help_text="URL to user's profile image"
+    )
+    
+    # Auth provider info
+    provider = models.CharField(
+        max_length=50,
+        default='neon-auth',
+        help_text="Authentication provider (google, github, etc.)"
     )
     
     # Status

@@ -1,0 +1,4 @@
+{
+  "step": "setup",
+  "data": "{\"agent\": \"claude-code\", \"ide\": \"vscode\", \"mcpConfigured\": false, \"skillsScope\": \"project\", \"mode\": \"defaults\", \"features\": \"database,auth\"}"
+}

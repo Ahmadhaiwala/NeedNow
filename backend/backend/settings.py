@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q5vdjp3j0vi)(x7++ha$s@kb3u!#b_c4#@v(+i*m*ji@@3vxz*'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-q5vdjp3j0vi)(x7++ha$s@kb3u!#b_c4#@v(+i*m*ji@@3vxz*')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = []
 
@@ -44,7 +49,6 @@ INSTALLED_APPS = [
     
     # Local apps
     'users',
-    'inventory',
 ]
 
 MIDDLEWARE = [
@@ -81,12 +85,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Use Neon PostgreSQL database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'neondb',
+        'USER': 'neondb_owner',
+        'PASSWORD': 'npg_Q1g8tHnRWkfO',
+        'HOST': 'ep-bitter-fire-adbc4vum-pooler.c-2.us-east-1.aws.neon.tech',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 }
+
+# Alternative: Parse from DATABASE_URL
+# import dj_database_url
+# DATABASES = {
+#     'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
+# }
 
 
 # Password validation
@@ -148,5 +166,11 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Clerk Webhook Settings
-CLERK_WEBHOOK_SECRET = 'your-clerk-webhook-secret'  # Set this in production
+# JWT Settings for Neon Auth
+NEON_AUTH_BASE_URL = os.getenv('NEON_AUTH_BASE_URL')
+NEON_AUTH_JWKS_URL = os.getenv('NEON_AUTH_JWKS_URL')
+
+# Legacy JWT settings (keep for fallback)
+JWT_SECRET_KEY = 'your-jwt-secret-key'  # Set this in production
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_HOURS = 24

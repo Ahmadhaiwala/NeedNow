@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.5.9",
+    "@neondatabase/auth": "^0.4.2-beta",
+    "@neondatabase/serverless": "^1.1.0",
+    "@react-oauth/google": "^0.12.1",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
