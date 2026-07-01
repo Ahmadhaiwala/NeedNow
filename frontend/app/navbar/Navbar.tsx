@@ -1,11 +1,10 @@
 "use client";
-import clsx from "clsx"
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth, SignInButton, SignOutButton } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import {
   Home,
   MessageCircle,
@@ -15,54 +14,23 @@ import {
   Menu,
   X,
   LogIn,
-  UserPlus,
+  Search,
   User,
   LogOut,
 } from "lucide-react";
 
 const navItems = [
-  {
-    name: "Home",
-    icon: Home,
-    href: "/",
-  },
-  {
-    name: "Chat",
-    icon: MessageCircle,
-    href: "/chat",
-  },
-  {
-    name: "Products",
-    icon: ShoppingCart,
-    href: "/products",
-  },
-  {
-    name: "Pantry",
-    icon: UtensilsCrossed,
-    href: "/pantry",
-  },
-  {
-    name: "Groups",
-    icon: Users,
-    href: "/groups",
-  },
+  { name: "Home", icon: Home, href: "/" },
+  { name: "Chat", icon: MessageCircle, href: "/chat" },
+  { name: "Products", icon: ShoppingCart, href: "/products" },
+  { name: "Pantry", icon: UtensilsCrossed, href: "/pantry" },
+  { name: "Groups", icon: Users, href: "/groups" },
 ];
-
-// Your custom color palette
-const colors = {
-  navy: "#2F4156",
-  teal: "#567C8D", 
-  skyBlue: "#C8D9E6",
-  beige: "#F5EFEB",
-  white: "#FFFFFF"
-};
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showSignInModal, setShowSignInModal] = useState(false);
-  const [showSignUpModal, setShowSignUpModal] = useState(false);
-  
+
   const { user, isLoading, signOut, signInWithGoogle } = useAuth();
 
   const handleSignOut = async () => {
@@ -74,286 +42,551 @@ export default function Navbar() {
     try {
       await signInWithGoogle();
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error("Sign in error:", error);
     }
   };
 
   return (
     <>
-      {/* Desktop Navbar */}
-      <header 
-        className={clsx('fixed', 'top-0', 'left-0', 'right-0', 'z-50', 'backdrop-blur-md', 'border-b', 'shadow-sm')}
-        style={{ 
-          backgroundColor: `${colors.white}E6`,
-          borderBottomColor: colors.skyBlue 
-        }}
+      {/* ── Desktop Navbar ── */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{ padding: "12px 24px" }}
       >
-        <div className={clsx('max-w-7xl', 'mx-auto', 'px-4', 'sm:px-6', 'lg:px-8')}>
-          <div className={clsx('flex', 'justify-between', 'items-center', 'h-16')}>
-            {/* Logo */}
-            <Link href="/" className={clsx('flex', 'items-center', 'gap-3', 'group')}>
-              <div 
-                className={clsx('w-8', 'h-8', 'rounded-lg', 'flex', 'items-center', 'justify-center', 'group-hover:scale-110', 'transition-transform')}
-                style={{ 
-                  background: `linear-gradient(135deg, ${colors.teal}, ${colors.navy})` 
+        {/* Floating rounded container — §9: bg-surface, radius-lg */}
+        <div
+          className="max-w-7xl mx-auto flex items-center justify-between"
+          style={{
+            background: "var(--bg-surface)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-card)",
+            padding: "10px 12px 10px 20px",
+            height: "56px",
+          }}
+        >
+          {/* ── Left: Logo ── */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div
+              className="flex items-center justify-center group-hover:scale-105 transition-transform duration-200"
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--color-core)",
+              }}
+            >
+              <span
+                className="font-bold"
+                style={{ fontSize: "18px", color: "var(--color-juice)" }}
+              >
+                N
+              </span>
+            </div>
+            <span
+              className="text-lg font-bold hidden sm:inline"
+              style={{ color: "var(--text-primary)" }}
+            >
+              NeedNow
+            </span>
+          </Link>
+
+          {/* ── Center: Pill search bar (desktop) — §8 ── */}
+          <div
+            className="hidden md:flex items-center gap-2 flex-1 mx-8"
+            style={{ maxWidth: "400px" }}
+          >
+            <div
+              className="flex items-center gap-2 w-full"
+              style={{
+                background: "var(--color-sky)",
+                opacity: 0.35,
+                borderRadius: "var(--radius-full)",
+                padding: "8px 16px",
+                height: "40px",
+                transition: "opacity 0.2s ease-out",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.opacity = "0.5";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.opacity = "0.35";
+              }}
+            >
+              <Search size={16} style={{ color: "var(--color-core)" }} />
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "var(--color-core)",
+                  opacity: 0.7,
                 }}
               >
-                <span className={clsx('font-bold', 'text-lg')} style={{ color: colors.white }}>N</span>
-              </div>
-              <span 
-                className={clsx('text-xl', 'font-bold', 'hidden', 'sm:inline', 'group-hover:opacity-80', 'transition-opacity')}
-                style={{ color: colors.navy }}
-              >
-                NeedNow
+                Search products...
               </span>
-            </Link>
+            </div>
+          </div>
 
-            {/* Desktop Navigation Links */}
-            <nav className={clsx('hidden', 'lg:flex', 'items-center', 'gap-1')}>
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.name} href={item.href}>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={clsx('flex', 'items-center', 'gap-2', 'px-4', 'py-2', 'rounded-lg', 'transition-all', 'duration-200', 'group')}
-                      style={{ color: colors.navy }}
-                      onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                        e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                        e.currentTarget.style.color = colors.teal;
-                      }}
-                      onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = colors.navy;
-                      }}
-                    >
-                      <Icon size={18} className={clsx('group-hover:scale-110', 'transition-transform')} />
-                      <span className={clsx('font-medium', 'text-sm')}>{item.name}</span>
-                    </motion.div>
-                  </Link>
-                );
-              })}
-            </nav>
+          {/* ── Desktop nav links ── */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.name} href={item.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 transition-all duration-200"
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "var(--radius-md)",
+                      color: "var(--text-primary)",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                    }}
+                    onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
+                      e.currentTarget.style.background = "var(--color-sky)";
+                      e.currentTarget.style.opacity = "0.3";
+                    }}
+                    onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                  >
+                    <Icon size={16} />
+                    <span>{item.name}</span>
+                  </motion.div>
+                </Link>
+              );
+            })}
+          </nav>
 
-            {/* Right Section */}
-            <div className={clsx('flex', 'items-center', 'gap-3')}>
-              {/* Cart with badge */}
-              <Link href="/cart">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={clsx('relative', 'p-2', 'rounded-lg', 'transition-colors')}
-                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                    e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
+          {/* ── Right: Icon buttons + auth ── */}
+          <div className="flex items-center gap-2">
+            {/* Cart — §6 circular icon button: sky fill on light surfaces */}
+            <Link href="/cart">
+              <motion.div
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative flex items-center justify-center"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "var(--radius-full)",
+                  background: "rgba(123, 163, 206, 0.2)",
+                  transition: "background 0.2s ease-out",
+                }}
+                onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
+                  e.currentTarget.style.background = "var(--color-jade)";
+                  const icon = e.currentTarget.querySelector("svg");
+                  if (icon)
+                    (icon as SVGElement).style.color = "var(--color-cloud)";
+                }}
+                onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
+                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.2)";
+                  const icon = e.currentTarget.querySelector("svg");
+                  if (icon)
+                    (icon as SVGElement).style.color = "var(--text-primary)";
+                }}
+              >
+                <ShoppingCart
+                  size={18}
+                  style={{
+                    color: "var(--text-primary)",
+                    transition: "color 0.2s ease-out",
                   }}
-                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                />
+                <span
+                  className="absolute -top-1 -right-1 font-bold flex items-center justify-center"
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "var(--radius-full)",
+                    background: "var(--accent-primary)",
+                    color: "var(--color-core)",
+                    fontSize: "10px",
                   }}
                 >
-                  <ShoppingCart size={20} style={{ color: colors.navy }} />
-                  <span 
-                    className={clsx('absolute', '-top-1', '-right-1', 'text-xs', 'font-bold', 'rounded-full', 'w-5', 'h-5', 'flex', 'items-center', 'justify-center')}
-                    style={{ 
-                      backgroundColor: colors.teal,
-                      color: colors.white 
-                    }}
-                  >
-                    3
-                  </span>
-                </motion.div>
-              </Link>
+                  3
+                </span>
+              </motion.div>
+            </Link>
 
-              {/* Auth Buttons */}
-              <div className={clsx('hidden', 'sm:flex', 'items-center', 'gap-2')}>
-                {!user && !isLoading ? (
-                  <button
-                    onClick={handleSignIn}
-                    className={clsx('flex', 'items-center', 'gap-2', 'px-4', 'py-2', 'rounded-lg', 'font-medium', 'transition-opacity', 'hover:opacity-90')}
-                    style={{ 
-                      backgroundColor: colors.teal,
-                      color: colors.white 
+            {/* Auth */}
+            <div className="hidden sm:flex items-center gap-2">
+              {!user && !isLoading ? (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleSignIn}
+                  className="flex items-center gap-2 font-semibold cursor-pointer"
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "var(--radius-full)",
+                    background: "var(--accent-primary)",
+                    color: "var(--color-core)",
+                    fontSize: "13px",
+                    border: "none",
+                    boxShadow: "var(--shadow-button)",
+                    transition: "opacity 0.2s ease-out",
+                  }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.currentTarget.style.opacity = "0.85";
+                  }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  <LogIn size={14} />
+                  <span className="hidden md:inline">Sign In</span>
+                </motion.button>
+              ) : user ? (
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className="flex items-center gap-2 cursor-pointer"
+                    style={{
+                      padding: "4px 12px 4px 4px",
+                      borderRadius: "var(--radius-full)",
+                      background: "rgba(123, 163, 206, 0.2)",
+                      border: "none",
+                      transition: "background 0.2s ease-out",
+                    }}
+                    onMouseEnter={(
+                      e: React.MouseEvent<HTMLButtonElement>
+                    ) => {
+                      e.currentTarget.style.background =
+                        "rgba(123, 163, 206, 0.35)";
+                    }}
+                    onMouseLeave={(
+                      e: React.MouseEvent<HTMLButtonElement>
+                    ) => {
+                      e.currentTarget.style.background =
+                        "rgba(123, 163, 206, 0.2)";
                     }}
                   >
-                    <LogIn size={16} />
-                    <span className={clsx('hidden', 'md:inline')}>Sign In</span>
-                  </button>
-                ) : user ? (
-                  <div className="relative">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowUserDropdown(!showUserDropdown)}
-                      className={clsx('flex', 'items-center', 'gap-2', 'p-2', 'rounded-lg', 'transition-colors')}
-                      onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                      }}
-                      onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                    {user.image ? (
+                      <Image
+                        src={user.image}
+                        alt="Profile"
+                        width={32}
+                        height={32}
+                        className="object-cover"
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "var(--radius-full)",
+                          border: "2px solid var(--bg-surface)",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="flex items-center justify-center"
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "var(--radius-full)",
+                          background: "var(--color-core)",
+                          border: "2px solid var(--bg-surface)",
+                        }}
+                      >
+                        <User
+                          size={14}
+                          style={{ color: "var(--color-cloud)" }}
+                        />
+                      </div>
+                    )}
+                    <span
+                      data-name
+                      className="hidden md:inline font-medium"
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--text-primary)",
+                        transition: "color 0.2s ease-out",
                       }}
                     >
-                      {user.image ? (
-                        <Image
-                          src={user.image}
-                          alt="Profile"
-                          width={32}
-                          height={32}
-                          className={clsx('w-8', 'h-8', 'rounded-full', 'object-cover')}
-                        />
-                      ) : (
-                        <div 
-                          className={clsx('w-8', 'h-8', 'rounded-full', 'flex', 'items-center', 'justify-center')}
-                          style={{ backgroundColor: colors.teal }}
-                        >
-                          <User size={16} style={{ color: colors.white }} />
-                        </div>
-                      )}
-                    </motion.button>
+                      {user.name?.split(" ")[0] || "Account"}
+                    </span>
+                  </motion.button>
 
-                    {/* User Dropdown */}
-                    <AnimatePresence>
-                      {showUserDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className={clsx('absolute', 'right-0', 'top-12', 'w-48', 'py-2', 'rounded-lg', 'shadow-lg', 'border')}
-                          style={{ 
-                            backgroundColor: colors.white,
-                            borderColor: colors.skyBlue 
+                  {/* User Dropdown */}
+                  <AnimatePresence>
+                    {showUserDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-12"
+                        style={{
+                          width: "220px",
+                          background: "var(--bg-surface)",
+                          borderRadius: "var(--radius-md)",
+                          boxShadow: "var(--shadow-hover)",
+                          padding: "8px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: "12px",
+                            borderRadius: "var(--radius-sm)",
+                            background: "rgba(123, 163, 206, 0.15)",
+                            marginBottom: "4px",
                           }}
                         >
-                          <div className={clsx('px-4', 'py-2', 'border-b')} style={{ borderBottomColor: colors.skyBlue }}>
-                            <p className="font-medium" style={{ color: colors.navy }}>
-                              {user.name || user.email}
-                            </p>
-                            <p className={clsx('text-sm', 'opacity-60')}>{user.email}</p>
-                          </div>
-                          <button 
-                            onClick={handleSignOut}
-                            className={clsx('w-full', 'flex', 'items-center', 'gap-2', 'px-4', 'py-2', 'text-left', 'transition-colors')}
-                            style={{ color: colors.navy }}
-                            onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                            }}
-                            onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
+                          <p
+                            className="font-semibold"
+                            style={{
+                              fontSize: "14px",
+                              color: "var(--text-primary)",
                             }}
                           >
-                            <LogOut size={16} />
-                            Sign Out
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Mobile Menu Button */}
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={clsx('lg:hidden', 'p-2', 'rounded-lg', 'transition-colors')}
-                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                }}
-                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {isMobileMenuOpen ? (
-                  <X size={24} style={{ color: colors.navy }} />
-                ) : (
-                  <Menu size={24} style={{ color: colors.navy }} />
-                )}
-              </motion.button>
+                            {user.name || user.email}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "var(--text-secondary)",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {user.email}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2 cursor-pointer"
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "var(--radius-sm)",
+                            color: "var(--text-primary)",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            background: "transparent",
+                            border: "none",
+                            transition: "background 0.2s ease-out",
+                          }}
+                          onMouseEnter={(
+                            e: React.MouseEvent<HTMLButtonElement>
+                          ) => {
+                            e.currentTarget.style.background =
+                              "var(--bg-page)";
+                          }}
+                          onMouseLeave={(
+                            e: React.MouseEvent<HTMLButtonElement>
+                          ) => {
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <LogOut size={14} />
+                          Sign Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : null}
             </div>
+
+            {/* Mobile menu button */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center cursor-pointer"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "var(--radius-full)",
+                background: "rgba(123, 163, 206, 0.2)",
+                border: "none",
+                transition: "background 0.2s ease-out",
+              }}
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.currentTarget.style.background = "var(--color-jade)";
+                const icon = e.currentTarget.querySelector("svg");
+                if (icon)
+                  (icon as SVGElement).style.color = "var(--color-cloud)";
+              }}
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.currentTarget.style.background = "rgba(123, 163, 206, 0.2)";
+                const icon = e.currentTarget.querySelector("svg");
+                if (icon)
+                  (icon as SVGElement).style.color = "var(--text-primary)";
+              }}
+            >
+              {isMobileMenuOpen ? (
+                <X
+                  size={18}
+                  style={{
+                    color: "var(--text-primary)",
+                    transition: "color 0.2s ease-out",
+                  }}
+                />
+              ) : (
+                <Menu
+                  size={18}
+                  style={{
+                    color: "var(--text-primary)",
+                    transition: "color 0.2s ease-out",
+                  }}
+                />
+              )}
+            </motion.button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* ── Mobile Menu ── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className={clsx('fixed', 'inset-0', 'backdrop-blur-sm', 'z-40', 'lg:hidden')}
-              style={{ backgroundColor: colors.navy + '33' }}
+              className="fixed inset-0 z-40 lg:hidden"
+              style={{
+                background: "rgba(31, 54, 53, 0.3)",
+                backdropFilter: "blur(4px)",
+              }}
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
-            {/* Mobile Menu */}
             <motion.div
               initial={{ opacity: 0, x: "100%" }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className={clsx('fixed', 'top-0', 'right-0', 'h-full', 'w-80', 'max-w-[80vw]', 'shadow-xl', 'z-50', 'lg:hidden')}
-              style={{ backgroundColor: colors.white }}
+              transition={{ type: "spring", damping: 28, stiffness: 220 }}
+              className="fixed top-0 right-0 h-full z-50 lg:hidden"
+              style={{
+                width: "320px",
+                maxWidth: "85vw",
+                background: "var(--bg-surface)",
+                borderRadius: "var(--radius-lg) 0 0 var(--radius-lg)",
+                boxShadow: "var(--shadow-hover)",
+              }}
             >
-              <div className={clsx('flex', 'flex-col', 'h-full')}>
-                {/* Header */}
-                <div 
-                  className={clsx('flex', 'items-center', 'justify-between', 'p-4', 'border-b')}
-                  style={{ borderBottomColor: colors.skyBlue }}
+              <div className="flex flex-col h-full">
+                {/* Panel header */}
+                <div
+                  className="flex items-center justify-between"
+                  style={{ padding: "20px 20px 16px" }}
                 >
-                  <div className={clsx('flex', 'items-center', 'gap-3')}>
-                    <div 
-                      className={clsx('w-8', 'h-8', 'rounded-lg', 'flex', 'items-center', 'justify-center')}
-                      style={{ 
-                        background: `linear-gradient(135deg, ${colors.teal}, ${colors.navy})` 
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex items-center justify-center"
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--color-core)",
                       }}
                     >
-                      <span className={clsx('font-bold', 'text-lg')} style={{ color: colors.white }}>N</span>
+                      <span
+                        className="font-bold"
+                        style={{
+                          fontSize: "18px",
+                          color: "var(--color-juice)",
+                        }}
+                      >
+                        N
+                      </span>
                     </div>
-                    <span className={clsx('text-xl', 'font-bold')} style={{ color: colors.navy }}>NeedNow</span>
+                    <span
+                      className="font-bold"
+                      style={{
+                        fontSize: "18px",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      NeedNow
+                    </span>
                   </div>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={clsx('p-2', 'rounded-lg', 'transition-colors')}
-                    onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                    }}
-                    onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
+                    className="flex items-center justify-center cursor-pointer"
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "var(--radius-full)",
+                      background: "rgba(123, 163, 206, 0.2)",
+                      border: "none",
                     }}
                   >
-                    <X size={20} style={{ color: colors.navy }} />
+                    <X
+                      size={16}
+                      style={{ color: "var(--text-primary)" }}
+                    />
                   </button>
                 </div>
 
-                {/* Navigation Links */}
-                <nav className={clsx('flex-1', 'py-4')}>
+                {/* Mobile search */}
+                <div style={{ padding: "0 20px 16px" }}>
+                  <div
+                    className="flex items-center gap-2"
+                    style={{
+                      background: "rgba(123, 163, 206, 0.2)",
+                      borderRadius: "var(--radius-full)",
+                      padding: "10px 16px",
+                      height: "44px",
+                    }}
+                  >
+                    <Search
+                      size={16}
+                      style={{ color: "var(--text-primary)", opacity: 0.5 }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "var(--text-primary)",
+                        opacity: 0.4,
+                      }}
+                    >
+                      Search products...
+                    </span>
+                  </div>
+                </div>
+
+                {/* Nav links */}
+                <nav className="flex-1" style={{ padding: "0 12px" }}>
                   {navItems.map((item, index) => {
                     const Icon = item.icon;
                     return (
                       <motion.div
                         key={item.name}
-                        initial={{ opacity: 0, x: 20 }}
+                        initial={{ opacity: 0, x: 16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.06 }}
                       >
                         <Link href={item.href}>
                           <div
-                            className={clsx('flex', 'items-center', 'gap-3', 'px-6', 'py-3', 'transition-all', 'duration-200')}
-                            style={{ color: colors.navy }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                              e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
-                              e.currentTarget.style.color = colors.teal;
+                            className="flex items-center gap-3"
+                            style={{
+                              padding: "12px 16px",
+                              borderRadius: "var(--radius-md)",
+                              color: "var(--text-primary)",
+                              fontSize: "15px",
+                              fontWeight: 500,
+                              transition: "background 0.2s ease-out",
                             }}
-                            onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.color = colors.navy;
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            onMouseEnter={(
+                              e: React.MouseEvent<HTMLDivElement>
+                            ) => {
+                              e.currentTarget.style.background =
+                                "rgba(123, 163, 206, 0.15)";
+                            }}
+                            onMouseLeave={(
+                              e: React.MouseEvent<HTMLDivElement>
+                            ) => {
+                              e.currentTarget.style.background = "transparent";
                             }}
                           >
-                            <Icon size={20} />
-                            <span className="font-medium">{item.name}</span>
+                            <Icon size={18} />
+                            <span>{item.name}</span>
                           </div>
                         </Link>
                       </motion.div>
@@ -361,66 +594,119 @@ export default function Navbar() {
                   })}
                 </nav>
 
-                {/* Mobile Auth Section */}
-                <div 
-                  className={clsx('p-4', 'border-t', 'space-y-3')}
-                  style={{ borderTopColor: colors.skyBlue }}
-                >
+                {/* Mobile auth footer */}
+                <div style={{ padding: "16px 20px" }}>
                   {!user && !isLoading ? (
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         handleSignIn();
                         setIsMobileMenuOpen(false);
                       }}
-                      className={clsx('w-full', 'flex', 'items-center', 'justify-center', 'gap-2', 'px-4', 'py-3', 'rounded-lg', 'font-medium', 'transition-opacity', 'hover:opacity-90')}
-                      style={{ 
-                        backgroundColor: colors.teal,
-                        color: colors.white 
+                      className="w-full flex items-center justify-center gap-2 font-semibold cursor-pointer"
+                      style={{
+                        padding: "14px 20px",
+                        borderRadius: "var(--radius-full)",
+                        background: "var(--accent-primary)",
+                        color: "var(--color-core)",
+                        fontSize: "14px",
+                        border: "none",
+                        boxShadow: "var(--shadow-button)",
                       }}
                     >
-                      <LogIn size={18} />
+                      <LogIn size={16} />
                       Sign In with Google
                     </motion.button>
                   ) : user ? (
-                    <div className={clsx('text-center', 'space-y-2')}>
-                      <div className={clsx('flex', 'items-center', 'justify-center', 'mb-2')}>
+                    <div>
+                      <div
+                        className="flex items-center gap-3"
+                        style={{
+                          padding: "12px 16px",
+                          borderRadius: "var(--radius-md)",
+                          background: "rgba(123, 163, 206, 0.15)",
+                          marginBottom: "8px",
+                        }}
+                      >
                         {user.image ? (
                           <Image
                             src={user.image}
                             alt="Profile"
-                            width={48}
-                            height={48}
-                            className={clsx('w-12', 'h-12', 'rounded-full', 'object-cover')}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "var(--radius-full)",
+                              border: "2px solid var(--bg-surface)",
+                            }}
                           />
                         ) : (
-                          <div 
-                            className={clsx('w-12', 'h-12', 'rounded-full', 'flex', 'items-center', 'justify-center')}
-                            style={{ backgroundColor: colors.teal }}
+                          <div
+                            className="flex items-center justify-center"
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "var(--radius-full)",
+                              background: "var(--color-core)",
+                              border: "2px solid var(--bg-surface)",
+                            }}
                           >
-                            <User size={20} style={{ color: colors.white }} />
+                            <User
+                              size={16}
+                              style={{ color: "var(--color-cloud)" }}
+                            />
                           </div>
                         )}
+                        <div>
+                          <p
+                            className="font-semibold"
+                            style={{
+                              fontSize: "14px",
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            {user.name || "Account"}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
-                      <p className="font-medium" style={{ color: colors.navy }}>
-                        {user.name || user.email}
-                      </p>
                       <button
                         onClick={() => {
                           handleSignOut();
                           setIsMobileMenuOpen(false);
                         }}
-                        className={clsx('w-full', 'flex', 'items-center', 'justify-center', 'gap-2', 'px-4', 'py-2', 'rounded-lg', 'transition-colors')}
-                        style={{ color: colors.navy }}
-                        onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.currentTarget.style.backgroundColor = colors.skyBlue + '40';
+                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
+                        style={{
+                          padding: "10px 16px",
+                          borderRadius: "var(--radius-md)",
+                          color: "var(--text-primary)",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          background: "transparent",
+                          border: "none",
+                          transition: "background 0.2s ease-out",
                         }}
-                        onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
+                        onMouseEnter={(
+                          e: React.MouseEvent<HTMLButtonElement>
+                        ) => {
+                          e.currentTarget.style.background = "var(--bg-page)";
+                        }}
+                        onMouseLeave={(
+                          e: React.MouseEvent<HTMLButtonElement>
+                        ) => {
+                          e.currentTarget.style.background = "transparent";
                         }}
                       >
-                        <LogOut size={16} />
+                        <LogOut size={14} />
                         Sign Out
                       </button>
                     </div>

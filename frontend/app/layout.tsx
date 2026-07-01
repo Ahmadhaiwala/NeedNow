@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className={clsx('min-h-full', 'flex', 'flex-col')}>
+      <body className={clsx('min-h-full', 'flex', 'flex-col')} style={{ background: '#EDE8DF' }}>
         <Layout>
           {children}
         </Layout>

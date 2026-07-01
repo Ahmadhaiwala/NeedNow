@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── 1. Color Tokens (Palette v2) ── */
+
+  /* Neutrals */
+  --color-core: #1F3635;
+  --color-cloud: #FCFBF4;
+  --color-juice: #CACE00;
+
+  /* Signal colors — light shades */
+  --color-heat: #E73F3C;
+  --color-jade: #025A5C;
+  --color-sky: #7BA3CE;
+  --color-pink: #E9BAC3;
+
+  /* Semantic — light mode only (dark mode not designed yet) */
+  --bg-page: #EDE8DF;              /* warm sand — clearly distinct from white cards */
+  --bg-surface: #FFFFFF;
+  --bg-surface-alt: #F3F0E8;
+  --text-primary: var(--color-core);
+  --text-secondary: rgba(31, 54, 53, 0.55);
+  --accent-primary: var(--color-juice);
+
+  /* 4. Border Radius */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-full: 999px;
+
+  /* 5. Elevation / Shadows */
+  --shadow-card: 0 4px 16px rgba(31, 54, 53, 0.08);
+  --shadow-hover: 0 8px 24px rgba(31, 54, 53, 0.14);
+  --shadow-button: 0 2px 8px rgba(31, 54, 53, 0.18);
+
+  /* Typography */
+  --font-display: var(--font-geist-sans), system-ui, sans-serif;
+  --font-body: var(--font-geist-sans), system-ui, sans-serif;
+
+  /* Legacy mappings */
+  --background: var(--bg-page);
+  --foreground: var(--text-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-core: #1F3635;
+  --color-cloud: #FCFBF4;
+  --color-juice: #CACE00;
+  --color-heat: #E73F3C;
+  --color-jade: #025A5C;
+  --color-sky: #7BA3CE;
+  --color-pink: #E9BAC3;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Dark mode removed — not yet designed (see design.md §"What's intentionally NOT decided yet") */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* Thin scrollbar for horizontal product rows */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-sky);
+  border-radius: var(--radius-full);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-jade);
 }
