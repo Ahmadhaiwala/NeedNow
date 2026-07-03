@@ -1,37 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import {
-  Home,
-  MessageCircle,
+  Mic,
+  Sparkles,
+  Bell,
   ShoppingCart,
-  UtensilsCrossed,
-  Users,
   Menu,
   X,
   LogIn,
-  Search,
   User,
   LogOut,
+  Compass,
+  UtensilsCrossed,
+  Users,
+  Clock,
+  BrainCircuit,
+  Settings,
+  SunMoon,
 } from "lucide-react";
 
 const navItems = [
-  { name: "Home", icon: Home, href: "/" },
-  { name: "Chat", icon: MessageCircle, href: "/chat" },
-  { name: "Products", icon: ShoppingCart, href: "/products" },
+  { name: "Discover", icon: Compass, href: "/" },
   { name: "Pantry", icon: UtensilsCrossed, href: "/pantry" },
-  { name: "Groups", icon: Users, href: "/groups" },
+  { name: "Shared Orders", icon: Users, href: "/groups" },
+  { name: "History", icon: Clock, href: "/history" },
+  { name: "AI Memory", icon: BrainCircuit, href: "/memory" },
+];
+
+const placeholders = [
+  "I need groceries for 5 days...",
+  "Build me a coding PC under ₹80,000...",
+  "I'm hosting 10 guests tonight...",
+  "I have ₹500 for groceries this week...",
+  "I'm preparing for semester exams...",
 ];
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const pathname = usePathname();
   const { user, isLoading, signOut, signInWithGoogle } = useAuth();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,88 +70,150 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ── Desktop Navbar ── */}
       <header
-        className="fixed top-0 left-0 right-0 z-50"
-        style={{ padding: "12px 24px" }}
+        className="fixed top-0 left-0 right-0 z-50 flex justify-center"
+        style={{ padding: "24px 32px" }}
       >
-        {/* Floating rounded container — §9: bg-surface, radius-lg */}
         <div
-          className="max-w-7xl mx-auto flex items-center justify-between"
+          className="w-full flex items-center justify-between"
           style={{
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "var(--shadow-card)",
-            padding: "10px 12px 10px 20px",
-            height: "56px",
+            maxWidth: "1400px",
+            background: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderRadius: "28px",
+            boxShadow: "0 8px 32px rgba(31, 54, 53, 0.04), 0 2px 8px rgba(31, 54, 53, 0.02)",
+            padding: "12px 16px 12px 24px",
+            border: "1px solid rgba(255, 255, 255, 0.4)",
+            height: "76px",
           }}
         >
-          {/* ── Left: Logo ── */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div
-              className="flex items-center justify-center group-hover:scale-105 transition-transform duration-200"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "var(--radius-sm)",
-                background: "var(--color-core)",
-              }}
-            >
+          {/* ── Left: Logo & Tagline ── */}
+          <Link href="/" className="flex items-center gap-4 group mr-6 shrink-0">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "10px",
+                    background: "#1F3635", // Core
+                  }}
+                >
+                  <span
+                    className="font-bold"
+                    style={{ fontSize: "16px", color: "#CACE00" }} // Juice
+                  >
+                    N
+                  </span>
+                </div>
+                <span
+                  className="text-xl font-bold tracking-tight hidden lg:inline"
+                  style={{ color: "#1F3635" }} // Core
+                >
+                  NeedNow
+                </span>
+              </div>
               <span
-                className="font-bold"
-                style={{ fontSize: "18px", color: "var(--color-juice)" }}
+                className="hidden lg:block mt-0.5 font-medium tracking-wide"
+                style={{ fontSize: "11px", color: "#7BA3CE" }} // Sky
               >
-                N
+                Need it? Just say it.
               </span>
             </div>
-            <span
-              className="text-lg font-bold hidden sm:inline"
-              style={{ color: "var(--text-primary)" }}
-            >
-              NeedNow
-            </span>
           </Link>
 
-          {/* ── Center: Pill search bar (desktop) — §8 ── */}
-          <div
-            className="hidden md:flex items-center gap-2 flex-1 mx-8"
-            style={{ maxWidth: "400px" }}
-          >
+          {/* ── Center: Conversational Input ── */}
+          <div className="hidden md:flex flex-1 max-w-[500px] shrink-0 mx-4">
             <div
-              className="flex items-center gap-2 w-full"
+              className="relative flex items-center w-full group overflow-hidden"
               style={{
-                background: "var(--color-sky)",
-                opacity: 0.35,
-                borderRadius: "var(--radius-full)",
-                padding: "8px 16px",
-                height: "40px",
-                transition: "opacity 0.2s ease-out",
+                background: "#FCFBF4", // Cloud
+                borderRadius: "9999px",
+                height: "52px",
+                padding: "0 8px 0 24px",
+                boxShadow: "inset 0 2px 6px rgba(31, 54, 53, 0.03)",
+                border: "1px solid rgba(123, 163, 206, 0.2)",
+                transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.opacity = "0.5";
+                e.currentTarget.style.borderColor = "#CACE00";
+                e.currentTarget.style.boxShadow = "0 0 0 4px rgba(202, 206, 0, 0.15), inset 0 2px 6px rgba(31, 54, 53, 0.03)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.opacity = "0.35";
+                e.currentTarget.style.borderColor = "rgba(123, 163, 206, 0.2)";
+                e.currentTarget.style.boxShadow = "inset 0 2px 6px rgba(31, 54, 53, 0.03)";
               }}
             >
-              <Search size={16} style={{ color: "var(--color-core)" }} />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  color: "var(--color-core)",
-                  opacity: 0.7,
-                }}
-              >
-                Search products...
-              </span>
+              <div className="flex-1 relative h-full flex items-center overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={placeholderIndex}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "circOut" }}
+                    className="absolute inset-0 flex items-center pointer-events-none"
+                  >
+                    <span
+                      className="truncate font-medium"
+                      style={{ color: "#1F3635", opacity: 0.4, fontSize: "15px" }}
+                    >
+                      {placeholders[placeholderIndex]}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+                <input
+                  type="text"
+                  className="w-full h-full bg-transparent outline-none font-medium"
+                  style={{ color: "#1F3635", fontSize: "15px" }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 ml-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center relative overflow-hidden"
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: "rgba(123, 163, 206, 0.1)", // Sky tinted
+                    color: "#025A5C", // Jade
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Mic size={18} />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center relative overflow-hidden"
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: "#1F3635", // Core
+                    color: "#CACE00", // Juice
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(31, 54, 53, 0.15)",
+                  }}
+                >
+                  <Sparkles size={16} strokeWidth={2.5} />
+                </motion.button>
+              </div>
             </div>
           </div>
 
-          {/* ── Desktop nav links ── */}
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* ── Navigation Links (Desktop) ── */}
+          <nav className="hidden xl:flex items-center gap-1 mx-6 shrink-0">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = pathname === item.href;
               return (
                 <Link key={item.name} href={item.href}>
                   <motion.div
@@ -137,22 +221,28 @@ export default function Navbar() {
                     whileTap={{ scale: 0.97 }}
                     className="flex items-center gap-2 transition-all duration-200"
                     style={{
-                      padding: "8px 14px",
-                      borderRadius: "var(--radius-md)",
-                      color: "var(--text-primary)",
-                      fontSize: "13px",
-                      fontWeight: 500,
+                      padding: "10px 16px",
+                      borderRadius: "9999px",
+                      color: isActive ? "#1F3635" : "#1F3635",
+                      background: isActive ? "#CACE00" : "transparent",
+                      fontSize: "14px",
+                      fontWeight: isActive ? 600 : 500,
+                      opacity: isActive ? 1 : 0.7,
                     }}
                     onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                      e.currentTarget.style.background = "var(--color-sky)";
-                      e.currentTarget.style.opacity = "0.3";
+                      if (!isActive) {
+                        e.currentTarget.style.background = "rgba(123, 163, 206, 0.1)"; // Sky 10%
+                        e.currentTarget.style.opacity = "1";
+                      }
                     }}
                     onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.opacity = "1";
+                      if (!isActive) {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.opacity = "0.7";
+                      }
                     }}
                   >
-                    <Icon size={16} />
+                    <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
                     <span>{item.name}</span>
                   </motion.div>
                 </Link>
@@ -160,50 +250,116 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* ── Right: Icon buttons + auth ── */}
-          <div className="flex items-center gap-2">
-            {/* Cart — §6 circular icon button: sky fill on light surfaces */}
+          {/* ── Right: Icon Buttons ── */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden md:flex items-center gap-2 mr-2 pr-4 border-r border-gray-200/50">
+              <motion.button
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                className="flex items-center justify-center cursor-pointer"
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: "transparent",
+                  color: "#1F3635", // Core
+                  border: "none",
+                }}
+                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)"; // Sky tint
+                  e.currentTarget.style.color = "#025A5C"; // Jade
+                }}
+                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#1F3635"; // Core
+                }}
+              >
+                <SunMoon size={20} strokeWidth={2} />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                className="flex items-center justify-center cursor-pointer"
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: "transparent",
+                  color: "#1F3635", // Core
+                  border: "none",
+                }}
+                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
+                  e.currentTarget.style.color = "#025A5C"; // Jade
+                }}
+                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#1F3635"; // Core
+                }}
+              >
+                <Settings size={20} strokeWidth={2} />
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                className="relative flex items-center justify-center cursor-pointer"
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: "transparent",
+                  color: "#1F3635", // Core
+                  border: "none",
+                }}
+                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
+                  e.currentTarget.style.color = "#025A5C"; // Jade
+                }}
+                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#1F3635"; // Core
+                }}
+              >
+                <Bell size={20} strokeWidth={2} />
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: "#CACE00" }} />
+              </motion.button>
+            </div>
+
             <Link href="/cart">
               <motion.div
                 whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative flex items-center justify-center"
+                whileTap={{ scale: 0.92 }}
+                className="relative flex items-center justify-center cursor-pointer"
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "var(--radius-full)",
-                  background: "rgba(123, 163, 206, 0.2)",
-                  transition: "background 0.2s ease-out",
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: "rgba(123, 163, 206, 0.15)", // Sky tint
+                  color: "#1F3635",
+                  border: "none",
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "var(--color-jade)";
-                  const icon = e.currentTarget.querySelector("svg");
-                  if (icon)
-                    (icon as SVGElement).style.color = "var(--color-cloud)";
+                  e.currentTarget.style.background = "#1F3635"; // Core
+                  e.currentTarget.style.color = "#FCFBF4"; // Cloud
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.2)";
-                  const icon = e.currentTarget.querySelector("svg");
-                  if (icon)
-                    (icon as SVGElement).style.color = "var(--text-primary)";
+                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
+                  e.currentTarget.style.color = "#1F3635";
                 }}
               >
-                <ShoppingCart
-                  size={18}
-                  style={{
-                    color: "var(--text-primary)",
-                    transition: "color 0.2s ease-out",
-                  }}
-                />
+                <ShoppingCart size={20} strokeWidth={2} />
                 <span
                   className="absolute -top-1 -right-1 font-bold flex items-center justify-center"
                   style={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "var(--radius-full)",
-                    background: "var(--accent-primary)",
-                    color: "var(--color-core)",
-                    fontSize: "10px",
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    background: "#CACE00", // Juice
+                    color: "#1F3635", // Core
+                    fontSize: "11px",
+                    boxShadow: "0 2px 4px rgba(31, 54, 53, 0.1)",
                   }}
                 >
                   3
@@ -211,33 +367,25 @@ export default function Navbar() {
               </motion.div>
             </Link>
 
-            {/* Auth */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center ml-2">
               {!user && !isLoading ? (
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSignIn}
-                  className="flex items-center gap-2 font-semibold cursor-pointer"
+                  className="flex items-center gap-2 font-bold cursor-pointer"
                   style={{
-                    padding: "8px 18px",
-                    borderRadius: "var(--radius-full)",
-                    background: "var(--accent-primary)",
-                    color: "var(--color-core)",
-                    fontSize: "13px",
+                    padding: "10px 24px",
+                    borderRadius: "9999px",
+                    background: "#1F3635", // Core
+                    color: "#CACE00", // Juice
+                    fontSize: "14px",
                     border: "none",
-                    boxShadow: "var(--shadow-button)",
-                    transition: "opacity 0.2s ease-out",
-                  }}
-                  onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                    e.currentTarget.style.opacity = "0.85";
-                  }}
-                  onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                    e.currentTarget.style.opacity = "1";
+                    boxShadow: "0 4px 12px rgba(31, 54, 53, 0.15)",
                   }}
                 >
-                  <LogIn size={14} />
-                  <span className="hidden md:inline">Sign In</span>
+                  <LogIn size={16} />
+                  <span>Sign In</span>
                 </motion.button>
               ) : user ? (
                 <div className="relative">
@@ -245,72 +393,45 @@ export default function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center justify-center cursor-pointer p-1"
                     style={{
-                      padding: "4px 12px 4px 4px",
-                      borderRadius: "var(--radius-full)",
-                      background: "rgba(123, 163, 206, 0.2)",
+                      borderRadius: "50%",
+                      background: "transparent",
                       border: "none",
-                      transition: "background 0.2s ease-out",
-                    }}
-                    onMouseEnter={(
-                      e: React.MouseEvent<HTMLButtonElement>
-                    ) => {
-                      e.currentTarget.style.background =
-                        "rgba(123, 163, 206, 0.35)";
-                    }}
-                    onMouseLeave={(
-                      e: React.MouseEvent<HTMLButtonElement>
-                    ) => {
-                      e.currentTarget.style.background =
-                        "rgba(123, 163, 206, 0.2)";
                     }}
                   >
                     {user.image ? (
                       <Image
                         src={user.image}
                         alt="Profile"
-                        width={32}
-                        height={32}
+                        width={40}
+                        height={40}
                         className="object-cover"
                         style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "var(--radius-full)",
-                          border: "2px solid var(--bg-surface)",
+                          width: "44px",
+                          height: "44px",
+                          borderRadius: "50%",
+                          border: "2px solid #CACE00", // Juice
+                          padding: "2px",
                         }}
                       />
                     ) : (
                       <div
                         className="flex items-center justify-center"
                         style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "var(--radius-full)",
-                          background: "var(--color-core)",
-                          border: "2px solid var(--bg-surface)",
+                          width: "44px",
+                          height: "44px",
+                          borderRadius: "50%",
+                          background: "#1F3635", // Core
+                          border: "2px solid #CACE00", // Juice
+                          padding: "2px",
                         }}
                       >
-                        <User
-                          size={14}
-                          style={{ color: "var(--color-cloud)" }}
-                        />
+                        <User size={18} color="#FCFBF4" />
                       </div>
                     )}
-                    <span
-                      data-name
-                      className="hidden md:inline font-medium"
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--text-primary)",
-                        transition: "color 0.2s ease-out",
-                      }}
-                    >
-                      {user.name?.split(" ")[0] || "Account"}
-                    </span>
                   </motion.button>
 
-                  {/* User Dropdown */}
                   <AnimatePresence>
                     {showUserDropdown && (
                       <motion.div
@@ -318,69 +439,58 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-12"
+                        className="absolute right-0 top-[60px]"
                         style={{
-                          width: "220px",
-                          background: "var(--bg-surface)",
-                          borderRadius: "var(--radius-md)",
-                          boxShadow: "var(--shadow-hover)",
-                          padding: "8px",
-                          overflow: "hidden",
+                          width: "240px",
+                          background: "rgba(255, 255, 255, 0.95)",
+                          backdropFilter: "blur(12px)",
+                          borderRadius: "20px",
+                          boxShadow: "0 12px 32px rgba(31, 54, 53, 0.1)",
+                          padding: "12px",
+                          border: "1px solid rgba(123, 163, 206, 0.2)",
                         }}
                       >
                         <div
                           style={{
-                            padding: "12px",
-                            borderRadius: "var(--radius-sm)",
-                            background: "rgba(123, 163, 206, 0.15)",
-                            marginBottom: "4px",
+                            padding: "16px",
+                            borderRadius: "14px",
+                            background: "#FCFBF4", // Cloud
+                            marginBottom: "8px",
+                            border: "1px solid rgba(123, 163, 206, 0.1)",
                           }}
                         >
                           <p
-                            className="font-semibold"
-                            style={{
-                              fontSize: "14px",
-                              color: "var(--text-primary)",
-                            }}
+                            className="font-bold truncate"
+                            style={{ fontSize: "15px", color: "#1F3635" }}
                           >
                             {user.name || user.email}
                           </p>
                           <p
-                            style={{
-                              fontSize: "12px",
-                              color: "var(--text-secondary)",
-                              marginTop: "2px",
-                            }}
+                            className="truncate"
+                            style={{ fontSize: "13px", color: "#7BA3CE", marginTop: "2px" }}
                           >
                             {user.email}
                           </p>
                         </div>
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 cursor-pointer"
+                          className="w-full flex items-center justify-center gap-2 font-semibold cursor-pointer"
                           style={{
-                            padding: "10px 12px",
-                            borderRadius: "var(--radius-sm)",
-                            color: "var(--text-primary)",
-                            fontSize: "13px",
-                            fontWeight: 500,
+                            padding: "12px",
+                            borderRadius: "14px",
+                            color: "#1F3635",
                             background: "transparent",
                             border: "none",
-                            transition: "background 0.2s ease-out",
+                            fontSize: "14px",
                           }}
-                          onMouseEnter={(
-                            e: React.MouseEvent<HTMLButtonElement>
-                          ) => {
-                            e.currentTarget.style.background =
-                              "var(--bg-page)";
+                          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.currentTarget.style.background = "rgba(123, 163, 206, 0.1)";
                           }}
-                          onMouseLeave={(
-                            e: React.MouseEvent<HTMLButtonElement>
-                          ) => {
+                          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.currentTarget.style.background = "transparent";
                           }}
                         >
-                          <LogOut size={14} />
+                          <LogOut size={16} />
                           Sign Out
                         </button>
                       </motion.div>
@@ -390,331 +500,141 @@ export default function Navbar() {
               ) : null}
             </div>
 
-            {/* Mobile menu button */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden flex items-center justify-center cursor-pointer"
+              className="xl:hidden flex items-center justify-center cursor-pointer ml-2"
               style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "var(--radius-full)",
-                background: "rgba(123, 163, 206, 0.2)",
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "rgba(123, 163, 206, 0.15)",
                 border: "none",
-                transition: "background 0.2s ease-out",
-              }}
-              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.currentTarget.style.background = "var(--color-jade)";
-                const icon = e.currentTarget.querySelector("svg");
-                if (icon)
-                  (icon as SVGElement).style.color = "var(--color-cloud)";
-              }}
-              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.currentTarget.style.background = "rgba(123, 163, 206, 0.2)";
-                const icon = e.currentTarget.querySelector("svg");
-                if (icon)
-                  (icon as SVGElement).style.color = "var(--text-primary)";
+                color: "#1F3635",
               }}
             >
-              {isMobileMenuOpen ? (
-                <X
-                  size={18}
-                  style={{
-                    color: "var(--text-primary)",
-                    transition: "color 0.2s ease-out",
-                  }}
-                />
-              ) : (
-                <Menu
-                  size={18}
-                  style={{
-                    color: "var(--text-primary)",
-                    transition: "color 0.2s ease-out",
-                  }}
-                />
-              )}
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </motion.button>
           </div>
         </div>
       </header>
 
-      {/* ── Mobile Menu ── */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 lg:hidden"
-              style={{
-                background: "rgba(31, 54, 53, 0.3)",
-                backdropFilter: "blur(4px)",
-              }}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 220 }}
-              className="fixed top-0 right-0 h-full z-50 lg:hidden"
-              style={{
-                width: "320px",
-                maxWidth: "85vw",
-                background: "var(--bg-surface)",
-                borderRadius: "var(--radius-lg) 0 0 var(--radius-lg)",
-                boxShadow: "var(--shadow-hover)",
-              }}
-            >
-              <div className="flex flex-col h-full">
-                {/* Panel header */}
-                <div
-                  className="flex items-center justify-between"
-                  style={{ padding: "20px 20px 16px" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex items-center justify-center"
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "var(--radius-sm)",
-                        background: "var(--color-core)",
-                      }}
-                    >
-                      <span
-                        className="font-bold"
-                        style={{
-                          fontSize: "18px",
-                          color: "var(--color-juice)",
-                        }}
-                      >
-                        N
-                      </span>
-                    </div>
-                    <span
-                      className="font-bold"
-                      style={{
-                        fontSize: "18px",
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      NeedNow
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-center cursor-pointer"
-                    style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "var(--radius-full)",
-                      background: "rgba(123, 163, 206, 0.2)",
-                      border: "none",
-                    }}
-                  >
-                    <X
-                      size={16}
-                      style={{ color: "var(--text-primary)" }}
-                    />
-                  </button>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-40 xl:hidden pt-[110px] px-6 pb-6"
+            style={{
+              background: "rgba(252, 251, 244, 0.98)", // Cloud highly opaque
+              backdropFilter: "blur(20px)",
+            }}
+          >
+            <div className="flex flex-col h-full overflow-y-auto">
+              {/* Mobile Search - Similar to desktop pill */}
+              <div
+                className="relative flex items-center w-full group overflow-hidden mb-8 shrink-0"
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "9999px",
+                  height: "56px",
+                  padding: "0 8px 0 24px",
+                  boxShadow: "0 4px 12px rgba(31, 54, 53, 0.05), inset 0 2px 6px rgba(31, 54, 53, 0.02)",
+                  border: "1px solid rgba(123, 163, 206, 0.2)",
+                }}
+              >
+                <div className="flex-1 relative h-full flex items-center overflow-hidden">
+                  <span className="font-medium truncate" style={{ color: "#1F3635", opacity: 0.4, fontSize: "15px" }}>
+                    {placeholders[0]}
+                  </span>
+                  <input type="text" className="absolute inset-0 w-full h-full bg-transparent outline-none font-medium text-transparent" />
                 </div>
-
-                {/* Mobile search */}
-                <div style={{ padding: "0 20px 16px" }}>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
                   <div
-                    className="flex items-center gap-2"
-                    style={{
-                      background: "rgba(123, 163, 206, 0.2)",
-                      borderRadius: "var(--radius-full)",
-                      padding: "10px 16px",
-                      height: "44px",
-                    }}
+                    className="flex items-center justify-center"
+                    style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#1F3635", color: "#CACE00" }}
                   >
-                    <Search
-                      size={16}
-                      style={{ color: "var(--text-primary)", opacity: 0.5 }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "var(--text-primary)",
-                        opacity: 0.4,
-                      }}
-                    >
-                      Search products...
-                    </span>
+                    <Sparkles size={18} strokeWidth={2.5} />
                   </div>
-                </div>
-
-                {/* Nav links */}
-                <nav className="flex-1" style={{ padding: "0 12px" }}>
-                  {navItems.map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <motion.div
-                        key={item.name}
-                        initial={{ opacity: 0, x: 16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.06 }}
-                      >
-                        <Link href={item.href}>
-                          <div
-                            className="flex items-center gap-3"
-                            style={{
-                              padding: "12px 16px",
-                              borderRadius: "var(--radius-md)",
-                              color: "var(--text-primary)",
-                              fontSize: "15px",
-                              fontWeight: 500,
-                              transition: "background 0.2s ease-out",
-                            }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            onMouseEnter={(
-                              e: React.MouseEvent<HTMLDivElement>
-                            ) => {
-                              e.currentTarget.style.background =
-                                "rgba(123, 163, 206, 0.15)";
-                            }}
-                            onMouseLeave={(
-                              e: React.MouseEvent<HTMLDivElement>
-                            ) => {
-                              e.currentTarget.style.background = "transparent";
-                            }}
-                          >
-                            <Icon size={18} />
-                            <span>{item.name}</span>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-                </nav>
-
-                {/* Mobile auth footer */}
-                <div style={{ padding: "16px 20px" }}>
-                  {!user && !isLoading ? (
-                    <motion.button
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        handleSignIn();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 font-semibold cursor-pointer"
-                      style={{
-                        padding: "14px 20px",
-                        borderRadius: "var(--radius-full)",
-                        background: "var(--accent-primary)",
-                        color: "var(--color-core)",
-                        fontSize: "14px",
-                        border: "none",
-                        boxShadow: "var(--shadow-button)",
-                      }}
-                    >
-                      <LogIn size={16} />
-                      Sign In with Google
-                    </motion.button>
-                  ) : user ? (
-                    <div>
-                      <div
-                        className="flex items-center gap-3"
-                        style={{
-                          padding: "12px 16px",
-                          borderRadius: "var(--radius-md)",
-                          background: "rgba(123, 163, 206, 0.15)",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        {user.image ? (
-                          <Image
-                            src={user.image}
-                            alt="Profile"
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                            style={{
-                              width: "40px",
-                              height: "40px",
-                              borderRadius: "var(--radius-full)",
-                              border: "2px solid var(--bg-surface)",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="flex items-center justify-center"
-                            style={{
-                              width: "40px",
-                              height: "40px",
-                              borderRadius: "var(--radius-full)",
-                              background: "var(--color-core)",
-                              border: "2px solid var(--bg-surface)",
-                            }}
-                          >
-                            <User
-                              size={16}
-                              style={{ color: "var(--color-cloud)" }}
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <p
-                            className="font-semibold"
-                            style={{
-                              fontSize: "14px",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {user.name || "Account"}
-                          </p>
-                          <p
-                            style={{
-                              fontSize: "12px",
-                              color: "var(--text-secondary)",
-                            }}
-                          >
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          handleSignOut();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
-                        style={{
-                          padding: "10px 16px",
-                          borderRadius: "var(--radius-md)",
-                          color: "var(--text-primary)",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          background: "transparent",
-                          border: "none",
-                          transition: "background 0.2s ease-out",
-                        }}
-                        onMouseEnter={(
-                          e: React.MouseEvent<HTMLButtonElement>
-                        ) => {
-                          e.currentTarget.style.background = "var(--bg-page)";
-                        }}
-                        onMouseLeave={(
-                          e: React.MouseEvent<HTMLButtonElement>
-                        ) => {
-                          e.currentTarget.style.background = "transparent";
-                        }}
-                      >
-                        <LogOut size={14} />
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </div>
-            </motion.div>
-          </>
+
+              <nav className="flex flex-col gap-3">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                      <div
+                        className="flex items-center gap-4"
+                        style={{
+                          padding: "16px 24px",
+                          borderRadius: "20px",
+                          background: isActive ? "#CACE00" : "rgba(255, 255, 255, 0.5)",
+                          color: "#1F3635",
+                          fontSize: "17px",
+                          fontWeight: isActive ? 700 : 600,
+                          boxShadow: isActive ? "0 4px 12px rgba(202, 206, 0, 0.2)" : "none",
+                        }}
+                      >
+                        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                        <span>{item.name}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="mt-auto pt-8">
+                {!user && !isLoading ? (
+                  <button
+                    onClick={() => {
+                      handleSignIn();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-3 font-bold"
+                    style={{
+                      padding: "18px 24px",
+                      borderRadius: "24px",
+                      background: "#1F3635",
+                      color: "#CACE00",
+                      fontSize: "16px",
+                      border: "none",
+                      boxShadow: "0 8px 24px rgba(31, 54, 53, 0.2)",
+                    }}
+                  >
+                    <LogIn size={20} />
+                    Sign In with Google
+                  </button>
+                ) : user ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4 p-4 rounded-3xl" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(123, 163, 206, 0.2)" }}>
+                      {user.image && (
+                        <Image src={user.image} alt="Profile" width={48} height={48} className="rounded-full border-2" style={{ borderColor: "#CACE00" }} />
+                      )}
+                      <div>
+                        <p className="font-bold text-lg" style={{ color: "#1F3635" }}>{user.name}</p>
+                        <p className="font-medium" style={{ color: "#7BA3CE", fontSize: "14px" }}>{user.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 font-bold py-4 rounded-2xl"
+                      style={{ background: "rgba(123, 163, 206, 0.15)", color: "#1F3635", border: "none" }}
+                    >
+                      <LogOut size={18} />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

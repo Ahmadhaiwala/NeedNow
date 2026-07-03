@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, ArrowRight, Loader2, ShoppingCart } from "lucide-react";
@@ -62,6 +62,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   const discountedPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
   return (
+    <Link href={`/product/${product.id}`}>
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -186,6 +187,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         </button>
       </div>
     </motion.div>
+    </Link>
   );
 }
 

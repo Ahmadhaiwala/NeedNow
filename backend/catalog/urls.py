@@ -3,8 +3,10 @@ from . import views
 
 urlpatterns = [
     path('categories/', views.getcategories, name='getcategories'),
-    path('products/', views.getproducts, name='getproducts'),
+    
+    path('product/<uuid:id>/',views.getproduct,name='getsingleproductdetail'),
     path('products/<uuid:id>/', views.getproductforcategory, name='getproductforcategory'),
+
 ]
 
    
