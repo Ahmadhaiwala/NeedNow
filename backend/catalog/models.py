@@ -1,4 +1,3 @@
-
 from django.db import models
 import uuid
 
@@ -11,6 +10,7 @@ class UnitChoices(models.TextChoices):
     ML = "ml", "Milliliter"
     PACK = "pack", "Pack"
 
+
 class Category(models.Model):
     id = models.UUIDField(
         primary_key=True,
@@ -19,38 +19,33 @@ class Category(models.Model):
     )
 
     name = models.CharField(
-        max_length=50,
-        unique=True
-    )
-
-    slug = models.SlugField(
         max_length=100,
         unique=True
     )
 
-    image_url = models.URLField(
-        blank=True
+    slug = models.SlugField(
+        max_length=150,
+        unique=True
     )
 
+    image_url = models.URLField(max_length=2000, blank=True)
+
     parent = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='subcategories'
+        related_name="subcategories"
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
 
 
-
 class Product(models.Model):
-
-   
 
     id = models.UUIDField(
         primary_key=True,
@@ -58,18 +53,35 @@ class Product(models.Model):
         editable=False
     )
 
+    # Amazon ASIN
+    external_id = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True,
+        db_index=True
+    )
+
     name = models.CharField(
-        max_length=100
+        max_length=500
     )
 
     slug = models.SlugField(
-        max_length=100,
+        max_length=600,
         unique=True
     )
 
     brand = models.CharField(
-        max_length=100,
+        max_length=200,
         blank=True
+    )
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products"
     )
 
     unit = models.CharField(
@@ -80,7 +92,8 @@ class Product(models.Model):
 
     unit_size = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        default=1
     )
 
     barcode = models.CharField(
@@ -92,28 +105,69 @@ class Product(models.Model):
 
     price = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        null=True,
+        blank=True
     )
 
-    discount_percentage = models.DecimalField(
-        max_digits=5,
+    original_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    rating = models.DecimalField(
+        max_digits=3,
         decimal_places=2,
         default=0
     )
 
+    review_count = models.PositiveIntegerField(
+        default=0
+    )
+
     image_url = models.URLField(
+        max_length=2000,
         blank=True
     )
 
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='products'
+    # Amazon "features"
+    features = models.JSONField(
+        default=list,
+        blank=True
     )
 
-    description = models.TextField(
+    # Long descriptions
+    description = models.JSONField(
+        default=list,
         blank=True
+    )
+
+    # Technical details/specifications
+    specifications = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+    # Categories/tags from dataset
+    tags = models.JSONField(
+        default=list,
+        blank=True
+    )
+
+    # Frequently bought together
+    bought_together = models.JSONField(
+        default=list,
+        blank=True
+    )
+
+    in_stock = models.BooleanField(
+        default=True
+    )
+
+    stock_quantity = models.PositiveIntegerField(
+        default=0
     )
 
     created_at = models.DateTimeField(
@@ -125,7 +179,24 @@ class Product(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+
+    image_url = models.URLField(max_length=2000)
+
+    is_primary = models.BooleanField(
+        default=False
+    )
+
+    def __str__(self):
+        return f"{self.product.name} image"

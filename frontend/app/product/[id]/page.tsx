@@ -1,10 +1,26 @@
 import Image from "next/image";
 import {
-  ShoppingCart,
   ShieldCheck,
   Truck,
   RotateCcw,
 } from "lucide-react";
+import AddToCartButtons from "./AddToCartButtons";
+
+function isValidUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function formatPrice(price: number | string | null | undefined): string {
+  const num = parseFloat(String(price ?? ''));
+  if (isNaN(num)) return 'N/A';
+  return num.toFixed(2);
+}
 
 async function getProduct(id: string) {
   const response = await fetch(
@@ -51,13 +67,14 @@ export default async function ProductPage({
                 boxShadow: "var(--shadow-card)",
               }}
             >
-              {product.image_url ? (
+              {isValidUrl(product.image_url) ? (
                 <Image
                   src={product.image_url}
                   alt={product.name || "Product Image"}
                   width={600}
                   height={600}
                   className="w-full h-[450px] object-contain"
+                  unoptimized
                 />
               ) : (
                 <div className="w-full h-[450px] flex items-center justify-center rounded-xl" style={{ background: "rgba(0,0,0,0.05)" }}>
@@ -223,7 +240,7 @@ export default async function ProductPage({
                   fontSize: "46px",
                 }}
               >
-                ₹{product.price}
+                {product.price != null ? `₹${formatPrice(product.price)}` : 'Price N/A'}
               </h2>
 
               <div
@@ -238,28 +255,9 @@ export default async function ProductPage({
                 In Stock
               </div>
 
-              <button
-                className="w-full mt-6 py-4 flex justify-center items-center gap-2 font-semibold"
-                style={{
-                  background: "var(--accent-primary)",
-                  color: "var(--color-core)",
-                  borderRadius: "var(--radius-full)",
-                }}
-              >
-                <ShoppingCart size={18} />
-                Add To Cart
-              </button>
-
-              <button
-                className="w-full mt-3 py-4 font-semibold"
-                style={{
-                  background: "var(--color-jade)",
-                  color: "white",
-                  borderRadius: "var(--radius-full)",
-                }}
-              >
-                Buy Now
-              </button>
+              <div className="mt-6">
+                <AddToCartButtons productId={product.id} price={product.price} />
+              </div>
 
               <div className="mt-8 space-y-4">
 
