@@ -5,6 +5,8 @@ import { useAuth } from '@/lib/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 function isValidUrl(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -16,8 +18,10 @@ function isValidUrl(url: string | null | undefined): boolean {
 
 export default function CartPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { state, updateItem, removeItem, clearItems } = useCart();
+  const { state, updateItem, removeItem, clearItems, checkout } = useCart();
   const { items, total, item_count, loading } = state;
+  const router = useRouter();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   if (authLoading) {
     return (
@@ -61,6 +65,27 @@ export default function CartPage() {
 
   const delivery = total > 499 ? 0 : 49;
   const finalTotal = total + delivery;
+
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    
+    setCheckoutLoading(true);
+    try {
+      const result = await checkout('neednow');
+      
+      // Show success message (you could use a toast here)
+      alert(`Order created successfully! Order ID: ${result.order.id}`);
+      
+      // Redirect to orders page
+      router.push('/orders');
+    } catch (error) {
+      // Show error message
+      const message = error instanceof Error ? error.message : 'Failed to proceed to checkout';
+      alert(message);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen px-4 pb-16" style={{ background: 'var(--bg-page)' }}>
@@ -196,9 +221,12 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button className="w-full py-4 font-bold rounded-full text-center transition-all hover:opacity-90 hover:scale-[1.02]"
+              <button 
+                onClick={handleCheckout}
+                disabled={loading || checkoutLoading || items.length === 0}
+                className="w-full py-4 font-bold rounded-full text-center transition-all hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ background: 'var(--color-jade)', color: 'white', fontSize: '16px' }}>
-                Proceed to Checkout
+                {checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}
               </button>
 
               <p className="text-center text-xs mt-4" style={{ color: 'var(--text-secondary)' }}>

@@ -63,3 +63,15 @@ export async function clearCart() {
   if (!res.ok) throw new Error('Failed to clear cart');
   return res.json();
 }
+
+export async function proceedToCheckout(platform = 'neednow') {
+  const res = await authFetch('/checkout/', {
+    method: 'POST',
+    body: JSON.stringify({ platform }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to proceed to checkout');
+  }
+  return res.json();
+}

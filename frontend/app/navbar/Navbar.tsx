@@ -28,6 +28,7 @@ import {
 const navItems = [
   { name: "Discover", icon: Compass, href: "/" },
   { name: "Pantry", icon: UtensilsCrossed, href: "/pantry" },
+  { name: "Orders", icon: ShoppingCart, href: "/orders" },
   { name: "Shared Orders", icon: Users, href: "/groups" },
   { name: "History", icon: Clock, href: "/history" },
   { name: "AI Memory", icon: BrainCircuit, href: "/memory" },

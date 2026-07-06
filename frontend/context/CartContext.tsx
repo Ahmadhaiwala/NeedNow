@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
-import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '@/lib/cart';
+import { getCart, addToCart, updateCartItem, removeCartItem, clearCart, proceedToCheckout } from '@/lib/cart';
 import { useAuth } from '@/lib/auth';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -61,6 +61,7 @@ interface CartContextValue {
   removeItem: (itemId: number) => Promise<void>;
   clearItems: () => Promise<void>;
   refreshCart: () => Promise<void>;
+  checkout: (platform?: string) => Promise<any>;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -137,8 +138,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const checkout = useCallback(async (platform = 'neednow') => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    try {
+      const result = await proceedToCheckout(platform);
+      // Clear cart after successful checkout
+      dispatch({ type: 'CLEAR' });
+      return result;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to proceed to checkout';
+      dispatch({ type: 'SET_ERROR', payload: msg });
+      throw e;
+    }
+  }, []);
+
   return (
-    <CartContext.Provider value={{ state, addItem, updateItem, removeItem, clearItems, refreshCart }}>
+    <CartContext.Provider value={{ state, addItem, updateItem, removeItem, clearItems, refreshCart, checkout }}>
       {children}
     </CartContext.Provider>
   );

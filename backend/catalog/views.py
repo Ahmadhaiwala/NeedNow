@@ -1,10 +1,12 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .models import Category, Product
 from .catalogSerializer import CategorySerializer, ProductSerializer
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def getcategories(request):
     """Return only parent categories (no subcategories)."""
     categories = Category.objects.filter(parent__isnull=True)
@@ -16,6 +18,7 @@ def getcategories(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def getproduct(request, id):
     """Return a single product by ID."""
     try:
@@ -29,6 +32,7 @@ def getproduct(request, id):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def getproductforcategory(request, id):
     """Return products for a category and all its subcategories."""
     try:

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'users',
     'catalog',
     'cart',
+    'order',
 ]
 
 MIDDLEWARE = [
@@ -150,6 +151,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'users.User'
+
 # Django REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -157,6 +161,13 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'users.authentication.NeonAuthAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Keep for Django admin
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 

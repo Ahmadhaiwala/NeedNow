@@ -14,16 +14,21 @@ export const authClient = createAuthClient(authUrl, {
 
 // Custom hook that wraps Neon Auth for our app
 export function useAuth() {
-  const { data: session, isPending: isLoading } = authClient.useSession();
+  const { data: session, isPending: isLoading, error } = authClient.useSession();
   
   const syncUserWithBackend = React.useCallback(async (user: { id: string; email: string; name: string; image?: string | null }) => {
+    if (!user?.email) {
+      console.error('No user email available for sync');
+      return;
+    }
+
     try {
       // Get JWT from session token directly
       const sessionData = await authClient.getSession();
       const jwtToken = sessionData?.data?.session?.token;
       
       if (!jwtToken) {
-        console.error('No JWT token available');
+        console.error('No JWT token available for sync');
         return;
       }
 
@@ -36,7 +41,8 @@ export function useAuth() {
       });
       
       if (!response.ok) {
-        console.error('Failed to sync user with backend');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to sync user with backend:', response.status, errorData);
       } else {
         console.log('User synced with backend successfully');
       }
@@ -47,40 +53,69 @@ export function useAuth() {
   
   // Auto-sync user with backend when session is available
   React.useEffect(() => {
-    if (session?.user) {
+    if (session?.user && !isLoading) {
       syncUserWithBackend(session.user);
     }
-  }, [session, syncUserWithBackend]);
+  }, [session?.user, isLoading, syncUserWithBackend]);
+
+  // Handle auth errors
+  React.useEffect(() => {
+    if (error) {
+      console.error('Authentication error:', error);
+    }
+  }, [error]);
   
   return {
     user: session?.user || null,
     isLoading,
-    signOut: async () => {
-      await authClient.signOut();
-    },
-    signInWithGoogle: async () => {
-      await authClient.signIn.social({
-        provider: 'google',
-        callbackURL: '/api/auth/callback',
-      });
-    },
-    signInWithEmail: async (email: string, password: string) => {
-      await authClient.signIn.email({
-        email,
-        password,
-      });
-    },
-    signUpWithEmail: async (email: string, password: string, name: string) => {
-      await authClient.signUp.email({
-        email,
-        password,
-        name,
-      });
-    },
-    getJWTToken: async () => {
-      const sessionData = await authClient.getSession();
-      return sessionData?.data?.session?.token ?? null;
-    }
+    error,
+    signOut: React.useCallback(async () => {
+      try {
+        await authClient.signOut();
+      } catch (error) {
+        console.error('Sign out error:', error);
+      }
+    }, []),
+    signInWithGoogle: React.useCallback(async () => {
+      try {
+        await authClient.signIn.social({
+          provider: 'google',
+          callbackURL: '/api/auth/callback',
+        });
+      } catch (error) {
+        console.error('Google sign in error:', error);
+      }
+    }, []),
+    signInWithEmail: React.useCallback(async (email: string, password: string) => {
+      try {
+        await authClient.signIn.email({
+          email,
+          password,
+        });
+      } catch (error) {
+        console.error('Email sign in error:', error);
+      }
+    }, []),
+    signUpWithEmail: React.useCallback(async (email: string, password: string, name: string) => {
+      try {
+        await authClient.signUp.email({
+          email,
+          password,
+          name,
+        });
+      } catch (error) {
+        console.error('Email sign up error:', error);
+      }
+    }, []),
+    getJWTToken: React.useCallback(async () => {
+      try {
+        const sessionData = await authClient.getSession();
+        return sessionData?.data?.session?.token ?? null;
+      } catch (error) {
+        console.error('Get JWT token error:', error);
+        return null;
+      }
+    }, [])
   };
 }
 
@@ -92,9 +127,17 @@ export function SignInButton({ children, className, onClick }: {
 }) {
   const { signInWithGoogle } = useAuth();
   
+  const handleClick = React.useCallback(async () => {
+    if (onClick) {
+      onClick();
+    } else {
+      await signInWithGoogle();
+    }
+  }, [onClick, signInWithGoogle]);
+  
   return (
     <button 
-      onClick={onClick || signInWithGoogle} 
+      onClick={handleClick} 
       className={className}
     >
       {children}
@@ -109,9 +152,17 @@ export function SignOutButton({ children, className, onClick }: {
 }) {
   const { signOut } = useAuth();
   
+  const handleClick = React.useCallback(async () => {
+    if (onClick) {
+      onClick();
+    } else {
+      await signOut();
+    }
+  }, [onClick, signOut]);
+  
   return (
     <button 
-      onClick={onClick || signOut} 
+      onClick={handleClick} 
       className={className}
     >
       {children}
@@ -120,4 +171,4 @@ export function SignOutButton({ children, className, onClick }: {
 }
 
 // Export auth client for direct use if needed
-export { authClient as neonAuth };
+export { authClient as neonAuth };

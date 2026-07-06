@@ -71,6 +71,9 @@ class NeonAuthValidator:
             # Decode header to get key ID
             header = jwt.get_unverified_header(token)
             kid = header.get("kid")
+            alg = header.get("alg")
+            
+            print(f"Token header - kid: {kid}, alg: {alg}")
             
             if not kid:
                 print("No kid in JWT header")
@@ -82,15 +85,18 @@ class NeonAuthValidator:
                 print(f"No public key found for kid: {kid}")
                 return None
             
+            print(f"Found public key for kid: {kid}")
+            
             # Verify and decode token
+            algorithms = [alg] if alg else ["EdDSA", "RS256", "ES256", "HS256"]  # Use token's algorithm or fallback
             payload = jwt.decode(
                 token,
                 public_key,
-                algorithms=["EdDSA"],  # Common algorithms
-                audience=self.base_url,
+                algorithms=algorithms,
                 options={"verify_exp": True, "verify_aud": False}  # Make audience optional for now
             )
             
+            print(f"Token validated successfully, payload keys: {list(payload.keys())}")
             return payload
             
         except jwt.ExpiredSignatureError:
@@ -99,8 +105,16 @@ class NeonAuthValidator:
         except jwt.InvalidTokenError as e:
             print(f"Invalid token: {e}")
             return None
+        except jwt.InvalidSignatureError as e:
+            print(f"Invalid signature: {e}")
+            return None
+        except jwt.InvalidKeyError as e:
+            print(f"Invalid key: {e}")
+            return None
         except Exception as e:
             print(f"Token validation error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
 def get_neon_auth_user(token):
