@@ -19,7 +19,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderCollaboratorSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     
     class Meta:
@@ -33,7 +33,7 @@ class OrderCollaboratorSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     collaborators = OrderCollaboratorSerializer(many=True, read_only=True)
-    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
     
     class Meta:
         model = Order

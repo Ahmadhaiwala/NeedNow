@@ -12,6 +12,8 @@ def get_user_from_neon_auth(request):
     """
     try:
         auth_header = request.headers.get('Authorization', '')
+        if not auth_header:
+            return None  # No auth header — silently skip (public/unauthenticated endpoints)
         if not auth_header.startswith('Bearer '):
             print(f"Invalid auth header format: {auth_header}")
             return None

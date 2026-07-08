@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -32,7 +32,8 @@ const paymentMethods = [
   { id: 'cod', name: 'Cash on Delivery', icon: Truck, description: 'Pay when you receive' },
 ];
 
-export default function CheckoutPage({ params }: { params: { orderId: string } }) {
+export default function CheckoutPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = use(params);
   const router = useRouter();
   const { user } = useAuth();
   const { orders, simulatePayment } = useOrders();
@@ -44,10 +45,10 @@ export default function CheckoutPage({ params }: { params: { orderId: string } }
 
   useEffect(() => {
     if (orders.length > 0) {
-      const foundOrder = orders.find(o => o.id === parseInt(params.orderId));
+      const foundOrder = orders.find(o => o.id === parseInt(orderId));
       setOrder(foundOrder || null);
     }
-  }, [orders, params.orderId]);
+  }, [orders, orderId]);
 
   if (!user) {
     return (

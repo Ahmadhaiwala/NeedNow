@@ -17,10 +17,9 @@ import time
 
 class OrderListCreateView(generics.ListCreateAPIView):
     """List user's orders or create new order"""
-    
+    permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
-        print(self.request.user)
         if self.request.method == 'POST':
             return CreateOrderSerializer
         return OrderSerializer
@@ -135,7 +134,7 @@ def cancel_order(request, order_id):
 @permission_classes([IsAuthenticated])
 def order_summary(request):
     """Get user's order summary/statistics"""
-    user_orders = Order.objects.filter(user=request.User)
+    user_orders = Order.objects.filter(user=request.user)
     
     summary = {
         'total_orders': user_orders.count(),
