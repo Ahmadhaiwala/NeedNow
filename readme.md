@@ -46,12 +46,12 @@ Users describe their situation naturally using text or voice.
 
 Examples:
 
-* "I have a headache."
-* "I'm making butter chicken."
-* "I need a coding laptop."
-* "I'm going camping."
-* "I have guests coming over."
-* "I want to start going to the gym."
+- "I have a headache."
+- "I'm making butter chicken."
+- "I need a coding laptop."
+- "I'm going camping."
+- "I have guests coming over."
+- "I want to start going to the gym."
 
 Instead of immediately suggesting products, the AI intelligently asks follow-up questions whenever additional information is needed.
 
@@ -63,9 +63,9 @@ User:
 
 AI:
 
-* What's your budget?
-* Will you use it mainly for coding, gaming, or editing?
-* Do you care more about battery life or performance?
+- What's your budget?
+- Will you use it mainly for coding, gaming, or editing?
+- Do you care more about battery life or performance?
 
 Only after understanding the user's intent does the AI recommend products.
 
@@ -83,10 +83,10 @@ Users add products they own.
 
 Example:
 
-* Eggs (12)
-* Milk (2L)
-* Rice (5kg)
-* Bread (2)
+- Eggs (12)
+- Milk (2L)
+- Rice (5kg)
+- Bread (2)
 
 The AI keeps track of inventory automatically.
 
@@ -100,9 +100,9 @@ NeedNow estimates what ingredients were used and asks for confirmation.
 
 After confirmation:
 
-* Milk decreases
-* Cheese decreases
-* Butter decreases
+- Milk decreases
+- Cheese decreases
+- Butter decreases
 
 Inventory updates automatically.
 
@@ -152,11 +152,11 @@ Before checkout, the AI optimizes the cart automatically.
 
 It can:
 
-* Suggest cheaper alternatives
-* Recommend better value packs
-* Apply available offers
-* Stay within a user's budget
-* Categorize products into Essential, Optional, and Luxury
+- Suggest cheaper alternatives
+- Recommend better value packs
+- Apply available offers
+- Stay within a user's budget
+- Categorize products into Essential, Optional, and Luxury
 
 Example:
 
@@ -168,18 +168,18 @@ AI:
 
 Essential:
 
-* Rice
-* Milk
-* Eggs
+- Rice
+- Milk
+- Eggs
 
 Optional:
 
-* Chocolate
-* Chips
+- Chocolate
+- Chips
 
 Luxury:
 
-* Ice Cream
+- Ice Cream
 
 ---
 
@@ -249,14 +249,14 @@ The AI can connect to multiple commerce and service providers to gather real-tim
 
 Examples of connected services:
 
-* Amazon
-* Flipkart
-* Blinkit
-* Instamart
-* Zepto
-* Zomato
-* Swiggy
-* Local Stores
+- Amazon
+- Flipkart
+- Blinkit
+- Instamart
+- Zepto
+- Zomato
+- Swiggy
+- Local Stores
 
 Instead of simply recommending a product, the AI compares multiple platforms and explains the best choice.
 
@@ -268,9 +268,9 @@ User:
 
 NeedNow:
 
-* Amazon: ₹4,699
-* Flipkart: ₹4,899
-* Local Store: ₹4,750 (same-day pickup)
+- Amazon: ₹4,699
+- Flipkart: ₹4,899
+- Local Store: ₹4,750 (same-day pickup)
 
 Recommendation:
 
@@ -300,10 +300,10 @@ User:
 
 The AI already knows:
 
-* Budget
-* Purpose
-* Preferred specifications
-* Previous discussion
+- Budget
+- Purpose
+- Preferred specifications
+- Previous discussion
 
 and directly finds the best available offers.
 
@@ -319,17 +319,17 @@ NeedNow allows multiple users to participate in the same order.
 
 Examples:
 
-* Hostel roommates
-* Family grocery shopping
-* Birthday parties
-* Office lunches
+- Hostel roommates
+- Family grocery shopping
+- Birthday parties
+- Office lunches
 
 Each participant can:
 
-* Add products
-* Remove products
-* Vote on alternatives
-* Chat inside the order
+- Add products
+- Remove products
+- Vote on alternatives
+- Chat inside the order
 
 ---
 
@@ -377,14 +377,14 @@ Unlike traditional chatbots, NeedNow continuously learns user preferences over t
 
 The AI remembers:
 
-* Favorite brands
-* Shopping habits
-* Dietary preferences
-* Household members
-* Budget ranges
-* Frequently purchased products
-* Previous conversations
-* Technology preferences
+- Favorite brands
+- Shopping habits
+- Dietary preferences
+- Household members
+- Budget ranges
+- Frequently purchased products
+- Previous conversations
+- Technology preferences
 
 Example:
 

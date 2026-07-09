@@ -22,12 +22,14 @@ import {
   Clock,
   BrainCircuit,
   Settings,
-  SunMoon,
+  Sun,
+  Moon,
+  Package,
 } from "lucide-react";
 
 const navItems = [
   { name: "Discover", icon: Compass, href: "/" },
-  { name: "Pantry", icon: UtensilsCrossed, href: "/pantry" },
+  { name: "Assets", icon: Package, href: "/assets" },
   { name: "Orders", icon: ShoppingCart, href: "/orders" },
   { name: "Shared Orders", icon: Users, href: "/groups" },
   { name: "History", icon: Clock, href: "/history" },
@@ -46,8 +48,27 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isDark, setIsDark] = useState(false);
   const pathname = usePathname();
   const { user, isLoading, signOut, signInWithGoogle } = useAuth();
+
+  // Initialise dark mode from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('neednow-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = stored ? stored === 'dark' : prefersDark;
+    setIsDark(dark);
+    document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.classList.toggle('light', !dark);
+  }, []);
+
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    document.documentElement.classList.toggle('light', !next);
+    localStorage.setItem('neednow-theme', next ? 'dark' : 'light');
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -73,69 +94,80 @@ export default function Navbar() {
     <>
       <header
         className="fixed top-0 left-0 right-0 z-50 flex justify-center"
-        style={{ padding: "24px 32px" }}
+        style={{ padding: "16px 16px", paddingTop: "20px", paddingBottom: "20px" }}
       >
         <div
           className="w-full flex items-center justify-between"
           style={{
             maxWidth: "1400px",
-            background: "rgba(255, 255, 255, 0.85)",
+            background: isDark
+              ? "rgba(61, 106, 104, 0.92)"   /* surface-1 #3D6A68 @ 92% */
+              : "rgba(255, 255, 255, 0.85)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            borderRadius: "28px",
-            boxShadow: "0 8px 32px rgba(31, 54, 53, 0.04), 0 2px 8px rgba(31, 54, 53, 0.02)",
-            padding: "12px 16px 12px 24px",
-            border: "1px solid rgba(255, 255, 255, 0.4)",
-            height: "76px",
+            borderRadius: "20px",
+            boxShadow: isDark
+              ? "0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)"
+              : "0 8px 32px rgba(31, 54, 53, 0.04), 0 2px 8px rgba(31, 54, 53, 0.02)",
+            padding: "8px 12px 8px 16px",
+            border: isDark
+              ? "1px solid rgba(252, 251, 244, 0.08)"
+              : "1px solid rgba(255, 255, 255, 0.4)",
+            minHeight: "60px",
+            transition: "background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
           }}
         >
           {/* ── Left: Logo & Tagline ── */}
-          <Link href="/" className="flex items-center gap-4 group mr-6 shrink-0">
+          <Link href="/" className="flex items-center gap-2 lg:gap-4 group shrink-0">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <div
                   className="flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
                   style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "10px",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "8px",
                     background: "#1F3635", // Core
                   }}
                 >
                   <span
                     className="font-bold"
-                    style={{ fontSize: "16px", color: "#CACE00" }} // Juice
+                    style={{ fontSize: "14px", color: "#CACE00" }} // Juice
                   >
                     N
                   </span>
                 </div>
                 <span
-                  className="text-xl font-bold tracking-tight hidden lg:inline"
-                  style={{ color: "#1F3635" }} // Core
-                >
-                  NeedNow
-                </span>
-              </div>
-              <span
-                className="hidden lg:block mt-0.5 font-medium tracking-wide"
-                style={{ fontSize: "11px", color: "#7BA3CE" }} // Sky
-              >
-                Need it? Just say it.
-              </span>
+                   className="text-lg lg:text-xl font-bold tracking-tight"
+                   style={{ color: isDark ? "#FCFBF4" : "#1F3635", transition: "color 0.3s" }}
+                 >
+                   NeedNow
+                 </span>
+               </div>
+               <span
+                 className="hidden lg:block mt-0.5 font-medium tracking-wide"
+                 style={{ fontSize: "10px", color: "#7BA3CE" }}
+               >
+                 Need it? Just say it.
+               </span>
             </div>
           </Link>
 
           {/* ── Center: Conversational Input ── */}
-          <div className="hidden md:flex flex-1 max-w-[500px] shrink-0 mx-4">
+          <div className="hidden sm:flex flex-1 max-w-[400px] lg:max-w-[500px] shrink-0 mx-2 lg:mx-4">
             <div
               className="relative flex items-center w-full group overflow-hidden"
               style={{
-                background: "#FCFBF4", // Cloud
+                background: isDark ? "#487D7B" : "#FCFBF4",
                 borderRadius: "9999px",
-                height: "52px",
-                padding: "0 8px 0 24px",
-                boxShadow: "inset 0 2px 6px rgba(31, 54, 53, 0.03)",
-                border: "1px solid rgba(123, 163, 206, 0.2)",
+                height: "44px",
+                padding: "0 6px 0 16px",
+                boxShadow: isDark
+                  ? "inset 0 2px 6px rgba(0,0,0,0.15)"
+                  : "inset 0 2px 6px rgba(31, 54, 53, 0.03)",
+                border: isDark
+                  ? "1px solid rgba(252,251,244,0.12)"
+                  : "1px solid rgba(123, 163, 206, 0.2)",
                 transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
               onMouseEnter={(e) => {
@@ -143,8 +175,10 @@ export default function Navbar() {
                 e.currentTarget.style.boxShadow = "0 0 0 4px rgba(202, 206, 0, 0.15), inset 0 2px 6px rgba(31, 54, 53, 0.03)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(123, 163, 206, 0.2)";
-                e.currentTarget.style.boxShadow = "inset 0 2px 6px rgba(31, 54, 53, 0.03)";
+                e.currentTarget.style.borderColor = isDark ? "rgba(252,251,244,0.12)" : "rgba(123, 163, 206, 0.2)";
+                e.currentTarget.style.boxShadow = isDark
+                  ? "inset 0 2px 6px rgba(0,0,0,0.15)"
+                  : "inset 0 2px 6px rgba(31, 54, 53, 0.03)";
               }}
             >
               <div className="flex-1 relative h-full flex items-center overflow-hidden">
@@ -159,7 +193,7 @@ export default function Navbar() {
                   >
                     <span
                       className="truncate font-medium"
-                      style={{ color: "#1F3635", opacity: 0.4, fontSize: "15px" }}
+                      style={{ color: isDark ? "#FCFBF4" : "#1F3635", opacity: 0.4, fontSize: "14px" }}
                     >
                       {placeholders[placeholderIndex]}
                     </span>
@@ -168,18 +202,18 @@ export default function Navbar() {
                 <input
                   type="text"
                   className="w-full h-full bg-transparent outline-none font-medium"
-                  style={{ color: "#1F3635", fontSize: "15px" }}
+                  style={{ color: isDark ? "#FCFBF4" : "#1F3635", fontSize: "14px" }}
                 />
               </div>
 
-              <div className="flex items-center gap-2 shrink-0 ml-2">
+              <div className="flex items-center gap-1 lg:gap-2 shrink-0 ml-1">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center justify-center relative overflow-hidden"
                   style={{
-                    width: "36px",
-                    height: "36px",
+                    width: "32px",
+                    height: "32px",
                     borderRadius: "50%",
                     background: "rgba(123, 163, 206, 0.1)", // Sky tinted
                     color: "#025A5C", // Jade
@@ -187,15 +221,15 @@ export default function Navbar() {
                     cursor: "pointer",
                   }}
                 >
-                  <Mic size={18} />
+                  <Mic size={16} />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center justify-center relative overflow-hidden"
                   style={{
-                    width: "36px",
-                    height: "36px",
+                    width: "32px",
+                    height: "32px",
                     borderRadius: "50%",
                     background: "#1F3635", // Core
                     color: "#CACE00", // Juice
@@ -204,14 +238,14 @@ export default function Navbar() {
                     boxShadow: "0 4px 12px rgba(31, 54, 53, 0.15)",
                   }}
                 >
-                  <Sparkles size={16} strokeWidth={2.5} />
+                  <Sparkles size={14} strokeWidth={2.5} />
                 </motion.button>
               </div>
             </div>
           </div>
 
           {/* ── Navigation Links (Desktop) ── */}
-          <nav className="hidden xl:flex items-center gap-1 mx-6 shrink-0">
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 shrink-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -220,31 +254,34 @@ export default function Navbar() {
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-2 transition-all duration-200"
+                    className="flex items-center gap-1.5 xl:gap-2 transition-all duration-200"
                     style={{
-                      padding: "10px 16px",
+                      padding: "8px 12px",
                       borderRadius: "9999px",
-                      color: isActive ? "#1F3635" : "#1F3635",
+                      color: isActive ? "#1F3635" : (isDark ? "#FCFBF4" : "#1F3635"),
                       background: isActive ? "#CACE00" : "transparent",
-                      fontSize: "14px",
+                      fontSize: "13px",
                       fontWeight: isActive ? 600 : 500,
-                      opacity: isActive ? 1 : 0.7,
+                      opacity: isActive ? 1 : 0.75,
+                      transition: "color 0.3s",
                     }}
                     onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
                       if (!isActive) {
-                        e.currentTarget.style.background = "rgba(123, 163, 206, 0.1)"; // Sky 10%
+                        e.currentTarget.style.background = isDark
+                          ? "rgba(252, 251, 244, 0.08)"
+                          : "rgba(123, 163, 206, 0.1)";
                         e.currentTarget.style.opacity = "1";
                       }
                     }}
                     onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                       if (!isActive) {
                         e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.opacity = "0.7";
+                        e.currentTarget.style.opacity = "0.75";
                       }
                     }}
                   >
-                    <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
-                    <span>{item.name}</span>
+                    <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
+                    <span className="hidden xl:inline">{item.name}</span>
                   </motion.div>
                 </Link>
               );
@@ -252,54 +289,60 @@ export default function Navbar() {
           </nav>
 
           {/* ── Right: Icon Buttons ── */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden md:flex items-center gap-2 mr-2 pr-4 border-r border-gray-200/50">
+          <div className="flex items-center gap-1 lg:gap-2 shrink-0">
+            {/* Desktop Controls */}
+            <div className="hidden md:flex items-center gap-1 lg:gap-2 mr-1 lg:mr-2 pr-2 lg:pr-4" style={{ borderRight: `1px solid ${isDark ? 'rgba(252,251,244,0.1)' : 'rgba(200,200,200,0.5)'}` }}>
               <motion.button
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
+                onClick={toggleDark}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                 className="flex items-center justify-center cursor-pointer"
                 style={{
-                  width: "44px",
-                  height: "44px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
-                  background: "transparent",
-                  color: "#1F3635", // Core
+                  background: isDark ? "rgba(202, 206, 0, 0.15)" : "transparent",
+                  color: isDark ? "#CACE00" : "#1F3635",
                   border: "none",
+                  transition: "background 0.2s, color 0.2s",
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)"; // Sky tint
-                  e.currentTarget.style.color = "#025A5C"; // Jade
+                  e.currentTarget.style.background = isDark
+                    ? "rgba(202, 206, 0, 0.25)"
+                    : "rgba(123, 163, 206, 0.15)";
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#1F3635"; // Core
+                  e.currentTarget.style.background = isDark
+                    ? "rgba(202, 206, 0, 0.15)"
+                    : "transparent";
                 }}
               >
-                <SunMoon size={20} strokeWidth={2} />
+                {isDark ? <Sun size={18} strokeWidth={2} /> : <Moon size={18} strokeWidth={2} />}
               </motion.button>
 
               <motion.button
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
-                className="flex items-center justify-center cursor-pointer"
+                className="hidden lg:flex items-center justify-center cursor-pointer"
                 style={{
-                  width: "44px",
-                  height: "44px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
                   background: "transparent",
-                  color: "#1F3635", // Core
+                  color: "#1F3635",
                   border: "none",
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
-                  e.currentTarget.style.color = "#025A5C"; // Jade
+                  e.currentTarget.style.color = "#025A5C";
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#1F3635"; // Core
+                  e.currentTarget.style.color = "#1F3635";
                 }}
               >
-                <Settings size={20} strokeWidth={2} />
+                <Settings size={18} strokeWidth={2} />
               </motion.button>
               
               <motion.button
@@ -307,59 +350,60 @@ export default function Navbar() {
                 whileTap={{ scale: 0.92 }}
                 className="relative flex items-center justify-center cursor-pointer"
                 style={{
-                  width: "44px",
-                  height: "44px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
                   background: "transparent",
-                  color: "#1F3635", // Core
+                  color: "#1F3635",
                   border: "none",
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
-                  e.currentTarget.style.color = "#025A5C"; // Jade
+                  e.currentTarget.style.color = "#025A5C";
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#1F3635"; // Core
+                  e.currentTarget.style.color = "#1F3635";
                 }}
               >
-                <Bell size={20} strokeWidth={2} />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: "#CACE00" }} />
+                <Bell size={18} strokeWidth={2} />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ background: "#CACE00" }} />
               </motion.button>
             </div>
 
+            {/* Cart Button */}
             <Link href="/cart">
               <motion.div
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
                 className="relative flex items-center justify-center cursor-pointer"
                 style={{
-                  width: "44px",
-                  height: "44px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
-                  background: "rgba(123, 163, 206, 0.15)", // Sky tint
+                  background: "rgba(123, 163, 206, 0.15)",
                   color: "#1F3635",
                   border: "none",
                 }}
                 onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "#1F3635"; // Core
-                  e.currentTarget.style.color = "#FCFBF4"; // Cloud
+                  e.currentTarget.style.background = "#1F3635";
+                  e.currentTarget.style.color = "#FCFBF4";
                 }}
                 onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                   e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
                   e.currentTarget.style.color = "#1F3635";
                 }}
               >
-                <ShoppingCart size={20} strokeWidth={2} />
+                <ShoppingCart size={18} strokeWidth={2} />
                 <span
-                  className="absolute -top-1 -right-1 font-bold flex items-center justify-center"
+                  className="absolute -top-0.5 -right-0.5 font-bold flex items-center justify-center"
                   style={{
-                    width: "20px",
-                    height: "20px",
+                    width: "18px",
+                    height: "18px",
                     borderRadius: "50%",
-                    background: "#CACE00", // Juice
-                    color: "#1F3635", // Core
-                    fontSize: "11px",
+                    background: "#CACE00",
+                    color: "#1F3635",
+                    fontSize: "10px",
                     boxShadow: "0 2px 4px rgba(31, 54, 53, 0.1)",
                   }}
                 >
@@ -368,25 +412,26 @@ export default function Navbar() {
               </motion.div>
             </Link>
 
-            <div className="hidden sm:flex items-center ml-2">
+            {/* User Authentication */}
+            <div className="flex items-center ml-1 lg:ml-2">
               {!user && !isLoading ? (
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSignIn}
-                  className="flex items-center gap-2 font-bold cursor-pointer"
+                  className="hidden sm:flex items-center gap-2 font-bold cursor-pointer"
                   style={{
-                    padding: "10px 24px",
+                    padding: "8px 16px",
                     borderRadius: "9999px",
-                    background: "#1F3635", // Core
-                    color: "#CACE00", // Juice
-                    fontSize: "14px",
+                    background: "#1F3635",
+                    color: "#CACE00",
+                    fontSize: "13px",
                     border: "none",
                     boxShadow: "0 4px 12px rgba(31, 54, 53, 0.15)",
                   }}
                 >
-                  <LogIn size={16} />
-                  <span>Sign In</span>
+                  <LogIn size={14} />
+                  <span className="hidden lg:inline">Sign In</span>
                 </motion.button>
               ) : user ? (
                 <div className="relative">
@@ -394,7 +439,7 @@ export default function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="flex items-center justify-center cursor-pointer p-1"
+                    className="flex items-center justify-center cursor-pointer p-0.5"
                     style={{
                       borderRadius: "50%",
                       background: "transparent",
@@ -405,30 +450,30 @@ export default function Navbar() {
                       <Image
                         src={user.image}
                         alt="Profile"
-                        width={40}
-                        height={40}
+                        width={36}
+                        height={36}
                         className="object-cover"
                         style={{
-                          width: "44px",
-                          height: "44px",
+                          width: "36px",
+                          height: "36px",
                           borderRadius: "50%",
-                          border: "2px solid #CACE00", // Juice
-                          padding: "2px",
+                          border: "2px solid #CACE00",
+                          padding: "1px",
                         }}
                       />
                     ) : (
                       <div
                         className="flex items-center justify-center"
                         style={{
-                          width: "44px",
-                          height: "44px",
+                          width: "36px",
+                          height: "36px",
                           borderRadius: "50%",
-                          background: "#1F3635", // Core
-                          border: "2px solid #CACE00", // Juice
-                          padding: "2px",
+                          background: "#1F3635",
+                          border: "2px solid #CACE00",
+                          padding: "1px",
                         }}
                       >
-                        <User size={18} color="#FCFBF4" />
+                        <User size={16} color="#FCFBF4" />
                       </div>
                     )}
                   </motion.button>
@@ -440,35 +485,43 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-[60px]"
+                        className="absolute right-0 top-[50px]"
                         style={{
-                          width: "240px",
-                          background: "rgba(255, 255, 255, 0.95)",
+                          width: "220px",
+                          background: isDark 
+                            ? "rgba(72, 125, 123, 0.95)"
+                            : "rgba(255, 255, 255, 0.95)",
                           backdropFilter: "blur(12px)",
-                          borderRadius: "20px",
-                          boxShadow: "0 12px 32px rgba(31, 54, 53, 0.1)",
-                          padding: "12px",
-                          border: "1px solid rgba(123, 163, 206, 0.2)",
+                          borderRadius: "16px",
+                          boxShadow: isDark
+                            ? "0 12px 32px rgba(0,0,0,0.3)"
+                            : "0 12px 32px rgba(31, 54, 53, 0.1)",
+                          padding: "8px",
+                          border: isDark
+                            ? "1px solid rgba(252,251,244,0.1)"
+                            : "1px solid rgba(123, 163, 206, 0.2)",
                         }}
                       >
                         <div
                           style={{
-                            padding: "16px",
-                            borderRadius: "14px",
-                            background: "#FCFBF4", // Cloud
-                            marginBottom: "8px",
-                            border: "1px solid rgba(123, 163, 206, 0.1)",
+                            padding: "12px",
+                            borderRadius: "12px",
+                            background: isDark ? "rgba(252,251,244,0.05)" : "#FCFBF4",
+                            marginBottom: "6px",
+                            border: isDark 
+                              ? "1px solid rgba(252,251,244,0.1)"
+                              : "1px solid rgba(123, 163, 206, 0.1)",
                           }}
                         >
                           <p
                             className="font-bold truncate"
-                            style={{ fontSize: "15px", color: "#1F3635" }}
+                            style={{ fontSize: "14px", color: isDark ? "#FCFBF4" : "#1F3635" }}
                           >
                             {user.name || user.email}
                           </p>
                           <p
                             className="truncate"
-                            style={{ fontSize: "13px", color: "#7BA3CE", marginTop: "2px" }}
+                            style={{ fontSize: "12px", color: "#7BA3CE", marginTop: "2px" }}
                           >
                             {user.email}
                           </p>
@@ -477,21 +530,23 @@ export default function Navbar() {
                           onClick={handleSignOut}
                           className="w-full flex items-center justify-center gap-2 font-semibold cursor-pointer"
                           style={{
-                            padding: "12px",
-                            borderRadius: "14px",
-                            color: "#1F3635",
+                            padding: "10px",
+                            borderRadius: "12px",
+                            color: isDark ? "#FCFBF4" : "#1F3635",
                             background: "transparent",
                             border: "none",
-                            fontSize: "14px",
+                            fontSize: "13px",
                           }}
                           onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-                            e.currentTarget.style.background = "rgba(123, 163, 206, 0.1)";
+                            e.currentTarget.style.background = isDark
+                              ? "rgba(252,251,244,0.1)"
+                              : "rgba(123, 163, 206, 0.1)";
                           }}
                           onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
                             e.currentTarget.style.background = "transparent";
                           }}
                         >
-                          <LogOut size={16} />
+                          <LogOut size={14} />
                           Sign Out
                         </button>
                       </motion.div>
@@ -501,20 +556,21 @@ export default function Navbar() {
               ) : null}
             </div>
 
+            {/* Mobile Menu Button */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="xl:hidden flex items-center justify-center cursor-pointer ml-2"
+              className="lg:hidden flex items-center justify-center cursor-pointer ml-1"
               style={{
-                width: "44px",
-                height: "44px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "50%",
                 background: "rgba(123, 163, 206, 0.15)",
                 border: "none",
                 color: "#1F3635",
               }}
             >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </motion.button>
           </div>
         </div>
@@ -527,42 +583,50 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 xl:hidden pt-[110px] px-6 pb-6"
+            className="fixed inset-0 z-40 lg:hidden pt-[90px] px-4 pb-6"
             style={{
-              background: "rgba(252, 251, 244, 0.98)", // Cloud highly opaque
+              background: isDark 
+                ? "rgba(31, 54, 53, 0.98)" 
+                : "rgba(252, 251, 244, 0.98)",
               backdropFilter: "blur(20px)",
             }}
           >
             <div className="flex flex-col h-full overflow-y-auto">
               {/* Mobile Search - Similar to desktop pill */}
-              <div
-                className="relative flex items-center w-full group overflow-hidden mb-8 shrink-0"
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "9999px",
-                  height: "56px",
-                  padding: "0 8px 0 24px",
-                  boxShadow: "0 4px 12px rgba(31, 54, 53, 0.05), inset 0 2px 6px rgba(31, 54, 53, 0.02)",
-                  border: "1px solid rgba(123, 163, 206, 0.2)",
-                }}
-              >
-                <div className="flex-1 relative h-full flex items-center overflow-hidden">
-                  <span className="font-medium truncate" style={{ color: "#1F3635", opacity: 0.4, fontSize: "15px" }}>
-                    {placeholders[0]}
-                  </span>
-                  <input type="text" className="absolute inset-0 w-full h-full bg-transparent outline-none font-medium text-transparent" />
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                  <div
-                    className="flex items-center justify-center"
-                    style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#1F3635", color: "#CACE00" }}
-                  >
-                    <Sparkles size={18} strokeWidth={2.5} />
+              <div className="sm:hidden mb-6">
+                <div
+                  className="relative flex items-center w-full group overflow-hidden"
+                  style={{
+                    background: isDark ? "#487D7B" : "#ffffff",
+                    borderRadius: "9999px",
+                    height: "48px",
+                    padding: "0 6px 0 20px",
+                    boxShadow: isDark
+                      ? "0 4px 12px rgba(0,0,0,0.15)"
+                      : "0 4px 12px rgba(31, 54, 53, 0.05), inset 0 2px 6px rgba(31, 54, 53, 0.02)",
+                    border: isDark
+                      ? "1px solid rgba(252,251,244,0.12)"
+                      : "1px solid rgba(123, 163, 206, 0.2)",
+                  }}
+                >
+                  <div className="flex-1 relative h-full flex items-center overflow-hidden">
+                    <span className="font-medium truncate" style={{ color: isDark ? "rgba(252,251,244,0.4)" : "rgba(31,54,53,0.4)", fontSize: "14px" }}>
+                      {placeholders[0]}
+                    </span>
+                    <input type="text" className="absolute inset-0 w-full h-full bg-transparent outline-none font-medium text-transparent" />
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <div
+                      className="flex items-center justify-center"
+                      style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#1F3635", color: "#CACE00" }}
+                    >
+                      <Sparkles size={16} strokeWidth={2.5} />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <nav className="flex flex-col gap-3">
+              <nav className="flex flex-col gap-2 mb-8">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -571,16 +635,21 @@ export default function Navbar() {
                       <div
                         className="flex items-center gap-4"
                         style={{
-                          padding: "16px 24px",
-                          borderRadius: "20px",
-                          background: isActive ? "#CACE00" : "rgba(255, 255, 255, 0.5)",
-                          color: "#1F3635",
-                          fontSize: "17px",
+                          padding: "14px 20px",
+                          borderRadius: "16px",
+                          background: isActive 
+                            ? "#CACE00" 
+                            : isDark ? "rgba(252,251,244,0.05)" : "rgba(255, 255, 255, 0.5)",
+                          color: isActive ? "#1F3635" : (isDark ? "#FCFBF4" : "#1F3635"),
+                          fontSize: "16px",
                           fontWeight: isActive ? 700 : 600,
                           boxShadow: isActive ? "0 4px 12px rgba(202, 206, 0, 0.2)" : "none",
+                          border: isDark && !isActive 
+                            ? "1px solid rgba(252,251,244,0.1)" 
+                            : "1px solid transparent",
                         }}
                       >
-                        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                        <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                         <span>{item.name}</span>
                       </div>
                     </Link>
@@ -588,7 +657,7 @@ export default function Navbar() {
                 })}
               </nav>
 
-              <div className="mt-auto pt-8">
+              <div className="mt-auto pt-6">
                 {!user && !isLoading ? (
                   <button
                     onClick={() => {
@@ -597,8 +666,8 @@ export default function Navbar() {
                     }}
                     className="w-full flex items-center justify-center gap-3 font-bold"
                     style={{
-                      padding: "18px 24px",
-                      borderRadius: "24px",
+                      padding: "16px 24px",
+                      borderRadius: "20px",
                       background: "#1F3635",
                       color: "#CACE00",
                       fontSize: "16px",
@@ -611,13 +680,40 @@ export default function Navbar() {
                   </button>
                 ) : user ? (
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-4 p-4 rounded-3xl" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(123, 163, 206, 0.2)" }}>
+                    <div 
+                      className="flex items-center gap-4 p-4 rounded-2xl" 
+                      style={{ 
+                        background: isDark 
+                          ? "rgba(252,251,244,0.05)" 
+                          : "rgba(255,255,255,0.7)", 
+                        border: isDark 
+                          ? "1px solid rgba(252,251,244,0.1)" 
+                          : "1px solid rgba(123, 163, 206, 0.2)" 
+                      }}
+                    >
                       {user.image && (
-                        <Image src={user.image} alt="Profile" width={48} height={48} className="rounded-full border-2" style={{ borderColor: "#CACE00" }} />
+                        <Image 
+                          src={user.image} 
+                          alt="Profile" 
+                          width={44} 
+                          height={44} 
+                          className="rounded-full border-2" 
+                          style={{ borderColor: "#CACE00" }} 
+                        />
                       )}
                       <div>
-                        <p className="font-bold text-lg" style={{ color: "#1F3635" }}>{user.name}</p>
-                        <p className="font-medium" style={{ color: "#7BA3CE", fontSize: "14px" }}>{user.email}</p>
+                        <p 
+                          className="font-bold text-lg" 
+                          style={{ color: isDark ? "#FCFBF4" : "#1F3635" }}
+                        >
+                          {user.name}
+                        </p>
+                        <p 
+                          className="font-medium" 
+                          style={{ color: "#7BA3CE", fontSize: "14px" }}
+                        >
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -625,8 +721,14 @@ export default function Navbar() {
                         handleSignOut();
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center gap-2 font-bold py-4 rounded-2xl"
-                      style={{ background: "rgba(123, 163, 206, 0.15)", color: "#1F3635", border: "none" }}
+                      className="w-full flex items-center justify-center gap-2 font-bold py-4 rounded-xl"
+                      style={{ 
+                        background: isDark 
+                          ? "rgba(252,251,244,0.1)" 
+                          : "rgba(123, 163, 206, 0.15)", 
+                        color: isDark ? "#FCFBF4" : "#1F3635", 
+                        border: "none" 
+                      }}
                     >
                       <LogOut size={18} />
                       Sign Out

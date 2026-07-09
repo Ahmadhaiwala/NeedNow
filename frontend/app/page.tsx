@@ -183,9 +183,9 @@
               {
                 label: "Brands",
                 value: "50+",
-                bg: "var(--color-sky)",
-                textColor: "var(--color-core)",
-                subColor: "rgba(31,54,53,0.6)",
+                bg: "var(--color-moss)",
+                textColor: "var(--color-cloud)",
+                subColor: "rgba(252,251,244,0.65)",
               },
             ].map((stat) => (
               <div

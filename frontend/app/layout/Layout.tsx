@@ -1,5 +1,12 @@
+'use client';
+
 import Navbar from "../navbar/Navbar"
 import { CartProvider } from "@/context/CartContext"
+
+// Import cache debugging in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  import('@/lib/cache-debug');
+}
 
 export default function Layout({children}:{children : React.ReactNode}){
     return(
