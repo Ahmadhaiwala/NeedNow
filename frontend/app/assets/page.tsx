@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { getCollections, createCollection, getDashboard } from '@/lib/assets';
 import { warmCache } from '@/lib/cache';
 import Link from 'next/link';
-import { Plus, Home, Package, AlertTriangle, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
+import { Plus, Home, Package, AlertTriangle, Calendar, ArrowRight } from 'lucide-react';
 
 interface Collection {
   id: string;
@@ -31,12 +31,6 @@ export default function AssetsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createData, setCreateData] = useState({ name: '', description: '' });
 
-  useEffect(() => {
-    if (user) {
-      loadCollections();
-    }
-  }, [user]);
-
   const loadCollections = async () => {
     try {
       setLoading(true);
@@ -47,7 +41,7 @@ export default function AssetsPage() {
       warmCache.collections();
       
       // Load dashboard stats for each collection in parallel
-      const statsPromises = data.map(async (collection) => {
+      const statsPromises = data.map(async (collection: Collection) => {
         try {
           const dashboard = await getDashboard(collection.id);
           return { id: collection.id, stats: dashboard.stats };
@@ -67,17 +61,18 @@ export default function AssetsPage() {
       });
       
       setDashboardStats(stats);
-        } catch (error) {
-          console.error(`Failed to load dashboard for ${collection.name}:`, error);
-        }
-      }
-      setDashboardStats(stats);
     } catch (error) {
       console.error('Failed to load collections:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      loadCollections();
+    }
+  }, [user]);
 
   const handleCreateCollection = async (e: React.FormEvent) => {
     e.preventDefault();

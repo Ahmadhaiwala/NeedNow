@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 import uuid
 
 
@@ -38,11 +40,27 @@ class Category(models.Model):
         related_name="subcategories"
     )
 
+    product_count = models.IntegerField(default=0)
+
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+    
+    def update_product_count(self):
+        """Update the product count for this category"""
+        self.product_count = self.products.count()
+        self.save(update_fields=['product_count'])
+    
+    def update_ancestors_count(self):
+        """Update product count for this category and all parent categories"""
+        # Update this category
+        self.update_product_count()
+        
+        # Update parent categories recursively
+        if self.parent:
+            self.parent.update_ancestors_count()
 
 
 class Product(models.Model):
@@ -200,3 +218,45 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.name} image"
+
+
+# Signal handlers for automatic product count updates
+@receiver(post_save, sender=Product)
+def update_category_count_on_product_save(sender, instance, created, **kwargs):
+    """Update category product count when a product is created or updated"""
+    if instance.category:
+        # Handle category change
+        if not created and hasattr(instance, '_original_category_id'):
+            # Product category was changed
+            old_category_id = instance._original_category_id
+            if old_category_id != instance.category.id:
+                # Update old category count
+                try:
+                    old_category = Category.objects.get(id=old_category_id)
+                    old_category.update_ancestors_count()
+                except Category.DoesNotExist:
+                    pass
+        
+        # Update new/current category count
+        instance.category.update_ancestors_count()
+
+
+@receiver(post_delete, sender=Product)
+def update_category_count_on_product_delete(sender, instance, **kwargs):
+    """Update category product count when a product is deleted"""
+    if instance.category:
+        instance.category.update_ancestors_count()
+
+
+# Track category changes for products
+@receiver(models.signals.pre_save, sender=Product)
+def track_category_change(sender, instance, **kwargs):
+    """Track the original category before saving to handle category changes"""
+    if instance.pk:
+        try:
+            original = Product.objects.get(pk=instance.pk)
+            instance._original_category_id = original.category.id if original.category else None
+        except Product.DoesNotExist:
+            instance._original_category_id = None
+    else:
+        instance._original_category_id = None
