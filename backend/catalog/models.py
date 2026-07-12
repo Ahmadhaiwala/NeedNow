@@ -196,6 +196,8 @@ class Product(models.Model):
         auto_now=True
     )
 
+    popularity_score = models.FloatField(default=0)
+
     class Meta:
         ordering = ["name"]
 

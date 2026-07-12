@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ShoppingCart, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/lib/auth';
+import { useInteractionTracker } from '@/hooks/useInteractionTracker';
 
 interface AddToCartButtonsProps {
   productId: string;
@@ -14,6 +15,7 @@ interface AddToCartButtonsProps {
 export default function AddToCartButtons({ productId, price }: AddToCartButtonsProps) {
   const { addItem, state } = useCart();
   const { user } = useAuth();
+  const { track } = useInteractionTracker();
   const router = useRouter();
   const [status, setStatus] = useState<'idle' | 'adding' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -27,6 +29,13 @@ export default function AddToCartButtons({ productId, price }: AddToCartButtonsP
     setErrorMsg('');
     try {
       await addItem(productId, 1);
+      // Track cart event — will be flushed in the next 30-second batch
+      track({
+        interaction_type: 'cart',
+        product_id: productId,
+        value: 3.0,
+        metadata: { price },
+      });
       setStatus('success');
       setTimeout(() => setStatus('idle'), 2500);
     } catch (e: unknown) {
@@ -43,6 +52,13 @@ export default function AddToCartButtons({ productId, price }: AddToCartButtonsP
       return;
     }
     await handleAddToCart();
+    // Track purchase intent — buy now is a strong signal
+    track({
+      interaction_type: 'purchase',
+      product_id: productId,
+      value: 5.0,
+      metadata: { price, source: 'buy_now_button' },
+    });
     router.push('/cart');
   };
 

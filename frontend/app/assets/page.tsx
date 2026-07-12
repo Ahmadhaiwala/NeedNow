@@ -44,7 +44,7 @@ export default function AssetsPage() {
       const statsPromises = data.map(async (collection: Collection) => {
         try {
           const dashboard = await getDashboard(collection.id);
-          return { id: collection.id, stats: dashboard.stats };
+          return { id: collection.id, stats: dashboard?.stats ?? { total_assets: 0, low_stock: 0, expired: 0, expiring_soon: 0 } };
         } catch (error) {
           console.warn(`Failed to load stats for collection ${collection.id}:`, error);
           return { id: collection.id, stats: { total_assets: 0, low_stock: 0, expired: 0, expiring_soon: 0 } };
@@ -70,7 +70,10 @@ export default function AssetsPage() {
 
   useEffect(() => {
     if (user) {
-      loadCollections();
+      // Small settling delay to ensure the auth token has propagated
+      // before we call getCollections (which itself has retry logic)
+      const t = setTimeout(() => loadCollections(), 100);
+      return () => clearTimeout(t);
     }
   }, [user]);
 

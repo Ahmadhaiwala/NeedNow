@@ -5,6 +5,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import AddToCartButtons from "./AddToCartButtons";
+import ProductInteractionTracker from "./ProductInteractionTracker";
+import WishlistButton from "./WishlistButton";
 
 function isValidUrl(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -51,6 +53,9 @@ export default async function ProductPage({
   className="min-h-screen px-6 py-10"
   style={{ background: "var(--bg-page)" }}
 >
+      {/* Invisible client component — tracks view/click events */}
+      <ProductInteractionTracker productId={product.id} productName={product.name} />
+
       <div className="max-w-7xl mx-auto">
 
         <div className="grid lg:grid-cols-12 gap-8">
@@ -255,8 +260,9 @@ export default async function ProductPage({
                 In Stock
               </div>
 
-              <div className="mt-6">
+              <div className="mt-6 space-y-3">
                 <AddToCartButtons productId={product.id} price={product.price} />
+                <WishlistButton product={product} />
               </div>
 
               <div className="mt-8 space-y-4">

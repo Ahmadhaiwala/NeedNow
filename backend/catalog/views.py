@@ -130,3 +130,51 @@ def refresh_all_category_counts(request):
         'message': f'Updated product counts for {updated_count} categories',
         'total_categories': categories.count()
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def search_products(request):
+    """
+    GET /api/catalog/search/?q=<query>&limit=<n>
+
+    Full-text search across product name, brand, and tags.
+    If a valid Bearer token is present the query is also stored as a
+    UserInteraction(type='search') for the recommendation engine.
+    """
+    from recommendations.models import UserInteraction, InteractionType
+    from users.auth_utils import get_user_from_neon_auth
+
+    query = request.query_params.get('q', '').strip()
+    limit = min(int(request.query_params.get('limit', 20)), 50)
+
+    if not query:
+        return Response({'results': [], 'count': 0, 'query': ''})
+
+    products = Product.objects.filter(
+        Q(name__icontains=query) |
+        Q(brand__icontains=query) |
+        Q(tags__icontains=query)
+    ).order_by('name')[:limit]
+
+    serializer = ProductSerializer(products, many=True)
+
+    # Record search interaction for authenticated users
+    # (best-effort — never block the response on a tracking failure)
+    try:
+        user = get_user_from_neon_auth(request)
+        if user:
+            UserInteraction.objects.create(
+                user=user,
+                interaction_type=InteractionType.SEARCH,
+                value=1.0,
+                metadata={'query': query, 'result_count': len(serializer.data)},
+            )
+    except Exception:
+        pass
+
+    return Response({
+        'results': serializer.data,
+        'count': len(serializer.data),
+        'query': query,
+    })

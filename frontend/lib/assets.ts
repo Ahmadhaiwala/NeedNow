@@ -4,14 +4,25 @@ import { cachedFetch, cacheKeys, invalidateCache, cacheTTL, frontendCache } from
 
 const API_BASE = 'http://localhost:8000/api/assets';
 
-async function getToken(): Promise<string | null> {
-  try {
-    const { authClient } = await import('./auth');
-    const session = await authClient.getSession();
-    return session?.data?.session?.token ?? null;
-  } catch {
-    return null;
+/**
+ * Fetch the session token, retrying briefly to handle the race between
+ * useAuth() reporting a user and the session propagating to authClient.
+ */
+async function getToken(retries = 3, delayMs = 300): Promise<string | null> {
+  const { authClient } = await import('./auth');
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const session = await authClient.getSession();
+      const token = session?.data?.session?.token ?? null;
+      if (token) return token;
+    } catch {
+      // ignore and retry
+    }
+    if (attempt < retries) {
+      await new Promise((r) => setTimeout(r, delayMs * Math.pow(2, attempt)));
+    }
   }
+  return null;
 }
 
 async function authFetch(path: string, options: RequestInit = {}) {
@@ -29,13 +40,22 @@ async function authFetch(path: string, options: RequestInit = {}) {
 // Asset Collections
 export async function getCollections() {
   const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
+
+  // Retry to handle the race between useAuth reporting a user and
+  // the session being available via authClient.getSession().
+  let userId: string | null = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const session = await authClient.getSession();
+    userId = session?.data?.session?.user?.id ?? null;
+    if (userId) break;
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 300 * Math.pow(2, attempt)));
   }
-  
+
+  if (!userId) {
+    // Return empty array rather than throwing — the page already guards on !user
+    return [];
+  }
+
   return cachedFetch(
     cacheKeys.collections(userId),
     async () => {
@@ -102,17 +122,16 @@ export async function addDefaultLocations(collectionId: string) {
 
 // Asset Locations
 export async function getLocations(collectionId?: string) {
+  const token = await getToken();
+  if (!token) return [];
+
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const userId = session?.data?.session?.user?.id ?? '';
+
   const params = new URLSearchParams();
   if (collectionId) params.append('collection', collectionId);
-  
+
   return cachedFetch(
     cacheKeys.locations(collectionId || ''),
     async () => {
@@ -125,14 +144,9 @@ export async function getLocations(collectionId?: string) {
 }
 
 export async function getLocationTree(collectionId: string) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return null;
+
   return cachedFetch(
     `locationTree_${collectionId}`,
     async () => {
@@ -190,24 +204,19 @@ export async function getAssets(filters: {
   expired?: boolean;
   expiring_soon?: boolean;
 } = {}) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return [];
+
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== '') {
       params.append(key, value.toString());
     }
   });
-  
+
   const filterString = params.toString();
   const cacheKey = cacheKeys.assets(filters.collection || '', filterString);
-  
+
   return cachedFetch(
     cacheKey,
     async () => {
@@ -220,14 +229,9 @@ export async function getAssets(filters: {
 }
 
 export async function getAsset(id: string) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return null;
+
   return cachedFetch(
     `asset_${id}`,
     async () => {
@@ -494,24 +498,19 @@ export async function getTransactions(filters: {
   collection?: string;
   type?: string;
 } = {}) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return [];
+
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== '') {
       params.append(key, value);
     }
   });
-  
+
   const filterString = params.toString();
   const cacheKey = cacheKeys.transactions(filters.collection || '', filterString);
-  
+
   return cachedFetch(
     cacheKey,
     async () => {
@@ -525,14 +524,9 @@ export async function getTransactions(filters: {
 
 // Dashboard & Analytics
 export async function getDashboard(collectionId: string) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return null;
+
   return cachedFetch(
     cacheKeys.dashboard(collectionId),
     async () => {
@@ -545,14 +539,9 @@ export async function getDashboard(collectionId: string) {
 }
 
 export async function getShoppingRecommendations(collectionId: string, limit = 20) {
-  const { authClient } = await import('./auth');
-  const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
-  
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-  
+  const token = await getToken();
+  if (!token) return [];
+
   return cachedFetch(
     cacheKeys.recommendations(collectionId),
     async () => {
