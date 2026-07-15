@@ -20,6 +20,8 @@ urlpatterns = [
     path('refresh-counts/', views.refresh_all_category_counts, name='refresh_category_counts'),
     # Search endpoint — records interaction for authenticated users
     path('search/', views.search_products, name='search-products'),
+    # Homepage feed — returns section metadata only (no products)
+    path('home/', views.home_feed, name='home-feed'),
 ]
 
    

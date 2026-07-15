@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import UserInteraction, InteractionType
+from catalog.catalogSerializer import ProductSerializer
 
 
 class UserInteractionSerializer(serializers.ModelSerializer):
@@ -48,3 +49,28 @@ class BulkInteractionSerializer(serializers.Serializer):
     The frontend batches 30-second intervals and POSTs them here.
     """
     events = BulkInteractionItemSerializer(many=True)
+
+
+class RecommendedProductSerializer(serializers.Serializer):
+    """
+    Serializes a single recommendation result dict produced by RecommendationService.
+
+    Input shape (from RecommendationService.get_recommendations)::
+
+        {
+            "product": <Product instance>,
+            "score":   <float>,
+            "reason":  {
+                "strategy":    "embedding" | "cold_start",
+                # embedding-only fields:
+                "cosine":      <float>,
+                "popularity":  <float>,
+                "in_stock":    <bool>,
+                "final_score": <float>,
+            }
+        }
+    """
+    product = ProductSerializer(read_only=True)
+    score = serializers.FloatField(read_only=True)
+    reason = serializers.DictField(read_only=True)
+
