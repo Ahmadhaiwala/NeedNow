@@ -1,6 +1,7 @@
 from django.db import models
 from catalog.models import Product
 from users.models import User
+from pgvector.django import VectorField
 
 
 class InteractionType(models.TextChoices):
@@ -11,6 +12,9 @@ class InteractionType(models.TextChoices):
     PURCHASE = "purchase", "Purchase"
     RATING = "rating", "Rating"
     SEARCH = "search", "Search"
+    REMOVE_CART = "remove_cart", "Remove Cart"
+    UPDATE_CART = "update_cart", "Update Cart"
+    REMOVE_WISHLIST = "remove_wishlist", "Remove Wishlist"
 
 
 class UserInteraction(models.Model):
@@ -49,6 +53,11 @@ class UserInteraction(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    session_id = models.CharField(
+    max_length=100,
+    blank=True
+)
+
     class Meta:
         ordering = ["-created_at"]
         indexes = [
@@ -86,3 +95,77 @@ class UserPreference(models.Model):
 
     def __str__(self):
         return f"Preferences for {self.user}"
+
+
+class UserEmbedding(models.Model):
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="embedding"
+    )
+
+    embedding = VectorField(dimensions=384)
+
+    model_name = models.CharField(
+        max_length=100,
+        default="all-MiniLM-L6-v2"
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ProductEmbedding(models.Model):
+
+    product = models.OneToOneField(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="embedding"
+    )
+
+    embedding = VectorField(
+        dimensions=384
+    )
+
+    model_name = models.CharField(
+        max_length=100,
+        default="all-MiniLM-L6-v2"
+    )
+
+    embedding_version = models.IntegerField(
+        default=1
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        indexes = [
+            # We'll add ANN indexes later
+        ]
+
+class Recommendation(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+    score = models.FloatField()
+
+    reason = models.JSONField(default=dict)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    
+    class Meta:
+        constraints = [
+    models.UniqueConstraint(
+        fields=["user", "product"],
+        name="unique_user_product_recommendation"
+    )
+]
+        indexes = [
+        models.Index(fields=["user"]),
+        models.Index(fields=["score"]),
+    ]
