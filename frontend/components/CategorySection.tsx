@@ -6,7 +6,7 @@ import { Package, ArrowRight, Loader2, ShoppingCart, Heart } from "lucide-react"
 import { useWishlist } from "@/context/WishlistContext";
 import { useInteractionTracker } from "@/hooks/useInteractionTracker";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   brand: string;
@@ -58,7 +58,7 @@ const VARIANTS = {
   },
 } as const;
 
-function ProductCard({ product, index }: { product: Product; index: number }) {
+export function ProductCard({ product, index }: { product: Product; index: number }) {
   const price = parseFloat(product.price);
   const discount = parseFloat(product.discount_percentage);
   const discountedPrice = discount > 0 ? price * (1 - discount / 100) : price;
@@ -256,13 +256,16 @@ export default function CategorySection({
   const [error, setError] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
+  const loadingRef = useRef(false);
+
   useEffect(() => {
     if (loaded) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting && !loaded && !loading) {
+        if (entry.isIntersecting && !loaded && !loadingRef.current) {
+          loadingRef.current = true;
           setLoading(true);
           fetch(`${API_BASE}/products/${category.id}/`)
             .then((res) => {
@@ -270,7 +273,9 @@ export default function CategorySection({
               return res.json();
             })
             .then((data) => {
-              setProducts(data);
+              // Paginated DRF response: { count, results: [...] } or plain array
+              const items = Array.isArray(data) ? data : (data.results ?? []);
+              setProducts(items);
               setLoaded(true);
               setLoading(false);
             })
@@ -285,7 +290,7 @@ export default function CategorySection({
 
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
-  }, [category.id, loaded, loading]);
+  }, [category.id, loaded]);
 
   const v = VARIANTS[variant];
 
