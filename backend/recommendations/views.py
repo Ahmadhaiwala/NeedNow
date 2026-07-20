@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,6 +13,9 @@ from .services.recommendation_service import (
     DEFAULT_TOP_K,
     DEFAULT_LIMIT,
 )
+from .services.preference_services import PreferenceService
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
@@ -77,6 +82,17 @@ def track_interactions(request):
         )
 
     created = UserInteraction.objects.bulk_create(to_create)
+
+    # Incrementally update UserPreference for all saved interactions.
+    # Wrapped in try/except: a preference failure must never break the
+    # 201 response that the frontend depends on.
+    if created:
+        try:
+            PreferenceService().update_preferences_from_interactions(created)
+        except Exception:
+            logger.exception(
+                "track_interactions: preference update failed for user_id=%s", user.pk
+            )
 
     return Response(
         {"saved": len(created), "errors": errors},

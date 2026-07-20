@@ -93,6 +93,15 @@ class UserPreference(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Tracks the wall-clock time used as T₀ when scores were last calculated.
+    # Used by the incremental decay formula:  new_score = old_score * decay(now - last_calculated_at)
+    # Distinct from `updated_at` (which is auto_now and cannot be set manually).
+    last_calculated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of the last preference score calculation (used for incremental decay).",
+    )
+
     def __str__(self):
         return f"Preferences for {self.user}"
 
