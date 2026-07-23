@@ -430,8 +430,6 @@ It's an intelligent commerce assistant that plans, reasons, compares, and shops 
 
 # 🎯 Vision
 
-NeedNow is not a grocery application.
-
 NeedNow is an AI-powered decision engine that helps users figure out what they need before they shop.
 
 Instead of searching for products, users simply describe their goal.
@@ -439,3 +437,29 @@ Instead of searching for products, users simply describe their goal.
 The AI thinks, asks questions, plans, optimizes, tracks inventory, and prepares the perfect shopping cart.
 
 **Shopping should start with a conversation—not a search bar.**
+
+---
+
+# 🐳 Quick Start with Docker
+
+To get all dependencies and run both backend and frontend instantly using Docker:
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Ahmadhaiwala/NeedNow.git
+cd NeedNow
+```
+
+### 2. Run with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+- **Backend API**: `http://localhost:8000`
+- **Frontend App**: `http://localhost:3000`
+
+> 💡 **Note**: The backend Docker container automatically pre-caches the sentence-transformers `all-MiniLM-L6-v2` embedding model during image build so startup is instant!
+
+docker compose up --build

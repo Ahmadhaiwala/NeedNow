@@ -1,6 +1,7 @@
 import logging
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def track_interactions(request):
     """
     POST /api/recommendations/interactions/
@@ -89,9 +91,11 @@ def track_interactions(request):
     if created:
         try:
             PreferenceService().update_preferences_from_interactions(created)
+            from .services.embedding_service import UserEmbeddingService
+            UserEmbeddingService().embed_user(user)
         except Exception:
             logger.exception(
-                "track_interactions: preference update failed for user_id=%s", user.pk
+                "track_interactions: preference/embedding update failed for user_id=%s", user.pk
             )
 
     return Response(
@@ -101,6 +105,7 @@ def track_interactions(request):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def my_interactions(request):
     """
     GET /api/recommendations/interactions/me/
@@ -139,6 +144,7 @@ def my_interactions(request):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_recommendations(request):
     """
     GET /api/recommendations/
@@ -234,18 +240,22 @@ def get_recommendations(request):
             category__in=all_cat_ids
         ).values_list("id", flat=True)
 
+    personal_arg = request.query_params.get("personal", "").lower()
+
     # ------------------------------------------------------------------ #
     # Page 1 — recommendation-ranked results                               #
     # ------------------------------------------------------------------ #
     if page == 1:
-        user = None
-        if personal:
-            user = get_user_from_neon_auth(request)
-            if not user:
-                return Response(
-                    {"error": "Authentication required for personal recommendations."},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
+        user = get_user_from_neon_auth(request)
+
+        if personal_arg == "true" and not user:
+            return Response(
+                {"error": "Authentication required for personal recommendations."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if personal_arg == "false":
+            user = None
 
         service = RecommendationService()
 

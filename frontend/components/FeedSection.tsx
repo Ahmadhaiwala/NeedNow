@@ -119,29 +119,31 @@ export default function FeedSection({
   // A ref is used so it never triggers re-renders.
   const fetchedRef = useRef(false);
 
-  // useSession() is synchronous -- reads Neon Auth in-memory cache, never blocks.
-  // We mirror the token into a ref so the observer callback can read it without
-  // any await (which would hang when there is no active session).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: sessionData } = (authClient as any).useSession();
-  const tokenRef = useRef<string | null>(null);
+  const { data: sessionData, isPending } = (authClient as any).useSession();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tokenRef.current = (sessionData as any)?.session?.token ?? null;
+  const token: string | null = (sessionData as any)?.session?.token ?? null;
+  const lastFetchedTokenRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    if (loaded) return;
+    // If section requires auth or session is still resolving, wait for session check
+    if (requires_auth && isPending) return;
+
+    // Don't refetch if already loaded for the current token state
+    if (loaded && lastFetchedTokenRef.current === token) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries[0].isIntersecting || fetchedRef.current) return;
+        if (!entries[0].isIntersecting) return;
+        if (fetchedRef.current && lastFetchedTokenRef.current === token) return;
 
         fetchedRef.current = true;
+        lastFetchedTokenRef.current = token;
         setLoading(true);
 
         let url = `${API_BASE}${endpoint}`;
         const headers: Record<string, string> = {};
-        const token = tokenRef.current;
-        if (requires_auth && token) {
+        if (token) {
           headers["Authorization"] = `Bearer ${token}`;
           url += (url.includes("?") ? "&" : "?") + "personal=true";
         }
@@ -177,7 +179,7 @@ export default function FeedSection({
 
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
-  }, [endpoint, loaded, requires_auth, type]);
+  }, [endpoint, loaded, requires_auth, type, token, isPending]);
 
   const v = VARIANTS[variant];
 

@@ -697,3 +697,29 @@ class ConcurrentUpdateSafetyTest(TransactionTestCase):
         # Scores will differ slightly because now is different → decay changes.
         # But they should be within 1% of each other for fresh interactions.
         self.assertAlmostEqual(score1, score2, delta=score1 * 0.01 + 0.01)
+
+
+class UserEmbeddingServiceTest(TestCase):
+    """Test suite for UserEmbeddingService."""
+
+    def test_compute_interaction_embedding_without_orm_conflict(self):
+        from recommendations.models import ProductEmbedding
+        from recommendations.services.embedding_service import UserEmbeddingService
+        import numpy as np
+
+        user = _make_user()
+        cat = _make_category("Tech")
+        product = _make_product("Laptop", category=cat, brand="Dell")
+        
+        # Create dummy ProductEmbedding
+        dummy_vec = [0.1] * 384
+        ProductEmbedding.objects.create(product=product, embedding=dummy_vec)
+
+        _make_interaction(user, product, InteractionType.VIEW, value=1.0)
+        
+        svc = UserEmbeddingService()
+        vec = svc._compute_interaction_embedding(user)
+        
+        self.assertIsNotNone(vec)
+        self.assertEqual(vec.shape, (384,))
+

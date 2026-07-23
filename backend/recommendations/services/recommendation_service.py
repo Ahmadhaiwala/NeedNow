@@ -106,13 +106,25 @@ class RecommendationService:
 
     def _get_user_embedding(self, user: User) -> Optional[np.ndarray]:
         """
-        Return the user's 384-dim embedding as a numpy array, or None if it
-        does not exist (triggering cold-start).
+        Return the user's 384-dim embedding as a numpy array.
+        If no UserEmbedding record exists in DB, attempts on-the-fly generation
+        via UserEmbeddingService. Returns None if there is insufficient interaction/preference data.
         """
         try:
             ue = UserEmbedding.objects.get(user=user)
             return np.array(ue.embedding, dtype=np.float32)
         except UserEmbedding.DoesNotExist:
+            try:
+                from recommendations.services.embedding_service import UserEmbeddingService
+                ue = UserEmbeddingService().embed_user(user)
+                if ue is not None and ue.embedding is not None:
+                    return np.array(ue.embedding, dtype=np.float32)
+            except Exception as exc:
+                logger.warning(
+                    "On-the-fly UserEmbedding generation failed for user_id=%s: %s",
+                    user.pk,
+                    exc,
+                )
             return None
 
     # ------------------------------------------------------------------ #

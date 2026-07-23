@@ -1,4 +1,4 @@
-﻿"""
+"""
 Embedding services for the NeedNow recommendation engine.
 
 Two service classes are provided:
@@ -260,7 +260,6 @@ class UserEmbeddingService:
         interactions = (
             UserInteraction.objects.filter(user=user, product__isnull=False)
             .select_related("product__embedding")
-            .only("value", "product__id")
         )
 
         weighted_sum = np.zeros(384, dtype=np.float64)
