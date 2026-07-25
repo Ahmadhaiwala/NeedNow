@@ -35,7 +35,7 @@ def cosine_similarity(vector_a, vector_b):
     return float(np.dot(a, b) / denominator)
 
 
-def group_related_interests(signals, similarity_threshold=0.55):
+def group_related_interests(signals, similarity_threshold=0.35):
     """
     Groups product interest signals using semantic similarity
     between their ProductEmbedding vectors.
