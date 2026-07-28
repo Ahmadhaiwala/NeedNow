@@ -239,6 +239,8 @@ Instead of offering predefined templates, the AI dynamically plans everything re
 
 Every scenario uses the same AI reasoning engine rather than separate hardcoded workflows.
 
+with implementing interest clusters it shows the best match and your project interest
+
 ---
 
 # 🌐 7. AI Commerce Agent (Multi-Service Assistant)
@@ -271,7 +273,7 @@ NeedNow:
 - Amazon: ₹4,699
 - Flipkart: ₹4,899
 - Local Store: ₹4,750 (same-day pickup)
-
+# right now it is'nt using amazon but it is using serp api which provides 250 requests so implemented it anyways but not with amazon or flipkart the popular platforms
 Recommendation:
 
 "Amazon is currently the cheapest option, while the local store offers immediate pickup if you need it today."
@@ -279,6 +281,14 @@ Recommendation:
 The AI acts as a shopping advisor instead of a simple search engine.
 
 ---
+
+ # The feature already implement check the screen for the contextual output 
+ showing its taking context from the serp api and the kind of response it gives based on context
+ <img width="663" height="896" alt="image" src="https://github.com/user-attachments/assets/9bf1d7e1-6754-4f16-bd4e-22142e71cef2" />
+
+<img width="846" height="770" alt="image" src="https://github.com/user-attachments/assets/900ba7aa-797f-4c3c-b1fa-3f48969b9824" />
+
+
 
 # 🧩 8. Context-Aware Shopping
 
@@ -309,10 +319,9 @@ and directly finds the best available offers.
 
 The shopping experience becomes conversational instead of repetitive.
 
----
- ## for practical I already implemended these feature 
+---  
 
- <img width="1917" height="951" alt="image" src="https://github.com/user-attachments/assets/737db7ca-04c8-4764-9a89-0515f2b1e572" />
+<img width="1917" height="967" alt="image" src="https://github.com/user-attachments/assets/fb59df72-5f6b-4d15-9dd9-a82fc86bb522" />
 
 
 
