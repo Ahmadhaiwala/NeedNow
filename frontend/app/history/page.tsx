@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { useWishlist } from '@/context/WishlistContext';
 import { useOrders } from '@/lib/orders';
 import { getUserHistory, UserInteractionRecord } from '@/lib/interactions';
+import Navbar from '../navbar/Navbar';
 import {
   Clock,
   Eye,
@@ -19,23 +20,6 @@ import {
 } from 'lucide-react';
 
 type TabType = 'all' | 'views' | 'wishlist' | 'orders';
-
-function Spinner() {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-      <div
-        className="animate-spin"
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          border: '3px solid var(--bg-surface-alt)',
-          borderTopColor: 'var(--color-juice)',
-        }}
-      />
-    </div>
-  );
-}
 
 export default function HistoryPage() {
   const { user } = useAuth();
@@ -57,7 +41,6 @@ export default function HistoryPage() {
     }
   }, [user]);
 
-  // Extract viewed products from interactions (deduplicated by product_id)
   const viewedProducts = useMemo(() => {
     const map = new Map<string, UserInteractionRecord>();
     for (const record of interactions) {
@@ -73,7 +56,6 @@ export default function HistoryPage() {
     return Array.from(map.values());
   }, [interactions]);
 
-  // Wishlist history (combining interaction logs and live context)
   const wishlistHistory = useMemo(() => {
     const recordedIds = new Set<string>();
     const list: Array<{
@@ -85,7 +67,6 @@ export default function HistoryPage() {
       date?: string;
     }> = [];
 
-    // Add items from backend interaction history
     for (const record of interactions) {
       if (record.interaction_type === 'wishlist' && record.product_id) {
         if (!recordedIds.has(record.product_id)) {
@@ -102,7 +83,6 @@ export default function HistoryPage() {
       }
     }
 
-    // Include items currently in local WishlistContext if not already present
     for (const item of wishlistItems) {
       if (!recordedIds.has(item.id)) {
         recordedIds.add(item.id);
@@ -134,27 +114,19 @@ export default function HistoryPage() {
 
   if (!user) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-page)', paddingTop: '96px' }}>
-        <div style={{ maxWidth: 480, margin: '0 auto', padding: '48px 24px', textAlign: 'center' }}>
-          <div
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: '50%',
-              margin: '0 auto 20px',
-              background: 'var(--bg-surface)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'var(--shadow-card)',
-            }}
+      <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+        <Navbar />
+        <div className="max-w-md mx-auto px-4 py-20 text-center">
+          <div 
+            className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}
           >
-            <AlertCircle size={32} style={{ color: 'var(--text-secondary)' }} />
+            <AlertCircle size={24} style={{ color: 'var(--text-secondary)' }} />
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+          <h1 className="text-xl font-serif font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
             Sign In Required
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
+          <p className="text-xs text-secondary mb-6">
             Please sign in to view your activity history, wishlist, and past orders.
           </p>
         </div>
@@ -165,167 +137,81 @@ export default function HistoryPage() {
   const isLoading = loadingHistory || ordersLoading;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', paddingTop: '96px', paddingBottom: '60px' }}>
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 24px' }}>
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: 'var(--bg-page)' }}>
+      <Navbar />
 
-        {/* Header Title */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: 'var(--color-juice)22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Clock size={20} style={{ color: 'var(--color-juice)' }} />
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(154,101,60,0.12)' }}>
+              <Clock size={16} style={{ color: 'var(--accent-primary)' }} />
             </div>
-            <h1 style={{ fontSize: 30, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <h1 className="text-3xl font-serif font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               Activity History
             </h1>
           </div>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-            Track your recently viewed products, wishlist items, and past orders
+          <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Track your recently viewed products, saved items, and past orders
           </p>
         </motion.div>
 
         {/* Stats Row */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 14,
-            marginBottom: 32,
-          }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '20px',
+              background: 'var(--surface-2)',
               boxShadow: 'var(--shadow-card)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
+              border: '1px solid var(--border)',
             }}
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'var(--color-sky)22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Eye size={20} style={{ color: 'var(--color-sky)' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(90, 123, 142, 0.12)' }}>
+              <Eye size={18} style={{ color: 'var(--color-sky)' }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                Products Viewed
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
-                {viewedProducts.length}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Products Viewed</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{viewedProducts.length}</p>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '20px',
+              background: 'var(--surface-2)',
               boxShadow: 'var(--shadow-card)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
+              border: '1px solid var(--border)',
             }}
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'var(--color-heat)22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Heart size={20} style={{ color: 'var(--color-heat)' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(185, 74, 62, 0.12)' }}>
+              <Heart size={18} style={{ color: 'var(--color-heat)' }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                Wishlisted Items
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
-                {wishlistHistory.length}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Wishlisted Items</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{wishlistHistory.length}</p>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '20px',
+              background: 'var(--surface-2)',
               boxShadow: 'var(--shadow-card)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
+              border: '1px solid var(--border)',
             }}
           >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'var(--color-jade)22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShoppingBag size={20} style={{ color: 'var(--color-jade)' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(78, 112, 85, 0.12)' }}>
+              <ShoppingBag size={18} style={{ color: 'var(--color-jade)' }} />
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                Past Orders
-              </p>
-              <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
-                {orders.length}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Past Orders</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{orders.length}</p>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            marginBottom: 24,
-            borderBottom: 'var(--divider-row)',
-            paddingBottom: 12,
-            overflowX: 'auto',
-          }}
-        >
+        {/* Tab Filter Pills */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
           {(
             [
               { id: 'all', label: 'All Activity', icon: Sparkles },
@@ -333,401 +219,175 @@ export default function HistoryPage() {
               { id: 'wishlist', label: `Wishlist (${wishlistHistory.length})`, icon: Heart },
               { id: 'orders', label: `Past Orders (${orders.length})`, icon: ShoppingBag },
             ] as const
-          ).map(({ id, label, icon: Icon }) => {
-            const active = activeTab === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 18px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: 13,
-                  fontWeight: active ? 700 : 500,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: active ? 'var(--color-juice)' : 'var(--bg-surface)',
-                  color: active ? 'var(--color-core)' : 'var(--text-secondary)',
-                  boxShadow: active ? 'var(--shadow-button)' : 'var(--shadow-card)',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <Icon size={15} />
-                {label}
-              </button>
-            );
-          })}
+          ).map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className="px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+              style={{
+                background: activeTab === id ? 'var(--accent-primary)' : 'var(--surface-2)',
+                color: activeTab === id ? '#FFFDF8' : 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <Icon size={13} />
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* Main Content Area */}
+        {/* Tab Content */}
         {isLoading ? (
-          <Spinner />
+          <div className="py-16 text-center text-xs font-medium text-[var(--text-secondary)]">
+            Loading activity history...
+          </div>
         ) : (
-          <AnimatePresence mode="wait">
-            {/* ── RECENTLY VIEWED TAB ── */}
+          <div className="flex flex-col gap-8">
+            {/* Recently Viewed */}
             {(activeTab === 'all' || activeTab === 'views') && (
-              <motion.div
-                key="views-section"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                style={{ marginBottom: activeTab === 'all' ? 40 : 0 }}
-              >
-                {activeTab === 'all' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Eye size={18} style={{ color: 'var(--color-sky)' }} /> Recently Viewed Products
-                    </h2>
-                    {viewedProducts.length > 4 && (
-                      <button
-                        onClick={() => setActiveTab('views')}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-juice)', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                      >
-                        See all ({viewedProducts.length}) <ArrowRight size={14} />
-                      </button>
-                    )}
-                  </div>
-                )}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-serif font-bold text-[var(--text-primary)] flex items-center gap-2">
+                    <Eye size={18} style={{ color: 'var(--color-sky)' }} /> Recently Viewed
+                  </h2>
+                </div>
 
                 {viewedProducts.length === 0 ? (
-                  activeTab === 'views' && (
-                    <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
-                      <Eye size={36} style={{ color: 'var(--text-secondary)', marginBottom: 12 }} />
-                      <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>No product view history yet</h3>
-                      <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Browse the marketplace to see your recently viewed products here.</p>
-                    </div>
-                  )
+                  <p className="text-xs text-[var(--text-secondary)]">No product view history yet.</p>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
-                    {(activeTab === 'all' ? viewedProducts.slice(0, 4) : viewedProducts).map((item) => {
-                      const wishlisted = isWishlisted(item.product_id || '');
-                      return (
-                        <motion.div
-                          key={item.id}
-                          whileHover={{ y: -3, boxShadow: 'var(--shadow-hover)' }}
-                          style={{
-                            background: 'var(--bg-surface)',
-                            borderRadius: 'var(--radius-lg)',
-                            padding: 16,
-                            boxShadow: 'var(--shadow-card)',
-                            position: 'relative',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          {/* Top row: Image & Wishlist Button */}
-                          <div style={{ position: 'relative', height: 140, borderRadius: 'var(--radius-md)', background: 'var(--bg-page)', overflow: 'hidden', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {item.product_image ? (
-                              <img src={item.product_image} alt={item.product_name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                              <Package size={32} style={{ color: 'var(--text-secondary)' }} />
-                            )}
-                            {item.product_id && (
-                              <button
-                                onClick={() =>
-                                  toggleWishlist({
-                                    id: item.product_id!,
-                                    name: item.product_name || 'Product',
-                                    price: item.product_price,
-                                    image_url: item.product_image || undefined,
-                                  })
-                                }
-                                style={{
-                                  position: 'absolute',
-                                  top: 8,
-                                  right: 8,
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: '50%',
-                                  background: 'var(--bg-surface)',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                                }}
-                              >
-                                <Heart size={16} style={{ color: wishlisted ? 'var(--color-heat)' : 'var(--text-secondary)', fill: wishlisted ? 'var(--color-heat)' : 'none' }} />
-                              </button>
-                            )}
-                          </div>
-
-                          <div>
-                            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 2 }}>
-                              {item.product_category || item.product_brand || 'Product'}
-                            </p>
-                            <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: 36 }}>
-                              {item.product_name}
-                            </h4>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-                              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                                {item.product_price ? `₹${item.product_price}` : 'Check details'}
-                              </p>
-                              {item.product_id && (
-                                <a
-                                  href={`/product/${item.product_id}`}
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 4,
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    color: 'var(--color-juice)',
-                                    textDecoration: 'none',
-                                  }}
-                                >
-                                  View <ExternalLink size={12} />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {(activeTab === 'all' ? viewedProducts.slice(0, 4) : viewedProducts).map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-4 rounded-2xl flex flex-col justify-between"
+                        style={{
+                          background: 'var(--surface-2)',
+                          border: '1px solid var(--border)',
+                          boxShadow: 'var(--shadow-card)',
+                        }}
+                      >
+                        <div className="h-32 rounded-xl mb-3 flex items-center justify-center p-2" style={{ background: 'var(--surface-1)' }}>
+                          {item.product_image ? (
+                            <img src={item.product_image} alt={item.product_name || ''} className="w-full h-full object-contain" />
+                          ) : (
+                            <Package size={28} className="opacity-30" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent-primary)' }}>
+                            {item.product_category || 'Product'}
+                          </p>
+                          <h4 className="text-xs font-semibold line-clamp-2 mt-0.5" style={{ color: 'var(--text-primary)' }}>
+                            {item.product_name}
+                          </h4>
+                          <p className="text-xs font-bold mt-2" style={{ color: 'var(--text-primary)' }}>
+                            {item.product_price ? `₹${item.product_price}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
-            {/* ── WISHLIST TAB ── */}
+            {/* Saved for Later / Wishlist */}
             {(activeTab === 'all' || activeTab === 'wishlist') && (
-              <motion.div
-                key="wishlist-section"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                style={{ marginBottom: activeTab === 'all' ? 40 : 0 }}
-              >
-                {activeTab === 'all' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Heart size={18} style={{ color: 'var(--color-heat)' }} /> Saved Wishlist Items
-                    </h2>
-                    {wishlistHistory.length > 4 && (
-                      <button
-                        onClick={() => setActiveTab('wishlist')}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-juice)', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                      >
-                        See all ({wishlistHistory.length}) <ArrowRight size={14} />
-                      </button>
-                    )}
-                  </div>
-                )}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-serif font-bold text-[var(--text-primary)] flex items-center gap-2">
+                    <Heart size={18} style={{ color: 'var(--color-heat)' }} /> Saved for Later
+                  </h2>
+                </div>
 
                 {wishlistHistory.length === 0 ? (
-                  activeTab === 'wishlist' && (
-                    <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
-                      <Heart size={36} style={{ color: 'var(--text-secondary)', marginBottom: 12 }} />
-                      <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Your wishlist is empty</h3>
-                      <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Click the heart icon on any product to save it to your wishlist.</p>
-                    </div>
-                  )
+                  <p className="text-xs text-[var(--text-secondary)]">Your wishlist is empty.</p>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {(activeTab === 'all' ? wishlistHistory.slice(0, 4) : wishlistHistory).map((item) => (
-                      <motion.div
+                      <div
                         key={item.id}
-                        whileHover={{ y: -3, boxShadow: 'var(--shadow-hover)' }}
+                        className="p-4 rounded-2xl flex flex-col justify-between"
                         style={{
                           background: 'var(--bg-surface)',
-                          borderRadius: 'var(--radius-lg)',
-                          padding: 16,
+                          border: '1px solid var(--border-subtle)',
                           boxShadow: 'var(--shadow-card)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
                         }}
                       >
-                        <div style={{ position: 'relative', height: 140, borderRadius: 'var(--radius-md)', background: 'var(--bg-page)', overflow: 'hidden', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="h-32 rounded-xl mb-3 flex items-center justify-center p-2" style={{ background: 'rgba(240, 232, 216, 0.4)' }}>
                           {item.image ? (
-                            <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                           ) : (
-                            <Package size={32} style={{ color: 'var(--text-secondary)' }} />
+                            <Package size={28} className="opacity-30" />
                           )}
-                          <button
-                            onClick={() =>
-                              toggleWishlist({
-                                id: item.id,
-                                name: item.name,
-                                price: item.price,
-                                image_url: item.image || undefined,
-                              })
-                            }
-                            style={{
-                              position: 'absolute',
-                              top: 8,
-                              right: 8,
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
-                              background: 'var(--bg-surface)',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                            }}
-                          >
-                            <Heart size={16} style={{ color: 'var(--color-heat)', fill: 'var(--color-heat)' }} />
-                          </button>
                         </div>
-
                         <div>
-                          <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 2 }}>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent-primary)' }}>
                             {item.category || 'Wishlist'}
                           </p>
-                          <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: 36 }}>
+                          <h4 className="text-xs font-semibold line-clamp-2 mt-0.5" style={{ color: 'var(--text-primary)' }}>
                             {item.name}
                           </h4>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-                            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                              {item.price ? `₹${item.price}` : ''}
-                            </p>
-                            <a
-                              href={`/product/${item.id}`}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: 'var(--color-juice)',
-                                textDecoration: 'none',
-                              }}
-                            >
-                              View <ExternalLink size={12} />
-                            </a>
-                          </div>
+                          <p className="text-xs font-bold mt-2" style={{ color: 'var(--text-primary)' }}>
+                            {item.price ? `₹${item.price}` : ''}
+                          </p>
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
-            {/* ── PAST ORDERS TAB ── */}
+            {/* Past Orders */}
             {(activeTab === 'all' || activeTab === 'orders') && (
-              <motion.div
-                key="orders-section"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                {activeTab === 'all' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <ShoppingBag size={18} style={{ color: 'var(--color-jade)' }} /> Past Orders History
-                    </h2>
-                    {orders.length > 3 && (
-                      <button
-                        onClick={() => setActiveTab('orders')}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-juice)', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                      >
-                        See all ({orders.length}) <ArrowRight size={14} />
-                      </button>
-                    )}
-                  </div>
-                )}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-serif font-bold text-[var(--text-primary)] flex items-center gap-2">
+                    <ShoppingBag size={18} style={{ color: 'var(--color-jade)' }} /> Past Purchases
+                  </h2>
+                </div>
 
                 {orders.length === 0 ? (
-                  activeTab === 'orders' && (
-                    <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
-                      <Package size={36} style={{ color: 'var(--text-secondary)', marginBottom: 12 }} />
-                      <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>No orders found</h3>
-                      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>Your order history will appear here once you place orders.</p>
-                      <a href="/marketplace" style={{ display: 'inline-flex', padding: '10px 20px', borderRadius: 'var(--radius-full)', background: 'var(--color-juice)', color: 'var(--color-core)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
-                        Browse Marketplace
-                      </a>
-                    </div>
-                  )
+                  <p className="text-xs text-[var(--text-secondary)]">No past orders found.</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div className="flex flex-col gap-3">
                     {(activeTab === 'all' ? orders.slice(0, 3) : orders).map((order) => (
-                      <motion.div
+                      <div
                         key={order.id}
+                        className="p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4"
                         style={{
                           background: 'var(--bg-surface)',
-                          borderRadius: 'var(--radius-lg)',
-                          padding: 20,
+                          border: '1px solid var(--border-subtle)',
                           boxShadow: 'var(--shadow-card)',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                          <div>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Order #{order.id}</span>
-                            <span style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 10 }}>
-                              {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span
-                              style={{
-                                padding: '3px 10px',
-                                borderRadius: 'var(--radius-sm)',
-                                fontSize: 11,
-                                fontWeight: 600,
-                                background: 'var(--color-jade)22',
-                                color: 'var(--color-jade)',
-                                textTransform: 'capitalize',
-                              }}
-                            >
-                              {order.status}
-                            </span>
-                            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>₹{order.total_amount}</span>
-                          </div>
+                        <div>
+                          <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Order #{order.id}</p>
+                          <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                            {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
                         </div>
-
-                        {/* Order Items Preview */}
-                        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6, marginBottom: 12 }}>
-                          {order.items.map((item) => (
-                            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', padding: '6px 10px', borderRadius: 'var(--radius-md)', flexShrink: 0 }}>
-                              {item.product_image ? (
-                                <img src={item.product_image} alt={item.product_name} style={{ width: 28, height: 28, borderRadius: 4, objectFit: 'cover' }} />
-                              ) : (
-                                <Package size={16} style={{ color: 'var(--text-secondary)' }} />
-                              )}
-                              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>{item.product_name} (x{item.quantity})</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>₹{order.total_amount}</span>
+                          <button
                             onClick={() => handleReorder(order.id)}
                             disabled={reorderingId === order.id}
-                            style={{
-                              padding: '6px 14px',
-                              borderRadius: 'var(--radius-full)',
-                              fontSize: 12,
-                              fontWeight: 600,
-                              border: 'none',
-                              cursor: 'pointer',
-                              background: 'var(--color-juice)',
-                              color: 'var(--color-core)',
-                            }}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer"
+                            style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
                           >
-                            {reorderingId === order.id ? 'Reordering...' : 'Reorder Items'}
-                          </motion.button>
+                            {reorderingId === order.id ? 'Reordering...' : 'Reorder'}
+                          </button>
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

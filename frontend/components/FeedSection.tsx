@@ -8,87 +8,32 @@ import { Product, ProductCard } from "@/components/CategorySection";
 
 const API_BASE = "http://localhost:8000";
 
-const VARIANTS = {
-  surface: {
-    bg: "var(--bg-surface)",
-    heading: "var(--color-core)",
-    sub: "var(--text-secondary)",
-    btnBg: "var(--accent-primary)",
-    btnText: "var(--color-core)",
-    arrowBg: "rgba(31,54,53,0.12)",
-  },
-  jade: {
-    bg: "var(--color-jade)",
-    heading: "var(--color-cloud)",
-    sub: "rgba(252,251,244,0.6)",
-    btnBg: "var(--accent-primary)",
-    btnText: "var(--color-core)",
-    arrowBg: "rgba(252,251,244,0.2)",
-  },
-  core: {
-    bg: "var(--color-core)",
-    heading: "var(--color-cloud)",
-    sub: "rgba(252,251,244,0.5)",
-    btnBg: "var(--accent-primary)",
-    btnText: "var(--color-core)",
-    arrowBg: "rgba(252,251,244,0.15)",
-  },
-} as const;
-
 function SkeletonCard() {
   return (
     <div
-      className="flex-shrink-0 min-w-[190px] max-w-[220px]"
+      className="flex-shrink-0 min-w-[200px] max-w-[230px] p-4 flex flex-col gap-3"
       style={{
         borderRadius: "var(--radius-lg)",
         background: "var(--bg-surface)",
-        boxShadow: "var(--shadow-card)",
-        overflow: "hidden",
-        opacity: 0.5,
+        border: "1px solid var(--border-subtle)",
       }}
     >
       <div
-        className="h-32 animate-pulse"
-        style={{ background: "var(--color-pink)", opacity: 0.4 }}
+        className="h-36 rounded-lg animate-pulse"
+        style={{ background: "rgba(240, 232, 216, 0.5)" }}
       />
-      <div className="p-4 flex flex-col gap-2">
-        <div
-          className="animate-pulse rounded"
-          style={{
-            height: "10px",
-            width: "50%",
-            background: "var(--color-jade)",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="animate-pulse rounded"
-          style={{
-            height: "14px",
-            width: "80%",
-            background: "var(--text-secondary)",
-            opacity: 0.2,
-          }}
-        />
-        <div
-          className="animate-pulse rounded"
-          style={{
-            height: "10px",
-            width: "35%",
-            background: "var(--text-secondary)",
-            opacity: 0.15,
-          }}
-        />
-        <div
-          className="animate-pulse rounded mt-3"
-          style={{
-            height: "36px",
-            width: "100%",
-            background: "var(--accent-primary)",
-            opacity: 0.2,
-          }}
-        />
-      </div>
+      <div
+        className="animate-pulse rounded h-3 w-1/2"
+        style={{ background: "rgba(154, 101, 60, 0.2)" }}
+      />
+      <div
+        className="animate-pulse rounded h-4 w-4/5"
+        style={{ background: "rgba(116, 103, 93, 0.2)" }}
+      />
+      <div
+        className="animate-pulse rounded h-8 w-full mt-2"
+        style={{ background: "rgba(154, 101, 60, 0.2)" }}
+      />
     </div>
   );
 }
@@ -99,7 +44,6 @@ export interface FeedSectionProps {
   title: string;
   endpoint: string;
   requires_auth: boolean;
-  variant?: "surface" | "jade" | "core";
 }
 
 export default function FeedSection({
@@ -107,16 +51,12 @@ export default function FeedSection({
   title,
   endpoint,
   requires_auth,
-  variant = "surface",
 }: FeedSectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-
-  // Prevents double-fetch inside the IntersectionObserver callback.
-  // A ref is used so it never triggers re-renders.
   const fetchedRef = useRef(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,10 +66,7 @@ export default function FeedSection({
   const lastFetchedTokenRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    // If section requires auth or session is still resolving, wait for session check
     if (requires_auth && isPending) return;
-
-    // Don't refetch if already loaded for the current token state
     if (loaded && lastFetchedTokenRef.current === token) return;
 
     const observer = new IntersectionObserver(
@@ -148,7 +85,6 @@ export default function FeedSection({
           url += (url.includes("?") ? "&" : "?") + "personal=true";
         }
 
-        // Plain .then/.catch -- no async/await so the callback never hangs.
         fetch(url, { headers })
           .then((res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -161,7 +97,6 @@ export default function FeedSection({
                 (r: { product: Product }) => r.product
               );
             } else {
-              // Paginated DRF: { count, results: [...] } or plain array
               items = Array.isArray(data) ? data : (data.results ?? []);
             }
             setProducts(items);
@@ -170,7 +105,7 @@ export default function FeedSection({
           })
           .catch((err: unknown) => {
             setError(err instanceof Error ? err.message : "Failed to load");
-            fetchedRef.current = false; // allow retry on next intersection
+            fetchedRef.current = false;
             setLoading(false);
           });
       },
@@ -181,30 +116,28 @@ export default function FeedSection({
     return () => observer.disconnect();
   }, [endpoint, loaded, requires_auth, type, token, isPending]);
 
-  const v = VARIANTS[variant];
-
   return (
     <section
       ref={sectionRef}
       style={{
-        background: v.bg,
+        background: "var(--bg-surface)",
         borderRadius: "var(--radius-lg)",
         boxShadow: "var(--shadow-card)",
+        border: "1px solid var(--border-subtle)",
         padding: "24px",
-        transition: "box-shadow 0.3s ease-out",
       }}
     >
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2
-            className="font-bold"
-            style={{ fontSize: "22px", lineHeight: 1.3, color: v.heading }}
+            className="font-serif font-bold text-xl sm:text-2xl"
+            style={{ color: "var(--text-primary)" }}
           >
             {title}
           </h2>
           <p
-            className="mt-1 font-medium"
-            style={{ fontSize: "13px", color: v.sub, minHeight: "18px" }}
+            className="mt-0.5 text-xs font-medium"
+            style={{ color: "var(--text-secondary)", minHeight: "16px" }}
           >
             {loaded
               ? `${products.length} product${products.length !== 1 ? "s" : ""}`
@@ -213,56 +146,27 @@ export default function FeedSection({
         </div>
 
         <button
-          className="hidden sm:flex items-center gap-2 font-semibold cursor-pointer"
+          className="hidden sm:flex items-center gap-1.5 font-bold text-xs cursor-pointer px-4 py-2 rounded-full transition-all"
           style={{
-            fontSize: "13px",
-            padding: "10px 20px",
-            background: v.btnBg,
-            color: v.btnText,
-            borderRadius: "var(--radius-full)",
-            boxShadow: "var(--shadow-button)",
+            background: "rgba(154, 101, 60, 0.12)",
+            color: "var(--accent-primary)",
             border: "none",
-            transition: "opacity 0.2s ease-out",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = "0.8";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = "1";
           }}
         >
           View All
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: "22px",
-              height: "22px",
-              borderRadius: "var(--radius-full)",
-              background: v.arrowBg,
-            }}
-          >
-            <ArrowRight size={12} />
-          </span>
+          <ArrowRight size={13} />
         </button>
-
-        <ArrowRight size={20} className="sm:hidden" style={{ color: v.sub }} />
       </div>
 
       <div className="relative">
         {error && (
-          <div
-            className="py-10 text-center font-medium"
-            style={{ fontSize: "14px", color: "var(--color-heat)" }}
-          >
+          <div className="py-10 text-center text-xs font-medium" style={{ color: "var(--color-heat)" }}>
             Could not load products.
           </div>
         )}
 
         {loaded && products.length === 0 && !error && (
-          <div
-            className="py-10 text-center font-medium"
-            style={{ fontSize: "14px", color: v.sub }}
-          >
+          <div className="py-10 text-center text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
             No products available.
           </div>
         )}

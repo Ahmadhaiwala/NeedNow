@@ -88,6 +88,20 @@ class ProductViewSet(ReadOnlyModelViewSet):
 
         return queryset.order_by("-popularity_score", "-rating", "name")
 
+    @action(detail=True, methods=['get'])
+    def related(self, request, pk=None):
+        """Get related products in the same category"""
+        try:
+            product = self.get_object()
+            related_products = Product.objects.filter(
+                category=product.category
+            ).exclude(id=product.id).order_by('-popularity_score')[:6]
+            serializer = self.get_serializer(related_products, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+
 
 # Legacy API views for backward compatibility
 @api_view(['GET'])

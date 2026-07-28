@@ -9,7 +9,7 @@ import {
   getMarketplacePosts,
   MarketplacePost 
 } from '@/lib/marketplace';
-import { MapPin, User, Info, Compass, HelpCircle, Loader2, X, Star } from 'lucide-react';
+import { MapPin, User, Info, Compass, Loader2, X, Star } from 'lucide-react';
 import LocationPicker from '@/components/LocationPicker';
 import MarketplaceFeed from '@/components/MarketplaceFeed';
 import CreatePostModal from '@/components/CreatePostModal';
@@ -23,7 +23,6 @@ export default function MarketplacePage() {
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Mount effect to hydrate client-side sessionStorage cache without SSR hydration mismatch
   useEffect(() => {
     setIsMounted(true);
     if (user && typeof window !== 'undefined') {
@@ -39,6 +38,7 @@ export default function MarketplacePage() {
       }
     }
   }, [user]);
+
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -62,7 +62,6 @@ export default function MarketplacePage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  // Pre-fill form fields whenever profile is loaded or updated
   useEffect(() => {
     if (profile) {
       setBio(profile.bio || '');
@@ -72,7 +71,6 @@ export default function MarketplacePage() {
     }
   }, [profile]);
 
-  // Compute dirty form state (activates submit button only when fields are changed)
   const isFormDirty = useMemo(() => {
     if (!profile) {
       return Boolean(bio.trim() && locationName.trim());
@@ -96,11 +94,9 @@ export default function MarketplacePage() {
     setIsEditingProfile(true);
   };
 
-  // Feed State
   const [posts, setPosts] = useState<MarketplacePost[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
 
-  // Check if profile exists
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -119,7 +115,6 @@ export default function MarketplacePage() {
         sessionStorage.setItem(`marketplace_profile_cache_${user.id}`, JSON.stringify(data));
       }
       if (data) {
-        // User already has a profile, fetch the feed
         fetchFeed(data.latitude, data.longitude);
       }
     } catch (err) {
@@ -145,7 +140,6 @@ export default function MarketplacePage() {
     }
   };
 
-  // Submit profile creation or update
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -210,17 +204,15 @@ export default function MarketplacePage() {
     }
   };
 
-  // ── LOADING STATE ──
   if (!isMounted || ((authLoading || profileLoading) && !profile)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-10 h-10 animate-spin text-[var(--color-juice)]" />
-        <p className="text-[var(--text-secondary)] font-medium">Checking marketplace registration...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-primary)]" />
+        <p className="text-xs text-[var(--text-secondary)] font-medium">Checking marketplace profile...</p>
       </div>
     );
   }
 
-  // ── UNAUTHENTICATED STATE ──
   if (!user) {
     return (
       <main className="max-w-md mx-auto px-4 py-16">
@@ -230,14 +222,15 @@ export default function MarketplacePage() {
             background: 'var(--bg-surface)',
             borderRadius: 'var(--radius-lg)',
             boxShadow: 'var(--shadow-card)',
+            border: '1px solid var(--border-subtle)',
           }}
         >
-          <Compass className="w-16 h-16 mx-auto mb-4 text-[var(--color-sky)]" />
-          <h2 className="text-2xl font-bold mb-2 text-[var(--text-primary)]">Community Marketplace</h2>
-          <p className="mb-6 text-sm leading-relaxed text-[var(--text-secondary)]">
-            Connect with neighbors to request items you need or sell things you no longer use. Syncs instantly with your local community.
+          <Compass className="w-12 h-12 mx-auto mb-4 text-[var(--accent-primary)]" />
+          <h2 className="text-xl font-serif font-bold mb-2 text-[var(--text-primary)]">Community Marketplace</h2>
+          <p className="mb-6 text-xs leading-relaxed text-[var(--text-secondary)]">
+            Connect with neighbors to request items you need or sell things you no longer use.
           </p>
-          <SignInButton className="w-full py-3 font-semibold rounded-[var(--radius-md)] cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all">
+          <SignInButton className="w-full py-3 font-bold text-xs rounded-full cursor-pointer hover:opacity-90 transition-all shadow-sm">
             Sign In with Google
           </SignInButton>
         </div>
@@ -245,7 +238,6 @@ export default function MarketplacePage() {
     );
   }
 
-  // ── ONBOARDING STATE (No Profile Setup Yet) ──
   if (!profile) {
     return (
       <main className="max-w-xl mx-auto px-4 py-8">
@@ -255,14 +247,15 @@ export default function MarketplacePage() {
             background: 'var(--bg-surface)',
             borderRadius: 'var(--radius-lg)',
             boxShadow: 'var(--shadow-card)',
+            border: '1px solid var(--border-subtle)',
           }}
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-[var(--radius-sm)] bg-[rgba(202,206,0,0.12)]">
-              <User className="w-6 h-6 text-[var(--color-juice)]" />
+            <div className="p-3 rounded-full bg-[rgba(154,101,60,0.12)]">
+              <User className="w-6 h-6 text-[var(--accent-primary)]" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">Marketplace Onboarding</h2>
+              <h2 className="text-lg font-serif font-bold text-[var(--text-primary)]">Marketplace Onboarding</h2>
               <p className="text-xs text-[var(--text-secondary)]">Setup your profile to find nearby items</p>
             </div>
           </div>
@@ -270,11 +263,11 @@ export default function MarketplacePage() {
           <form onSubmit={handleProfileSubmit} className="flex flex-col gap-6">
             {error && (
               <div 
-                className="p-4 text-xs font-semibold rounded-[var(--radius-sm)] flex gap-2 items-center"
+                className="p-3 text-xs font-semibold rounded-xl flex gap-2 items-center"
                 style={{
-                  background: 'rgba(231,63,60,0.12)',
+                  background: 'rgba(185,74,62,0.12)',
                   color: 'var(--color-heat)',
-                  border: '1px solid rgba(231,63,60,0.2)'
+                  border: '1px solid rgba(185,74,62,0.2)'
                 }}
               >
                 <Info size={16} />
@@ -282,23 +275,21 @@ export default function MarketplacePage() {
               </div>
             )}
 
-            {/* BIO INPUT */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+              <label className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                 About You (Bio)
               </label>
               <textarea
-                placeholder="Write a brief intro (e.g. 'I am a university student looking to trade course books and small electronic items. Happy to help!')"
+                placeholder="Write a brief intro..."
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full min-h-[100px] p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none resize-none"
+                className="w-full min-h-[90px] p-3 text-xs bg-[var(--bg-page)] text-[var(--text-primary)] rounded-xl border-0 outline-none resize-none"
               />
             </div>
 
-            {/* LOCATION INPUT */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                Your Neighborhood / Location / Pincode
+              <label className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                Your Neighborhood / Location
               </label>
               <LocationPicker
                 value={locationName}
@@ -309,30 +300,20 @@ export default function MarketplacePage() {
                 }}
                 lat={latitude}
                 lng={longitude}
-                placeholder="e.g. Ahmedabad, Bopal, 382210"
+                placeholder="e.g. Ahmedabad, Bopal"
               />
             </div>
 
-            {/* SUBMIT BUTTON WITH DIRTY ACTIVATION */}
             <button
               type="submit"
               disabled={!isFormDirty || submitLoading}
-              className={`w-full mt-2 py-4 font-semibold text-center rounded-[var(--radius-md)] transition-all flex items-center justify-center gap-2 ${
-                isFormDirty && !submitLoading
-                  ? 'bg-[var(--accent-primary)] text-[var(--color-core)] cursor-pointer hover:opacity-90 active:scale-[0.98] shadow-md'
-                  : 'bg-[var(--bg-page)] text-[var(--text-secondary)] border border-[rgba(31,54,53,0.1)] opacity-50 cursor-not-allowed'
-              }`}
+              className="w-full py-3.5 text-xs font-bold text-center rounded-full transition-all cursor-pointer shadow-sm"
+              style={{
+                background: isFormDirty ? 'var(--accent-primary)' : 'rgba(0,0,0,0.1)',
+                color: isFormDirty ? '#FFFDF8' : 'var(--text-secondary)',
+              }}
             >
-              {submitLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Saving Profile...
-                </>
-              ) : isFormDirty ? (
-                'Activate Marketplace Profile'
-              ) : (
-                'Fill Bio & Location to Activate'
-              )}
+              {submitLoading ? 'Saving Profile...' : 'Activate Marketplace Profile'}
             </button>
           </form>
         </div>
@@ -340,7 +321,6 @@ export default function MarketplacePage() {
     );
   }
 
-  // ── ACTIVE STATE ──
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div 
@@ -349,144 +329,44 @@ export default function MarketplacePage() {
           background: 'var(--bg-surface)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-card)',
+          border: '1px solid var(--border-subtle)',
         }}
       >
         <div>
-          <h2 className="text-xl font-bold text-[var(--text-primary)]">Welcome, {user.name}!</h2>
-          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+          <h2 className="text-lg font-serif font-bold text-[var(--text-primary)]">Welcome, {user.name}!</h2>
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
-              <MapPin size={12} className="text-[var(--color-sky)]" />
+              <MapPin size={12} style={{ color: 'var(--accent-primary)' }} />
               Active location: {profile.location_name}
             </p>
-            <button 
-              onClick={() => setIsReviewsModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[rgba(202,206,0,0.12)] border border-[rgba(202,206,0,0.25)] text-xs font-bold text-[var(--text-primary)] hover:opacity-90 cursor-pointer transition-all"
-            >
-              <Star size={12} className="fill-[#FFC107] text-[#FFC107]" />
-              <span>{profile.rating > 0 ? Number(profile.rating).toFixed(1) : 'New'}</span>
-              <span className="text-[var(--text-secondary)] font-medium">({profile.review_count || 0} reviews)</span>
-            </button>
           </div>
         </div>
         <div className="flex gap-2">
           <button 
             onClick={() => setIsReviewsModalOpen(true)}
-            className="px-3.5 py-2 text-xs font-semibold rounded-[var(--radius-md)] bg-[rgba(202,206,0,0.15)] text-[var(--text-primary)] hover:opacity-90 transition-all cursor-pointer border border-[rgba(202,206,0,0.3)] flex items-center gap-1.5"
+            className="px-3.5 py-2 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5"
+            style={{
+              background: 'rgba(154,101,60,0.12)',
+              color: 'var(--accent-primary)',
+              border: 'none',
+            }}
           >
-            <Star size={14} className="fill-[#FFC107] text-[#FFC107]" />
+            <Star size={13} className="fill-warning text-warning" />
             My Ratings & Reviews
           </button>
           <button 
             onClick={handleStartEditing}
-            className="px-4 py-2 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--bg-page)] hover:bg-[rgba(31,54,53,0.08)] transition-all cursor-pointer text-[var(--text-primary)] border border-[rgba(31,54,53,0.08)]"
+            className="px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer"
+            style={{
+              background: 'var(--bg-page)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-subtle)',
+            }}
           >
-            Edit Profile / Location
+            Edit Location
           </button>
         </div>
       </div>
-
-      {/* EDIT PROFILE MODAL */}
-      {isEditingProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
-          <div 
-            className="w-full max-w-xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative my-auto scrollbar-thin"
-            style={{
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-modal)',
-            }}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-[var(--radius-sm)] bg-[rgba(202,206,0,0.12)]">
-                  <User className="w-5 h-5 text-[var(--color-juice)]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[var(--text-primary)]">Edit Marketplace Profile</h3>
-                  <p className="text-xs text-[var(--text-secondary)]">Update your bio and primary search location</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsEditingProfile(false)}
-                className="p-1.5 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] transition-all cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleProfileSubmit} className="flex flex-col gap-5">
-              {error && (
-                <div className="p-4 text-xs font-semibold rounded-[var(--radius-sm)] bg-[rgba(231,63,60,0.12)] text-[var(--color-heat)] border border-[rgba(231,63,60,0.2)] flex items-center gap-2">
-                  <Info size={16} />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* BIO INPUT */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[var(--text-primary)]">
-                  About You (Bio)
-                </label>
-                <textarea
-                  placeholder="Tell neighbors about items you buy, sell, or trade..."
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="w-full min-h-[90px] p-3 text-xs bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none resize-none"
-                />
-              </div>
-
-              {/* LOCATION INPUT */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[var(--text-primary)]">
-                  Your Primary Location / Address
-                </label>
-                <LocationPicker
-                  value={locationName}
-                  onChange={(address, lat, lng) => {
-                    setLocationName(address);
-                    setLatitude(lat);
-                    setLongitude(lng);
-                  }}
-                  lat={latitude}
-                  lng={longitude}
-                  placeholder="e.g. Ahmedabad, Bopal, 382210"
-                />
-              </div>
-
-              {/* ACTION BUTTONS WITH DIRTY STATE ACTIVATION */}
-              <div className="flex justify-end items-center gap-3 pt-3 border-t border-[rgba(31,54,53,0.08)]">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2.5 text-xs font-bold rounded-[var(--radius-md)] bg-[var(--bg-page)] text-[var(--text-primary)] hover:bg-[rgba(31,54,53,0.08)] transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!isFormDirty || submitLoading}
-                  className={`px-5 py-2.5 text-xs font-bold rounded-[var(--radius-md)] transition-all flex items-center gap-2 ${
-                    isFormDirty && !submitLoading
-                      ? 'bg-[var(--accent-primary)] text-[var(--color-core)] cursor-pointer hover:opacity-90 active:scale-[0.98] shadow-md'
-                      : 'bg-[var(--bg-page)] text-[var(--text-secondary)] border border-[rgba(31,54,53,0.1)] opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  {submitLoading ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Saving Changes...
-                    </>
-                  ) : isFormDirty ? (
-                    'Save Profile Changes'
-                  ) : (
-                    'No Changes Made'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <MarketplaceFeed
         refreshTrigger={refreshKey}
@@ -506,7 +386,6 @@ export default function MarketplacePage() {
         }}
       />
 
-      {/* Create Post Modal */}
       <CreatePostModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -514,11 +393,10 @@ export default function MarketplacePage() {
         defaultLat={profile.latitude}
         defaultLng={profile.longitude}
         onPostCreated={() => {
-          setRefreshKey((prev) => prev + 1); // Refresh feed
+          setRefreshKey((prev) => prev + 1);
         }}
       />
 
-      {/* Post Detail & Offers Modal */}
       <PostDetailModal
         post={selectedPost}
         isOpen={isDetailModalOpen}
@@ -537,7 +415,6 @@ export default function MarketplacePage() {
         }}
       />
 
-      {/* Live Polling Chat Drawer */}
       {chatRecipientId && (
         <ChatDrawer
           isOpen={isChatOpen}
@@ -549,7 +426,7 @@ export default function MarketplacePage() {
           currentUserEmail={user.email}
         />
       )}
-      {/* My Reviews Modal */}
+
       <UserReviewsModal
         isOpen={isReviewsModalOpen}
         onClose={() => setIsReviewsModalOpen(false)}

@@ -76,7 +76,7 @@ export default function ChatDrawer({
           prev.forEach((m) => map.set(m.id, m));
           data.forEach((m) => map.set(m.id, m));
           return Array.from(map.values()).sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            (a, b) => new Date(a.created_at || Date.now()).getTime() - new Date(b.created_at || Date.now()).getTime()
           );
         });
       }
@@ -137,14 +137,14 @@ export default function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] shadow-2xl animate-slideInRight flex flex-col"
+    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] shadow-modal animate-slideInRight flex flex-col"
       style={{
-        background: 'var(--bg-surface)',
-        borderLeft: '1px solid rgba(31,54,53,0.1)',
+        background: 'var(--surface-1)',
+        borderLeft: '1px solid var(--border)',
       }}
     >
       {/* Header */}
-      <div className="p-4 sm:p-5 flex justify-between items-center border-b border-[rgba(31,54,53,0.08)] bg-[var(--bg-surface)]">
+      <div className="p-4 sm:p-5 flex justify-between items-center border-b bg-[var(--surface-1)]" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[var(--color-sky)] text-[var(--color-core)] font-bold text-xs flex items-center justify-center uppercase">
             {otherUserName[0] || 'U'}
@@ -162,14 +162,14 @@ export default function ChatDrawer({
 
         <button
           onClick={onClose}
-          className="p-2 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+          className="p-2 rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
         >
           <X size={18} />
         </button>
       </div>
 
       {/* Messages List Area */}
-      <div className="flex-grow min-h-0 p-4 overflow-y-auto flex flex-col gap-3 bg-[var(--bg-page)] scrollbar-thin">
+      <div className="flex-grow min-h-0 p-4 overflow-y-auto flex flex-col gap-3 bg-[var(--surface-1)] scrollbar-thin">
         {loading ? (
           <div className="flex items-center justify-center h-full gap-2 text-xs text-[var(--text-secondary)]">
             <Loader2 size={16} className="animate-spin text-[var(--color-juice)]" />
@@ -206,15 +206,16 @@ export default function ChatDrawer({
                 <div
                   className={`p-3 rounded-2xl text-xs leading-relaxed ${
                     isMe
-                      ? 'bg-[var(--color-juice)] text-[var(--color-core)] font-semibold rounded-tr-none shadow-xs'
-                      : 'bg-[var(--bg-surface)] text-[var(--text-primary)] rounded-tl-none border border-[rgba(31,54,53,0.08)] shadow-xs'
+                      ? 'bg-[var(--accent-primary)] text-[#FFFDF8] font-semibold rounded-tr-none shadow-xs'
+                      : 'bg-[var(--surface-2)] text-[var(--text-primary)] rounded-tl-none border shadow-xs'
                   }`}
+                  style={!isMe ? { borderColor: 'var(--border)' } : {}}
                 >
                   {msg.content}
                 </div>
                 <span className="text-[9px] text-[var(--text-secondary)] mt-1 px-1">
                   {isMe ? 'You • ' : ''}
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             );
@@ -224,18 +225,19 @@ export default function ChatDrawer({
       </div>
 
       {/* Input Footer */}
-      <form onSubmit={handleSend} className="p-4 border-t border-[rgba(31,54,53,0.08)] bg-[var(--bg-surface)] flex gap-2">
+      <form onSubmit={handleSend} className="p-4 border-t bg-[var(--surface-1)] flex gap-2" style={{ borderColor: 'var(--border)' }}>
         <input
           type="text"
           placeholder="Type a message..."
           value={inputContent}
           onChange={(e) => setInputContent(e.target.value)}
-          className="flex-grow p-3 text-xs bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+          className="flex-grow p-3 text-xs bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border outline-none"
+          style={{ borderColor: 'var(--border)' }}
         />
         <button
           type="submit"
           disabled={sending || !inputContent.trim()}
-          className="px-4 py-3 bg-[var(--accent-primary)] text-[var(--color-core)] font-bold text-xs rounded-[var(--radius-md)] hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+          className="px-4 py-3 bg-[var(--accent-primary)] text-[#FFFDF8] font-bold text-xs rounded-[var(--radius-md)] hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
         >
           {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </button>

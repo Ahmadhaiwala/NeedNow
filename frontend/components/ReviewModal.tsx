@@ -104,9 +104,10 @@ export default function ReviewModal({
       <div 
         className="w-full max-w-md p-6 sm:p-8 relative my-auto scrollbar-thin"
         style={{
-          background: 'var(--bg-surface)',
+          background: 'var(--surface-3)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-modal)',
+          border: '1px solid var(--border)',
         }}
       >
         {/* Header */}
@@ -122,7 +123,7 @@ export default function ReviewModal({
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] transition-all cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-all cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -141,7 +142,7 @@ export default function ReviewModal({
           </div>
         ) : success ? (
           <div className="py-8 text-center flex flex-col items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[rgba(202,206,0,0.2)] flex items-center justify-center text-[var(--color-juice)]">
+            <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center text-success">
               <Check size={28} />
             </div>
             <p className="text-sm font-bold text-[var(--text-primary)]">
@@ -174,7 +175,7 @@ export default function ReviewModal({
                     >
                       <Star
                         size={32}
-                        className={isFilled ? 'fill-[#FFC107] text-[#FFC107]' : 'text-gray-300'}
+                        className={isFilled ? 'fill-warning text-warning' : 'text-gray-300'}
                       />
                     </button>
                   );

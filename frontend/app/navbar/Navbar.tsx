@@ -7,6 +7,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
+import { useFlyToCart } from "@/context/FlyToCartContext";
 import {
   Mic,
   Sparkles,
@@ -20,35 +22,29 @@ import {
   LogOut,
   Compass,
   Package,
-  Users,
   Clock,
-  BrainCircuit,
   Settings,
-  Sun,
-  Moon,
   Search,
   Store,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navItems = [
   { name: "Discover", icon: Compass, href: "/" },
   { name: "Marketplace", icon: Store, href: "/marketplace" },
   { name: "AI Agent", icon: Sparkles, href: "/chat" },
-  { name: "Assets", icon: Package, href: "/assets" },
   { name: "Orders", icon: ShoppingCart, href: "/orders" },
-
   { name: "History", icon: Clock, href: "/history" },
 ];
 
 const placeholders = [
-  "I need groceries for 5 days...",
+  "Search products, brands, groceries...",
   "Build me a coding PC under ₹80,000...",
-  "I'm hosting 10 guests tonight...",
-  "I have ₹500 for groceries this week...",
-  "I'm preparing for semester exams...",
+  "Fresh organic fruits & vegetables...",
+  "Noise cancelling wireless headphones...",
+  "Living room decor & home essentials...",
 ];
 
-// Minimal product shape returned by the search endpoint
 interface SearchResult {
   id: string;
   name: string;
@@ -61,7 +57,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [isDark, setIsDark] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,34 +71,45 @@ export default function Navbar() {
   const router = useRouter();
   const { user, isLoading, signOut, signInWithGoogle } = useAuth();
   const { count: wishlistCount } = useWishlist();
+  const { state: cartState } = useCart();
+  const { cartPulse } = useFlyToCart();
+  const [isDark, setIsDark] = useState(false);
 
-  // ── Dark mode ─────────────────────────────────────────────────────────────
+useEffect(() => {
+  const root = document.documentElement;
+
+  // Set initial value
+  setIsDark(root.classList.contains("dark"));
+
+  // Watch for ThemeToggle changing <html class="dark">
+  const observer = new MutationObserver(() => {
+    setIsDark(root.classList.contains("dark"));
+  });
+
+  observer.observe(root, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+
+  return () => observer.disconnect();
+}, []);
   useEffect(() => {
-    const stored = localStorage.getItem("neednow-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const dark = stored ? stored === "dark" : prefersDark;
-    setIsDark(dark);
-    document.documentElement.classList.toggle("dark", dark);
-    document.documentElement.classList.toggle("light", !dark);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 15);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleDark = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    document.documentElement.classList.toggle("light", !next);
-    localStorage.setItem("neednow-theme", next ? "dark" : "light");
-  };
-
-  // ── Rotating placeholder ───────────────────────────────────────────────────
+  // Rotating search placeholder
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
-    }, 4000);
+    }, 3800);
     return () => clearInterval(interval);
   }, []);
 
-  // ── Click-outside to close search dropdown ─────────────────────────────────
+  // Close search dropdown on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -113,7 +120,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Debounced search ──────────────────────────────────────────────────────
+  // Debounced search
   const runSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
       setSearchResults([]);
@@ -122,7 +129,6 @@ export default function Navbar() {
     }
     setSearchLoading(true);
     try {
-      // Grab JWT if available (server records the interaction for auth'd users)
       let authHeader = "";
       try {
         const { authClient } = await import("@/lib/auth");
@@ -167,944 +173,461 @@ export default function Navbar() {
     setShowUserDropdown(false);
   };
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Sign in error:", error);
-    }
-  };
-
-  // ── Shared style helpers ───────────────────────────────────────────────────
-  const iconBtnStyle = {
-    width: "36px",
-    height: "36px",
-    borderRadius: "50%",
-    background: "transparent",
-    color: isDark ? "#FCFBF4" : "#1F3635",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "background 0.2s, color 0.2s",
-  } as const;
-
-  const iconBtnHoverEnter = (e: React.MouseEvent<HTMLButtonElement | HTMLDivElement>) => {
-    (e.currentTarget as HTMLElement).style.background = isDark
-      ? "rgba(252, 251, 244, 0.1)"
-      : "rgba(123, 163, 206, 0.15)";
-  };
-  const iconBtnHoverLeave = (e: React.MouseEvent<HTMLButtonElement | HTMLDivElement>) => {
-    (e.currentTarget as HTMLElement).style.background = "transparent";
-  };
-
   return (
-    <>
-      <header
-        className="fixed top-0 left-0 right-0 z-50 flex justify-center"
-        style={{ padding: "16px", paddingTop: "20px", paddingBottom: "20px" }}
+    <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4 pb-3">
+      <div
+        className={`w-full max-w-7xl flex items-center justify-between gap-4 px-5 py-3 transition-theme navbar-glass ${scrolled ? 'scrolled' : ''}`}
+        style={{
+          borderRadius: "var(--radius-lg)",
+          minHeight: "66px",
+        }}
       >
-        <div
-          className="w-full flex items-center justify-between gap-3"
-          style={{
-            maxWidth: "1400px",
-            background: isDark
-              ? "rgba(61, 106, 104, 0.92)"
-              : "rgba(255, 255, 255, 0.88)",
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: isDark
-              ? "0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)"
-              : "var(--shadow-card)",
-            padding: "8px 12px 8px 16px",
-            border: isDark
-              ? "1px solid rgba(252, 251, 244, 0.08)"
-              : "1px solid rgba(255, 255, 255, 0.5)",
-            minHeight: "60px",
-            transition: "background 0.3s ease, box-shadow 0.3s ease",
-          }}
-        >
-          {/* ── Left: Logo ── */}
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <div
-                  className="flex items-center justify-center group-hover:scale-105 transition-transform duration-300"
+        {/* ── Brand Logo ── */}
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
+          <div
+            className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105 w-9 h-9 rounded-xl bg-accent text-accent-foreground font-bold text-lg shadow-button"
+          >
+            N
+          </div>
+          <div className="flex flex-col">
+            <span
+              className="text-xl font-serif font-bold tracking-tight leading-none text-foreground"
+            >
+              NeedNow
+            </span>
+            <span
+              className="hidden lg:block text-[11px] font-medium tracking-wide mt-0.5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Express Commerce & AI
+            </span>
+          </div>
+        </Link>
+
+        {/* ── Navigation Links (Center-Left) ── */}
+        <nav className="hidden md:flex items-center gap-1.5 shrink-0">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link key={item.name} href={item.href}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs lg:text-sm font-bold transition-all"
                   style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "var(--radius-sm)",
-                    background: "#1F3635",
+                    color: isActive
+                      ? (isDark ? "#FFFDF8" : "#FFFDF8")
+                      : "var(--text-secondary)",
+                    background: isActive
+                      ? (isDark ? "#B77A48" : "#9A653C")
+                      : "transparent",
+                    boxShadow: isActive ? "var(--shadow-button)" : "none",
+                  }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "var(--text-primary)";
+                      e.currentTarget.style.background = isDark
+                        ? "rgba(217, 186, 131, 0.08)"
+                        : "rgba(154, 101, 60, 0.08)";
+                    }
+                  }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "var(--text-secondary)";
+                      e.currentTarget.style.background = "transparent";
+                    }
                   }}
                 >
-                  <span className="font-bold" style={{ fontSize: "14px", color: "#CACE00" }}>
-                    N
-                  </span>
-                </div>
-                <span
-                  className="text-xl font-bold tracking-tight"
-                  style={{ color: isDark ? "#FCFBF4" : "#1F3635", transition: "color 0.3s" }}
-                >
-                  NeedNow
-                </span>
+                  <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+                  <span>{item.name}</span>
+                </motion.div>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* ── Center: Search Input Bar ── */}
+        <div
+          ref={searchRef}
+          className="hidden sm:flex flex-1 max-w-[460px] shrink-0 mx-2 relative"
+        >
+          <form onSubmit={handleSearchSubmit} className="w-full">
+            <div
+              className="relative flex items-center w-full px-4"
+              style={{
+                background: "var(--surface-2)",
+                borderRadius: "var(--radius-full)",
+                height: "42px",
+                border: "1px solid var(--border)",
+                transition: "all 0.25s ease",
+              }}
+            >
+              <Search
+                size={16}
+                style={{
+                  color: "var(--text-secondary)",
+                  marginRight: "10px",
+                  flexShrink: 0,
+                }}
+              />
+
+              <div className="flex-1 relative h-full flex items-center overflow-hidden">
+                {!searchQuery && (
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={placeholderIndex}
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 0.6 }}
+                      exit={{ y: -10, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="absolute pointer-events-none truncate text-xs font-normal"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {placeholders[placeholderIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                )}
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full h-full bg-transparent outline-none text-xs font-medium relative z-10"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-label="Search products"
+                  autoComplete="off"
+                />
               </div>
-              <span
-                className="hidden lg:block mt-0.5 font-medium tracking-wide"
-                style={{ fontSize: "10px", color: "#7BA3CE" }}
+
+              {searchLoading && (
+                <div
+                  className="w-3.5 h-3.5 border-2 rounded-full animate-spin ml-1"
+                  style={{
+                    borderColor: "rgba(154, 101, 60, 0.3)",
+                    borderTopColor: "var(--accent-primary)",
+                  }}
+                />
+              )}
+            </div>
+          </form>
+
+          {/* Search Dropdown Results */}
+          <AnimatePresence>
+            {searchOpen && searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-0 right-0 top-[44px] overflow-hidden z-50 shadow-modal"
+                style={{
+                  background: "var(--surface-3)",
+                  borderRadius: "var(--radius-lg)",
+                  border: "1px solid var(--border)",
+                  maxHeight: "360px",
+                  overflowY: "auto",
+                }}
               >
-                Need it? Just say it.
-              </span>
+                <div
+                  className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex justify-between"
+                  style={{
+                    color: "var(--text-secondary)",
+                    borderBottom: "1px solid var(--border)",
+                  }}
+                >
+                  <span>Results for &ldquo;{searchQuery}&rdquo;</span>
+                  <span>{searchResults.length} found</span>
+                </div>
+
+                {searchResults.map((result) => (
+                  <Link
+                    key={result.id}
+                    href={`/product/${result.id}`}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                  >
+                    <div
+                      className="flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer"
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--surface-2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <div
+                        className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 overflow-hidden"
+                        style={{ background: "var(--surface-2)" }}
+                      >
+                        {result.image_url ? (
+                          <img
+                            src={result.image_url}
+                            alt={result.name}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <Package size={16} style={{ color: "var(--text-secondary)" }} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-xs font-semibold truncate"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {result.name}
+                        </p>
+                        <p
+                          className="text-[11px] truncate"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          {result.brand}
+                        </p>
+                      </div>
+                      {result.price && (
+                        <span
+                          className="text-xs font-bold shrink-0"
+                          style={{ color: "var(--accent-primary)" }}
+                        >
+                          ₹{parseFloat(result.price).toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── Right Actions & Utilities ── */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Wishlist Icon */}
+          <Link href="/wishlist" aria-label="Wishlist">
+            <div
+              className="relative w-9.5 h-9.5 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+              style={{ color: "var(--text-primary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--surface-2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <Heart
+                size={18}
+                style={{
+                  fill: wishlistCount > 0 ? "var(--color-heat)" : "none",
+                  color: wishlistCount > 0 ? "var(--color-heat)" : "currentColor",
+                }}
+              />
+              {wishlistCount > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full text-[10px] font-bold flex items-center justify-center"
+                  style={{
+                    background: "var(--color-heat)",
+                    color: "#FFFDF8",
+                  }}
+                >
+                  {wishlistCount > 9 ? "9+" : wishlistCount}
+                </span>
+              )}
             </div>
           </Link>
 
-          {/* ── Center: Search Bar ── */}
-          <div
-            ref={searchRef}
-            className="hidden sm:flex flex-1 max-w-[480px] shrink-0 mx-2 lg:mx-4 relative"
-          >
-            <form onSubmit={handleSearchSubmit} className="w-full">
-              <div
-                className="relative flex items-center w-full group overflow-hidden"
-                style={{
-                  background: isDark ? "#487D7B" : "#FCFBF4",
-                  borderRadius: "var(--radius-full)",
-                  height: "44px",
-                  padding: "0 6px 0 16px",
-                  boxShadow: isDark
-                    ? "inset 0 2px 6px rgba(0,0,0,0.15)"
-                    : "inset 0 2px 6px rgba(31, 54, 53, 0.03)",
-                  border: isDark
-                    ? "1px solid rgba(252,251,244,0.12)"
-                    : "1px solid rgba(123, 163, 206, 0.2)",
-                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-                onFocusCapture={(e) => {
-                  e.currentTarget.style.borderColor = "#CACE00";
-                  e.currentTarget.style.boxShadow =
-                    "0 0 0 3px rgba(202, 206, 0, 0.15), inset 0 2px 6px rgba(31, 54, 53, 0.03)";
-                }}
-                onBlurCapture={(e) => {
-                  e.currentTarget.style.borderColor = isDark
-                    ? "rgba(252,251,244,0.12)"
-                    : "rgba(123, 163, 206, 0.2)";
-                  e.currentTarget.style.boxShadow = isDark
-                    ? "inset 0 2px 6px rgba(0,0,0,0.15)"
-                    : "inset 0 2px 6px rgba(31, 54, 53, 0.03)";
-                }}
-              >
-                <Search
-                  size={15}
-                  style={{
-                    color: isDark ? "rgba(252,251,244,0.4)" : "rgba(31,54,53,0.35)",
-                    marginRight: "8px",
-                    flexShrink: 0,
-                  }}
-                />
-
-                <div className="flex-1 relative h-full flex items-center overflow-hidden">
-                  {/* Animated placeholder (only shown when input is empty) */}
-                  {!searchQuery && (
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={placeholderIndex}
-                        initial={{ y: 14, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -14, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: "circOut" }}
-                        className="absolute pointer-events-none truncate font-medium"
-                        style={{
-                          color: isDark ? "#FCFBF4" : "#1F3635",
-                          opacity: 0.38,
-                          fontSize: "14px",
-                        }}
-                      >
-                        {placeholders[placeholderIndex]}
-                      </motion.span>
-                    </AnimatePresence>
-                  )}
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full h-full bg-transparent outline-none font-medium relative z-10"
-                    style={{ color: isDark ? "#FCFBF4" : "#1F3635", fontSize: "14px" }}
-                    aria-label="Search products"
-                    autoComplete="off"
-                  />
-                </div>
-
-                {/* Right buttons */}
-                <div className="flex items-center gap-1 shrink-0 ml-1">
-                  {searchLoading && (
-                    <div
-                      className="w-4 h-4 border-2 rounded-full animate-spin"
-                      style={{
-                        borderColor: "rgba(202,206,0,0.3)",
-                        borderTopColor: "#CACE00",
-                      }}
-                    />
-                  )}
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      background: "rgba(123, 163, 206, 0.12)",
-                      color: "#025A5C",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Mic size={14} />
-                  </motion.button>
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      background: "#1F3635",
-                      color: "#CACE00",
-                      border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 12px rgba(31, 54, 53, 0.18)",
-                    }}
-                  >
-                    <Sparkles size={13} strokeWidth={2.5} />
-                  </motion.button>
-                </div>
-              </div>
-            </form>
-
-            {/* ── Search Dropdown ── */}
-            <AnimatePresence>
-              {searchOpen && searchResults.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                  transition={{ duration: 0.18 }}
-                  className="absolute left-0 right-0 top-[52px] overflow-hidden"
-                  style={{
-                    background: isDark
-                      ? "rgba(72, 125, 123, 0.97)"
-                      : "rgba(255, 255, 255, 0.97)",
-                    backdropFilter: "blur(14px)",
-                    borderRadius: "var(--radius-lg)",
-                    boxShadow: isDark
-                      ? "0 12px 32px rgba(0,0,0,0.3)"
-                      : "var(--shadow-hover)",
-                    border: isDark
-                      ? "1px solid rgba(252,251,244,0.1)"
-                      : "1px solid rgba(123,163,206,0.15)",
-                    zIndex: 60,
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                  }}
-                >
-                  {/* Header */}
-                  <div
-                    className="flex items-center justify-between px-4 pt-3 pb-2"
-                    style={{ borderBottom: "var(--divider-row)" }}
-                  >
-                    <span
-                      className="font-semibold uppercase tracking-widest"
-                      style={{ fontSize: "10px", color: "#CACE00" }}
-                    >
-                      Results for &ldquo;{searchQuery}&rdquo;
-                    </span>
-                    <span
-                      className="font-medium"
-                      style={{ fontSize: "11px", color: isDark ? "rgba(252,251,244,0.5)" : "rgba(31,54,53,0.45)" }}
-                    >
-                      {searchResults.length} found
-                    </span>
-                  </div>
-
-                  {/* Result rows */}
-                  {searchResults.map((result) => (
-                    <Link
-                      key={result.id}
-                      href={`/product/${result.id}`}
-                      onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                    >
-                      <div
-                        className="flex items-center gap-3 px-4 py-3 transition-colors"
-                        style={{ borderBottom: "var(--divider-row)", cursor: "pointer" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = isDark
-                            ? "rgba(252,251,244,0.06)"
-                            : "rgba(123,163,206,0.08)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                        }}
-                      >
-                        {/* Thumbnail */}
-                        <div
-                          className="flex-shrink-0 flex items-center justify-center"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "var(--radius-sm)",
-                            background: "rgba(233,186,195,0.3)",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {result.image_url ? (
-                            <img
-                              src={result.image_url}
-                              alt={result.name}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <Package size={18} style={{ color: "#025A5C", opacity: 0.4 }} />
-                          )}
-                        </div>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className="font-semibold truncate"
-                            style={{ fontSize: "13px", color: isDark ? "#FCFBF4" : "#1F3635" }}
-                          >
-                            {result.name}
-                          </p>
-                          <p
-                            className="truncate"
-                            style={{ fontSize: "11px", color: "#7BA3CE", marginTop: "1px" }}
-                          >
-                            {result.brand}
-                          </p>
-                        </div>
-                        {/* Price */}
-                        {result.price && (
-                          <span
-                            className="font-bold shrink-0"
-                            style={{ fontSize: "14px", color: "#025A5C" }}
-                          >
-                            ₹{parseFloat(result.price).toFixed(0)}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-
-                  {/* Footer CTA */}
-                  <button
-                    onClick={handleSearchSubmit as unknown as React.MouseEventHandler}
-                    className="w-full flex items-center justify-center gap-2 font-semibold py-3"
-                    style={{
-                      background: "transparent",
-                      color: "#CACE00",
-                      border: "none",
-                      fontSize: "13px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Search size={13} />
-                    View all results for &ldquo;{searchQuery}&rdquo;
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* ── Desktop Nav Links ── */}
-          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 shrink-0">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link key={item.name} href={item.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 xl:gap-2"
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: "var(--radius-full)",
-                      color: isActive ? "#1F3635" : (isDark ? "#FCFBF4" : "#1F3635"),
-                      background: isActive ? "#CACE00" : "transparent",
-                      fontSize: "13px",
-                      fontWeight: isActive ? 600 : 500,
-                      opacity: isActive ? 1 : 0.75,
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = isDark
-                          ? "rgba(252, 251, 244, 0.08)"
-                          : "rgba(123, 163, 206, 0.1)";
-                        e.currentTarget.style.opacity = "1";
-                      }
-                    }}
-                    onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.opacity = "0.75";
-                      }
-                    }}
-                  >
-                    <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
-                    <span className="hidden xl:inline">{item.name}</span>
-                  </motion.div>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* ── Right: Icon Buttons ── */}
-          <div className="flex items-center gap-1 lg:gap-2 shrink-0">
-
-            {/* Desktop utility controls */}
-            <div
-              className="hidden md:flex items-center gap-1 mr-1 lg:mr-2 pr-2 lg:pr-3"
-              style={{
-                borderRight: `1px solid ${
-                  isDark ? "rgba(252,251,244,0.1)" : "rgba(200,200,200,0.5)"
-                }`,
+          {/* Shopping Cart Icon */}
+          <Link href="/cart" aria-label="Shopping Cart">
+            <motion.div
+              animate={{ scale: cartPulse ? 1.25 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-9.5 h-9.5 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+              style={{ color: "var(--text-primary)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--surface-2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
               }}
             >
-              {/* Dark mode toggle */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                onClick={toggleDark}
-                title={isDark ? "Light mode" : "Dark mode"}
-                style={{
-                  ...iconBtnStyle,
-                  background: isDark ? "rgba(202, 206, 0, 0.15)" : "transparent",
-                  color: isDark ? "#CACE00" : "#1F3635",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = isDark
-                    ? "rgba(202, 206, 0, 0.25)"
-                    : "rgba(123, 163, 206, 0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isDark
-                    ? "rgba(202, 206, 0, 0.15)"
-                    : "transparent";
-                }}
-              >
-                {isDark ? <Sun size={17} strokeWidth={2} /> : <Moon size={17} strokeWidth={2} />}
-              </motion.button>
-
-              {/* Settings */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                className="hidden lg:flex"
-                style={iconBtnStyle}
-                onMouseEnter={iconBtnHoverEnter}
-                onMouseLeave={iconBtnHoverLeave}
-              >
-                <Settings size={17} strokeWidth={2} />
-              </motion.button>
-
-              {/* Notifications */}
-              <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                className="relative"
-                style={iconBtnStyle}
-                onMouseEnter={iconBtnHoverEnter}
-                onMouseLeave={iconBtnHoverLeave}
-              >
-                <Bell size={17} strokeWidth={2} />
+              <ShoppingCart size={18} />
+              {cartState.item_count > 0 && (
                 <span
-                  className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                  style={{ background: "#CACE00" }}
-                />
-              </motion.button>
-            </div>
-
-            {/* Wishlist heart — with live badge */}
-            <Link href="/wishlist" aria-label="Wishlist">
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                className="relative flex items-center justify-center cursor-pointer"
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background: "rgba(233, 186, 195, 0.18)",
-                  color: isDark ? "#CE9AA5" : "#025A5C",
-                  transition: "background 0.2s, color 0.2s",
-                }}
-                onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "rgba(233,186,195,0.35)";
-                }}
-                onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "rgba(233, 186, 195, 0.18)";
-                }}
-              >
-                <Heart
-                  size={17}
-                  strokeWidth={2}
+                  className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full text-[10px] font-bold flex items-center justify-center shadow-sm"
                   style={{
-                    fill: wishlistCount > 0 ? "currentColor" : "none",
-                    transition: "fill 0.2s",
-                  }}
-                />
-                {wishlistCount > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 font-bold flex items-center justify-center"
-                    style={{
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "50%",
-                      background: "#E9BAC3",
-                      color: "#1F3635",
-                      fontSize: "9px",
-                    }}
-                  >
-                    {wishlistCount > 9 ? "9+" : wishlistCount}
-                  </span>
-                )}
-              </motion.div>
-            </Link>
-
-            {/* Cart */}
-            <Link href="/cart" aria-label="Cart">
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                className="relative flex items-center justify-center cursor-pointer"
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background: "rgba(123, 163, 206, 0.15)",
-                  color: isDark ? "#FCFBF4" : "#1F3635",
-                  transition: "background 0.2s, color 0.2s",
-                }}
-                onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "#1F3635";
-                  e.currentTarget.style.color = "#FCFBF4";
-                }}
-                onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                  e.currentTarget.style.background = "rgba(123, 163, 206, 0.15)";
-                  e.currentTarget.style.color = isDark ? "#FCFBF4" : "#1F3635";
-                }}
-              >
-                <ShoppingCart size={17} strokeWidth={2} />
-                <span
-                  className="absolute -top-0.5 -right-0.5 font-bold flex items-center justify-center"
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "50%",
-                    background: "#CACE00",
-                    color: "#1F3635",
-                    fontSize: "9px",
-                    boxShadow: "var(--shadow-button)",
+                    background: "var(--accent-primary)",
+                    color: "#FFFDF8",
                   }}
                 >
-                  3
+                  {cartState.item_count > 99 ? "99+" : cartState.item_count}
                 </span>
-              </motion.div>
-            </Link>
+              )}
+            </motion.div>
+          </Link>
 
-            {/* User auth */}
-            <div className="flex items-center ml-1">
-              {!user && !isLoading ? (
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleSignIn}
-                  className="hidden sm:flex items-center gap-2 font-bold cursor-pointer"
+          {/* User Auth / Profile Dropdown */}
+          <div className="relative ml-1">
+            {user ? (
+              <div>
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center gap-1.5 p-0.5 rounded-full border transition-all cursor-pointer"
                   style={{
-                    padding: "8px 16px",
-                    borderRadius: "var(--radius-full)",
-                    background: "#1F3635",
-                    color: "#CACE00",
-                    fontSize: "13px",
-                    border: "none",
-                    boxShadow: "var(--shadow-button)",
+                    borderColor: "var(--border)",
                   }}
                 >
-                  <LogIn size={14} />
-                  <span className="hidden lg:inline">Sign In</span>
-                </motion.button>
-              ) : user ? (
-                <div className="relative">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="flex items-center justify-center cursor-pointer"
-                    style={{ borderRadius: "50%", background: "transparent", border: "none" }}
-                  >
-                    {user.image ? (
-                      <Image
-                        src={user.image}
-                        alt="Profile"
-                        width={36}
-                        height={36}
-                        className="object-cover"
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          border: "2px solid #CACE00",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="flex items-center justify-center"
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          background: "#1F3635",
-                          border: "2px solid #CACE00",
-                        }}
-                      >
-                        <User size={16} color="#FCFBF4" />
-                      </div>
-                    )}
-                  </motion.button>
-
-                  <AnimatePresence>
-                    {showUserDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-[46px]"
-                        style={{
-                          width: "220px",
-                          background: isDark
-                            ? "rgba(72, 125, 123, 0.97)"
-                            : "rgba(255, 255, 255, 0.97)",
-                          backdropFilter: "blur(14px)",
-                          borderRadius: "var(--radius-md)",
-                          boxShadow: isDark
-                            ? "0 12px 32px rgba(0,0,0,0.3)"
-                            : "var(--shadow-hover)",
-                          padding: "8px",
-                          border: isDark
-                            ? "1px solid rgba(252,251,244,0.1)"
-                            : "1px solid rgba(123,163,206,0.2)",
-                          zIndex: 70,
-                        }}
-                      >
-                        <div
-                          style={{
-                            padding: "12px",
-                            borderRadius: "var(--radius-sm)",
-                            background: isDark ? "rgba(252,251,244,0.05)" : "#FCFBF4",
-                            marginBottom: "6px",
-                            border: isDark
-                              ? "1px solid rgba(252,251,244,0.1)"
-                              : "1px solid rgba(123,163,206,0.1)",
-                          }}
-                        >
-                          <p
-                            className="font-bold truncate"
-                            style={{ fontSize: "14px", color: isDark ? "#FCFBF4" : "#1F3635" }}
-                          >
-                            {user.name || user.email}
-                          </p>
-                          <p
-                            className="truncate mt-0.5"
-                            style={{ fontSize: "12px", color: "#7BA3CE" }}
-                          >
-                            {user.email}
-                          </p>
-                        </div>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center justify-center gap-2 font-semibold cursor-pointer"
-                          style={{
-                            padding: "10px",
-                            borderRadius: "var(--radius-sm)",
-                            color: isDark ? "#FCFBF4" : "#1F3635",
-                            background: "transparent",
-                            border: "none",
-                            fontSize: "13px",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = isDark
-                              ? "rgba(252,251,244,0.1)"
-                              : "rgba(123,163,206,0.1)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                          }}
-                        >
-                          <LogOut size={14} />
-                          Sign Out
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden flex items-center justify-center cursor-pointer ml-1"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: "rgba(123, 163, 206, 0.15)",
-                border: "none",
-                color: isDark ? "#FCFBF4" : "#1F3635",
-              }}
-            >
-              {isMobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
-            </motion.button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Mobile Menu ── */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 lg:hidden pt-[96px] px-4 pb-6"
-            style={{
-              background: isDark
-                ? "rgba(31, 54, 53, 0.98)"
-                : "rgba(252, 251, 244, 0.98)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <div className="flex flex-col h-full overflow-y-auto">
-
-              {/* Mobile Search */}
-              <div className="sm:hidden mb-6">
-                <form onSubmit={handleSearchSubmit}>
-                  <div
-                    className="relative flex items-center w-full"
-                    style={{
-                      background: isDark ? "#487D7B" : "#ffffff",
-                      borderRadius: "var(--radius-full)",
-                      height: "48px",
-                      padding: "0 6px 0 20px",
-                      border: isDark
-                        ? "1px solid rgba(252,251,244,0.12)"
-                        : "1px solid rgba(123, 163, 206, 0.2)",
-                    }}
-                  >
-                    <Search
-                      size={15}
-                      style={{
-                        color: isDark ? "rgba(252,251,244,0.4)" : "rgba(31,54,53,0.35)",
-                        marginRight: "10px",
-                      }}
+                  {user.image ? (
+                    <Image
+                      src={user.image}
+                      alt="User Profile"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
                     />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="Search products..."
-                      className="flex-1 h-full bg-transparent outline-none font-medium"
-                      style={{
-                        color: isDark ? "#FCFBF4" : "#1F3635",
-                        fontSize: "14px",
-                      }}
-                    />
+                  ) : (
                     <div
-                      className="flex items-center justify-center ml-2"
+                      className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
                       style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        background: "#1F3635",
-                        color: "#CACE00",
-                        flexShrink: 0,
+                        background: "var(--accent-primary)",
+                        color: "#FFFDF8",
                       }}
                     >
-                      <Sparkles size={15} strokeWidth={2.5} />
+                      {user.name ? user.name[0].toUpperCase() : "U"}
                     </div>
-                  </div>
-                </form>
-              </div>
+                  )}
+                </button>
 
-              {/* Nav links */}
-              <nav className="flex flex-col gap-2 mb-8">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <div
-                        className="flex items-center gap-4"
-                        style={{
-                          padding: "14px 20px",
-                          borderRadius: "var(--radius-md)",
-                          background: isActive
-                            ? "#CACE00"
-                            : isDark
-                            ? "rgba(252,251,244,0.05)"
-                            : "rgba(255, 255, 255, 0.5)",
-                          color: isActive ? "#1F3635" : (isDark ? "#FCFBF4" : "#1F3635"),
-                          fontSize: "16px",
-                          fontWeight: isActive ? 700 : 600,
-                          boxShadow: isActive ? "0 4px 12px rgba(202, 206, 0, 0.2)" : "none",
-                        }}
-                      >
-                        <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                        <span>{item.name}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-
-                {/* Wishlist mobile link */}
-                <Link href="/wishlist" onClick={() => setIsMobileMenuOpen(false)}>
-                  <div
-                    className="flex items-center gap-4"
-                    style={{
-                      padding: "14px 20px",
-                      borderRadius: "var(--radius-md)",
-                      background: isDark ? "rgba(252,251,244,0.05)" : "rgba(255,255,255,0.5)",
-                      color: isDark ? "#FCFBF4" : "#1F3635",
-                      fontSize: "16px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Heart size={22} strokeWidth={2} />
-                    <span>Wishlist</span>
-                    {wishlistCount > 0 && (
-                      <span
-                        className="ml-auto font-bold"
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: "var(--radius-full)",
-                          background: "#E9BAC3",
-                          color: "#1F3635",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              </nav>
-
-              {/* Auth bottom */}
-              <div className="mt-auto pt-6">
-                {!user && !isLoading ? (
-                  <button
-                    onClick={() => { handleSignIn(); setIsMobileMenuOpen(false); }}
-                    className="w-full flex items-center justify-center gap-3 font-bold"
-                    style={{
-                      padding: "16px 24px",
-                      borderRadius: "var(--radius-md)",
-                      background: "#1F3635",
-                      color: "#CACE00",
-                      fontSize: "16px",
-                      border: "none",
-                      boxShadow: "var(--shadow-hover)",
-                    }}
-                  >
-                    <LogIn size={20} />
-                    Sign In with Google
-                  </button>
-                ) : user ? (
-                  <div className="flex flex-col gap-3">
-                    <div
-                      className="flex items-center gap-4 p-4 rounded-2xl"
+                <AnimatePresence>
+                  {showUserDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-[42px] w-52 py-2 rounded-2xl shadow-modal z-50"
                       style={{
-                        background: isDark
-                          ? "rgba(252,251,244,0.05)"
-                          : "rgba(255,255,255,0.7)",
-                        border: isDark
-                          ? "1px solid rgba(252,251,244,0.1)"
-                          : "1px solid rgba(123,163,206,0.2)",
+                        background: "var(--surface-3)",
+                        border: "1px solid var(--border)",
                       }}
                     >
-                      {user.image && (
-                        <Image
-                          src={user.image}
-                          alt="Profile"
-                          width={44}
-                          height={44}
-                          className="rounded-full border-2"
-                          style={{ borderColor: "#CACE00" }}
-                        />
-                      )}
-                      <div>
+                      <div className="px-4 py-2 border-b" style={{ borderColor: "var(--border)" }}>
                         <p
-                          className="font-bold text-lg"
-                          style={{ color: isDark ? "#FCFBF4" : "#1F3635" }}
+                          className="text-xs font-bold truncate"
+                          style={{ color: "var(--text-primary)" }}
                         >
                           {user.name}
                         </p>
                         <p
-                          className="font-medium"
-                          style={{ color: "#7BA3CE", fontSize: "14px" }}
+                          className="text-[11px] truncate"
+                          style={{ color: "var(--text-secondary)" }}
                         >
                           {user.email}
                         </p>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 font-bold py-4 rounded-xl"
-                      style={{
-                        background: isDark
-                          ? "rgba(252,251,244,0.1)"
-                          : "rgba(123,163,206,0.15)",
-                        color: isDark ? "#FCFBF4" : "#1F3635",
-                        border: "none",
-                      }}
-                    >
-                      <LogOut size={18} />
-                      Sign Out
-                    </button>
-                  </div>
-                ) : null}
+
+                      <Link
+                        href="/profile"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium transition-colors"
+                        style={{ color: "var(--text-primary)" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <User size={14} /> Profile & Settings
+                      </Link>
+
+                      <Link
+                        href="/assets"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium transition-colors"
+                        style={{ color: "var(--text-primary)" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <Package size={14} /> My Assets
+                      </Link>
+
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 transition-colors cursor-pointer border-t mt-1"
+                        style={{ borderColor: "var(--border)" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <LogOut size={14} /> Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all shadow-sm"
+                style={{
+                  background: "var(--accent-primary)",
+                  color: "#FFFDF8",
+                }}
+              >
+                <LogIn size={13} />
+                <span>Sign In</span>
+              </button>
+            )}
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden ml-1 p-1.5 rounded-md text-foreground"
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden absolute top-full left-4 right-4 mt-2 p-4 rounded-2xl shadow-modal z-50 overflow-hidden"
+            style={{
+              background: "var(--surface-3)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div className="flex flex-col gap-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                    style={{
+                      background: isActive
+                        ? "var(--accent-primary)"
+                        : "transparent",
+                      color: isActive ? "#FFFDF8" : "var(--text-primary)",
+                    }}
+                  >
+                    <Icon size={16} />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── Floating AI Agent Chat Button ── */}
-      <Link href="/chat" aria-label="Open NeedNow AI Agent Chat">
-        <motion.div
-          whileHover={{ scale: 1.06, y: -2 }}
-          whileTap={{ scale: 0.94 }}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4.5 py-3 rounded-full cursor-pointer"
-          style={{
-            background: "#CACE00",
-            color: "#1F3635",
-            border: "1px solid rgba(31, 54, 53, 0.15)",
-            boxShadow: "0 10px 30px -5px rgba(202, 206, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15)",
-          }}
-        >
-          <Sparkles size={18} strokeWidth={2.5} />
-          <span className="font-bold text-xs tracking-wider uppercase">AI Agent</span>
-        </motion.div>
-      </Link>
-    </>
+    </header>
   );
 }

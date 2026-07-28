@@ -77,6 +77,9 @@ export default function CreatePostModal({
     return '';
   });
 
+  // Optional Image URL
+  const [imageUrl, setImageUrl] = useState('');
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('draft_title', title);
@@ -123,6 +126,7 @@ export default function CreatePostModal({
         latitude: parseFloat(String(latitude)),
         longitude: parseFloat(String(longitude)),
         radius,
+        images: imageUrl.trim() ? [imageUrl.trim()] : [],
       };
 
       if (postType === 'need') {
@@ -143,6 +147,7 @@ export default function CreatePostModal({
       setDescription('');
       setBudget('');
       setPrice('');
+      setImageUrl('');
       onPostCreated();
       onClose();
     } catch (err: any) {
@@ -158,15 +163,16 @@ export default function CreatePostModal({
       <div 
         className="w-full max-w-xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative my-auto scrollbar-thin"
         style={{
-          background: 'var(--bg-surface)',
+          background: 'var(--surface-3)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-card)',
+          boxShadow: 'var(--shadow-modal)',
+          border: '1px solid var(--border)',
         }}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+          className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
         >
           <X size={20} />
         </button>
@@ -183,7 +189,7 @@ export default function CreatePostModal({
         </div>
 
         {/* Post Type Selector Tabs */}
-        <div className="grid grid-cols-2 gap-3 mb-6 p-1.5 bg-[var(--bg-page)] rounded-[var(--radius-md)] border border-[rgba(31,54,53,0.08)]">
+        <div className="grid grid-cols-2 gap-3 mb-6 p-1.5 bg-[var(--surface-2)] rounded-[var(--radius-md)] border" style={{ borderColor: 'var(--border)' }}>
           <button
             type="button"
             onClick={() => setPostType('need')}
@@ -241,7 +247,8 @@ export default function CreatePostModal({
               }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+              style={{ borderColor: 'var(--border)' }}
             />
           </div>
 
@@ -253,7 +260,8 @@ export default function CreatePostModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
+              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
+              style={{ borderColor: 'var(--border)' }}
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -281,11 +289,12 @@ export default function CreatePostModal({
                       key={u.id}
                       type="button"
                       onClick={() => setUrgency(u.id as any)}
-                      className={`flex-1 py-3 text-xs font-bold rounded-[var(--radius-md)] transition-all cursor-pointer ${
+                      className={`flex-1 py-3 text-xs font-bold rounded-[var(--radius-md)] border transition-all cursor-pointer ${
                         urgency === u.id
-                          ? 'bg-[var(--text-primary)] text-[var(--bg-page)]'
-                          : 'bg-[var(--bg-page)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--text-primary)] text-[var(--surface-3)]'
+                          : 'bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
+                      style={{ borderColor: 'var(--border)' }}
                     >
                       {u.label}
                     </button>
@@ -303,7 +312,8 @@ export default function CreatePostModal({
                   placeholder="e.g. 500 (or leave blank for free)"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  className="w-full p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+                  style={{ borderColor: 'var(--border)' }}
                 />
               </div>
             </div>
@@ -319,7 +329,8 @@ export default function CreatePostModal({
                 <select
                   value={condition}
                   onChange={(e) => setCondition(e.target.value as any)}
-                  className="w-full p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
+                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
+                  style={{ borderColor: 'var(--border)' }}
                 >
                   <option value="new">New (Unopened)</option>
                   <option value="like_new">Like New (Barely used)</option>
@@ -339,7 +350,8 @@ export default function CreatePostModal({
                   placeholder="e.g. 1200"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+                  style={{ borderColor: 'var(--border)' }}
                 />
               </div>
             </div>
@@ -354,8 +366,51 @@ export default function CreatePostModal({
               placeholder="Add details, condition, availability, or preferred pickup times..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full min-h-[90px] p-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none resize-none"
+              className="w-full min-h-[90px] p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none resize-none"
+              style={{ borderColor: 'var(--border)' }}
             />
+          </div>
+
+          {/* IMAGE URL */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center justify-between">
+              <span>Item Image URL (Optional)</span>
+              <span className="text-[10px] text-[var(--text-secondary)] font-normal">Direct HTTP/HTTPS link</span>
+            </label>
+            <input
+              type="url"
+              placeholder="https://images.unsplash.com/photo-... or item image link"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border outline-none"
+              style={{ borderColor: 'var(--border)' }}
+            />
+
+            {imageUrl.trim() && (
+              <div className="mt-2 p-2 rounded-xl border flex items-center gap-3 bg-[var(--surface-1)]" style={{ borderColor: 'var(--border)' }}>
+                <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border)' }}>
+                  <img 
+                    src={imageUrl.trim()} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-[var(--text-primary)]">Image Attached</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] truncate">{imageUrl.trim()}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImageUrl('')}
+                  className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-[rgba(231,63,60,0.12)] text-[var(--color-heat)] cursor-pointer"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
 
           {/* LOCATION & RADIUS */}

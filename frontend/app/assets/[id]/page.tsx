@@ -311,28 +311,28 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
               <LoadingStats />
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
+                <div className="p-4 rounded-2xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="text-2xl font-bold" style={{ color: 'var(--color-jade)' }}>
                     {dashboard.stats.total_assets}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total Items</div>
                 </div>
                 
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
+                <div className="p-4 rounded-2xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="text-2xl font-bold" style={{ color: dashboard.stats.low_stock > 0 ? 'var(--color-heat)' : 'var(--text-secondary)' }}>
                     {dashboard.stats.low_stock}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Low Stock</div>
                 </div>
                 
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
+                <div className="p-4 rounded-2xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="text-2xl font-bold" style={{ color: dashboard.stats.expired > 0 ? 'var(--color-heat)' : 'var(--text-secondary)' }}>
                     {dashboard.stats.expired}
                   </div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Expired</div>
                 </div>
                 
-                <div className="p-4 rounded-2xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
+                <div className="p-4 rounded-2xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="text-2xl font-bold" style={{ color: dashboard.stats.expiring_soon > 0 ? 'var(--color-juice)' : 'var(--text-secondary)' }}>
                     {dashboard.stats.expiring_soon}
                   </div>
@@ -343,7 +343,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
 
             {/* Low Stock Items */}
             {(dashboard?.low_stock_items?.length ?? 0) > 0 && (
-              <div className="p-6 rounded-3xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
+              <div className="p-6 rounded-3xl border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle size={20} style={{ color: 'var(--color-heat)' }} />
                   <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Low Stock Items</h3>

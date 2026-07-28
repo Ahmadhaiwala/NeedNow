@@ -1,10 +1,12 @@
 import FeedSection, { FeedSectionProps } from "@/components/FeedSection";
-import { Search } from "lucide-react";
+import HeroSection from "@/components/HeroSection";
+import BentoBanners from "@/components/BentoBanners";
+import TrustFooter from "@/components/TrustFooter";
 
-interface FeedSection extends FeedSectionProps {}
+interface FeedSectionData extends FeedSectionProps {}
 
 interface HomeFeedResponse {
-  sections: FeedSection[];
+  sections: FeedSectionData[];
   meta: {
     total_categories: number;
     total_products: number;
@@ -12,7 +14,7 @@ interface HomeFeedResponse {
 }
 
 export default async function Home() {
-  let sections: FeedSection[] = [];
+  let sections: FeedSectionData[] = [];
   let totalCategories = 0;
   let totalProducts = 0;
 
@@ -31,146 +33,46 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: "var(--bg-page)" }}>
       <main
-        className="max-w-7xl mx-auto"
-        style={{ padding: "24px", paddingTop: "32px" }}
+        className="max-w-7xl mx-auto w-full"
+        style={{ padding: "24px", paddingTop: "16px" }}
       >
-        {/* ── Hero Banner ── */}
-        <div className="mb-8">
-          {/* Large hero card */}
-          <div
-            className="relative overflow-hidden"
-            style={{
-              background: "var(--color-core)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "var(--shadow-card)",
-              padding: "40px",
-              minHeight: "280px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-            }}
-          >
-            {/* Decorative circles */}
-            <div
-              className="absolute -top-16 -right-16"
-              style={{
-                width: "280px",
-                height: "280px",
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-juice)",
-                opacity: 0.12,
-              }}
-            />
-            <div
-              className="absolute bottom-0 right-20"
-              style={{
-                width: "180px",
-                height: "180px",
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-jade)",
-                opacity: 0.25,
-              }}
-            />
-            <div
-              className="absolute top-8 right-40"
-              style={{
-                width: "100px",
-                height: "100px",
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-pink)",
-                opacity: 0.15,
-              }}
-            />
+        {/* ── Editorial Hero Section ── */}
+        <HeroSection totalCategories={totalCategories} totalProducts={totalProducts} />
 
-            <p
-              className="font-semibold mb-2 relative z-10 uppercase tracking-widest"
-              style={{ fontSize: "12px", color: "var(--color-juice)" }}
-            >
-              Welcome to NeedNow
-            </p>
-            <h1
-              className="font-bold relative z-10"
-              style={{
-                fontSize: "clamp(32px, 5vw, 48px)",
-                lineHeight: 1.1,
-                color: "var(--color-cloud)",
-                maxWidth: "550px",
-              }}
-            >
-              Everything you need,
-              <br />
-              delivered now.
-            </h1>
-            <p
-              className="mt-3 relative z-10"
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.5,
-                color: "var(--color-cloud)",
-                opacity: 0.6,
-                maxWidth: "460px",
-              }}
-            >
-              Browse {totalCategories} categories and {totalProducts}+ products.
-              Scroll down to explore.
-            </p>
-
-            {/* Pill search bar */}
-            <div className="mt-6 relative z-10" style={{ maxWidth: "400px" }}>
-              <div
-                className="flex items-center gap-3"
-                style={{
-                  background: "rgba(252, 251, 244, 0.1)",
-                  borderRadius: "var(--radius-full)",
-                  padding: "12px 20px",
-                  border: "1px solid rgba(252, 251, 244, 0.15)",
-                }}
-              >
-                <Search size={18} style={{ color: "var(--color-juice)" }} />
-                <span
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--color-cloud)",
-                    opacity: 0.45,
-                  }}
-                >
-                  Search for products...
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ── Promotional Bento Banners ── */}
+        <BentoBanners />
 
         {/* ── Feed Sections ── */}
         {sections.length === 0 && (
           <div
-            className="text-center"
+            className="text-center my-8"
             style={{
-              padding: "80px 24px",
+              padding: "60px 24px",
               background: "var(--bg-surface)",
               borderRadius: "var(--radius-lg)",
               boxShadow: "var(--shadow-card)",
+              border: "1px solid var(--border-subtle)",
             }}
           >
             <p
-              className="font-semibold"
-              style={{ fontSize: "18px", color: "var(--text-primary)" }}
+              className="font-serif font-bold text-lg"
+              style={{ color: "var(--text-primary)" }}
             >
               Could not load feed
             </p>
             <p
-              className="mt-2"
-              style={{ fontSize: "14px", color: "var(--text-secondary)" }}
+              className="mt-1 text-xs"
+              style={{ color: "var(--text-secondary)" }}
             >
-              Make sure the backend is running at localhost:8000
+              Make sure the Django backend is running at http://localhost:8000
             </p>
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
-          {sections.map((section, i) => (
+        <div className="flex flex-col gap-6">
+          {sections.map((section) => (
             <FeedSection
               key={section.id}
               id={section.id}
@@ -178,11 +80,13 @@ export default async function Home() {
               title={section.title}
               endpoint={section.endpoint}
               requires_auth={section.requires_auth}
-              variant={i % 2 === 0 ? "jade" : "core"}
             />
           ))}
         </div>
       </main>
+
+      {/* ── Bottom Trust Footer ── */}
+      <TrustFooter />
     </div>
   );
 }

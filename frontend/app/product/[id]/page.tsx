@@ -7,6 +7,10 @@ import {
 import AddToCartButtons from "./AddToCartButtons";
 import ProductInteractionTracker from "./ProductInteractionTracker";
 import WishlistButton from "./WishlistButton";
+import RecommendedProducts from "./RecommendedProducts";
+import ProductReviews from "./ProductReviews";
+import Navbar from "../../navbar/Navbar";
+import TrustFooter from "@/components/TrustFooter";
 
 function isValidUrl(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -21,7 +25,7 @@ function isValidUrl(url: string | null | undefined): boolean {
 function formatPrice(price: number | string | null | undefined): string {
   const num = parseFloat(String(price ?? ''));
   if (isNaN(num)) return 'N/A';
-  return num.toFixed(2);
+  return num.toFixed(0);
 }
 
 async function getProduct(id: string) {
@@ -45,136 +49,103 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
   const product = await getProduct(id);
 
   return (
-    <div
-  className="min-h-screen px-6 py-10"
-  style={{ background: "var(--bg-page)" }}
->
-      {/* Invisible client component — tracks view/click events */}
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: "var(--bg-page)" }}>
+      <Navbar />
       <ProductInteractionTracker productId={product.id} productName={product.name} />
 
-      <div className="max-w-7xl mx-auto">
-
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
         <div className="grid lg:grid-cols-12 gap-8">
-
-          {/* ================= IMAGE ================= */}
-          <div className="lg:col-span-4">
-
+          {/* IMAGE */}
+          <div className="lg:col-span-5">
             <div
-              className="p-8 sticky top-24"
+              className="p-8 sticky top-24 rounded-3xl shadow-card flex items-center justify-center"
               style={{
-                borderRadius: "var(--radius-lg)",
-                background:
-                  "linear-gradient(135deg, rgba(123,163,206,0.15), rgba(233,186,195,0.18))",
-                boxShadow: "var(--shadow-card)",
+                background: "rgba(240, 232, 216, 0.4)",
+                border: "1px solid var(--border-subtle)",
               }}
             >
               {isValidUrl(product.image_url) ? (
                 <Image
                   src={product.image_url}
                   alt={product.name || "Product Image"}
-                  width={600}
-                  height={600}
-                  className="w-full h-[450px] object-contain"
+                  width={500}
+                  height={500}
+                  className="w-full h-[400px] object-contain"
                   unoptimized
                 />
               ) : (
-                <div className="w-full h-[450px] flex items-center justify-center rounded-xl" style={{ background: "rgba(0,0,0,0.05)" }}>
-                  <span style={{ color: "var(--text-secondary)" }}>No Image</span>
+                <div className="w-full h-[400px] flex items-center justify-center rounded-xl" style={{ background: "rgba(0,0,0,0.05)" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>No Image Available</span>
                 </div>
               )}
             </div>
-
           </div>
 
-          {/* ================= PRODUCT INFO ================= */}
-          <div className="lg:col-span-5 space-y-6">
-
-            {/* Brand */}
-            <div className="flex gap-3 flex-wrap">
+          {/* PRODUCT INFO */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="flex gap-2 flex-wrap">
               <span
-                className="px-4 py-2"
+                className="px-3 py-1 text-xs font-bold uppercase rounded-full"
                 style={{
-                  background: "rgba(2,90,92,0.12)",
-                  color: "var(--color-jade)",
-                  borderRadius: "var(--radius-full)",
-                  fontWeight: 600,
-                  fontSize: "13px",
+                  background: "rgba(154, 101, 60, 0.12)",
+                  color: "var(--accent-primary)",
                 }}
               >
-                {product.brand || "Generic"}
+                {product.brand || "Brand"}
               </span>
 
               <span
-                className="px-4 py-2"
+                className="px-3 py-1 text-xs font-bold uppercase rounded-full"
                 style={{
-                  background: "rgba(123,163,206,0.12)",
-                  color: "var(--color-sky)",
-                  borderRadius: "var(--radius-full)",
-                  fontWeight: 600,
-                  fontSize: "13px",
+                  background: "var(--bg-surface)",
+                  color: "var(--text-secondary)",
+                  border: "1px solid var(--border-subtle)",
                 }}
               >
                 {product.category?.name || "Category"}
               </span>
             </div>
 
-            {/* Product Name */}
             <h1
-              className="text-5xl font-bold leading-tight"
-              style={{
-                color: "var(--text-primary)",
-              }}
+              className="text-3xl sm:text-4xl font-serif font-bold leading-tight"
+              style={{ color: "var(--text-primary)" }}
             >
               {product.name}
             </h1>
 
-            {/* Description */}
             <div
-              className="p-6"
+              className="p-6 rounded-2xl border shadow-sm"
               style={{
-                borderRadius: "var(--radius-lg)",
-                background: "rgba(233,186,195,0.14)",
+                background: "var(--surface-2)",
+                borderColor: "var(--border)",
               }}
             >
               <h2
-                className="mb-4 font-bold"
-                style={{
-                  color: "var(--color-jade)",
-                  fontSize: "22px",
-                }}
+                className="mb-2 font-serif font-bold text-lg"
+                style={{ color: "var(--text-primary)" }}
               >
                 Description
               </h2>
-
               <p
-                style={{
-                  color: "var(--text-secondary)",
-                  lineHeight: "1.9",
-                  fontSize: "16px",
-                }}
+                className="text-xs leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
               >
-                {product.description ||
-                  "No description available for this product."}
+                {product.description || "No description available for this product."}
               </p>
             </div>
 
-            {/* Attributes */}
             <div>
               <h2
-                className="mb-5 font-bold text-2xl"
-                style={{
-                  color: "var(--text-primary)",
-                }}
+                className="mb-4 font-serif font-bold text-lg"
+                style={{ color: "var(--text-primary)" }}
               >
                 Product Details
               </h2>
 
-              <div className="grid grid-cols-2 gap-4">
-
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   ["Unit", product.unit],
                   ["Size", product.unit_size],
@@ -183,30 +154,21 @@ export default async function ProductPage({
                 ].map(([title, value]) => (
                   <div
                     key={title}
-                    className="p-5"
+                    className="p-3.5 rounded-xl border"
                     style={{
-                      borderRadius: "var(--radius-md)",
-                      background: "rgba(123,163,206,0.08)",
+                      background: "var(--surface-2)",
+                      borderColor: "var(--border)",
                     }}
                   >
                     <p
-                      style={{
-                        color: "var(--color-jade)",
-                        fontSize: "12px",
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        fontWeight: 700,
-                      }}
+                      className="text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: "var(--accent-primary)" }}
                     >
                       {title}
                     </p>
-
                     <p
-                      className="mt-2 font-medium"
-                      style={{
-                        color: "var(--text-primary)",
-                        fontSize: "16px",
-                      }}
+                      className="mt-1 font-semibold text-xs truncate"
+                      style={{ color: "var(--text-primary)" }}
                     >
                       {value}
                     </p>
@@ -216,48 +178,34 @@ export default async function ProductPage({
             </div>
           </div>
 
-          {/* ================= BUY BOX ================= */}
+          {/* BUY BOX */}
           <div className="lg:col-span-3">
-
             <div
-              className="sticky top-24 p-6"
+              className="sticky top-24 p-6 rounded-3xl shadow-card"
               style={{
-                borderRadius: "var(--radius-lg)",
                 background: "var(--bg-surface)",
-                boxShadow: "var(--shadow-card)",
+                border: "1px solid var(--border-subtle)",
               }}
             >
-
-              <p
-                style={{
-                  color: "var(--color-jade)",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                }}
-              >
-                PRICE
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
+                Price
               </p>
 
               <h2
-                className="font-bold mt-2"
-                style={{
-                  color: "var(--text-primary)",
-                  fontSize: "46px",
-                }}
+                className="font-bold mt-1 text-3xl sm:text-4xl"
+                style={{ color: "var(--text-primary)" }}
               >
-                {product.price != null ? `₹${formatPrice(product.price)}` : 'Price N/A'}
+                {product.price != null ? `₹${formatPrice(product.price)}` : 'N/A'}
               </h2>
 
               <div
-                className="mt-4 px-4 py-3"
+                className="mt-3 px-3 py-1.5 rounded-full text-xs font-bold inline-block"
                 style={{
-                  borderRadius: "var(--radius-md)",
-                  background: "rgba(2,90,92,0.1)",
+                  background: "rgba(78, 112, 85, 0.12)",
                   color: "var(--color-jade)",
-                  fontWeight: 600,
                 }}
               >
-                In Stock
+                In Stock & Ready for Delivery
               </div>
 
               <div className="mt-6 space-y-3">
@@ -265,93 +213,29 @@ export default async function ProductPage({
                 <WishlistButton product={product} />
               </div>
 
-              <div className="mt-8 space-y-4">
-
-                <div className="flex gap-3 items-center">
-                  <Truck
-                    size={18}
-                    color="var(--color-sky)"
-                  />
-                  <span style={{ color: "var(--text-secondary)" }}>
-                    Fast Delivery
-                  </span>
+              <div className="mt-6 space-y-3 pt-6 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                <div className="flex gap-2.5 items-center text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <Truck size={16} style={{ color: "var(--accent-primary)" }} />
+                  <span>30-min express delivery</span>
                 </div>
-
-                <div className="flex gap-3 items-center">
-                  <RotateCcw
-                    size={18}
-                    color="var(--color-sky)"
-                  />
-                  <span style={{ color: "var(--text-secondary)" }}>
-                    Easy Returns
-                  </span>
+                <div className="flex gap-2.5 items-center text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <RotateCcw size={16} style={{ color: "var(--accent-primary)" }} />
+                  <span>7-day easy returns</span>
                 </div>
-
-                <div className="flex gap-3 items-center">
-                  <ShieldCheck
-                    size={18}
-                    color="var(--color-sky)"
-                  />
-                  <span style={{ color: "var(--text-secondary)" }}>
-                    Secure Payments
-                  </span>
+                <div className="flex gap-2.5 items-center text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <ShieldCheck size={16} style={{ color: "var(--accent-primary)" }} />
+                  <span>Secure checkout</span>
                 </div>
-
               </div>
-
             </div>
-
-          </div>
-
-        </div>
-
-        {/* ================= FUTURE RECOMMENDATIONS ================= */}
-
-        <div className="mt-24">
-          <h2
-            className="text-3xl font-bold mb-6"
-            style={{
-              color: "var(--text-primary)",
-            }}
-          >
-            Recommended Products
-          </h2>
-
-          <div
-            className="h-60 flex items-center justify-center"
-            style={{
-              borderRadius: "var(--radius-lg)",
-              background: "rgba(123,163,206,0.08)",
-            }}
-          >
-            Coming Soon
           </div>
         </div>
 
-        {/* ================= FUTURE REVIEWS ================= */}
+        <RecommendedProducts productId={product.id} categoryId={product.category?.id} />
+        <ProductReviews productName={product.name} />
+      </main>
 
-        <div className="mt-20">
-          <h2
-            className="text-3xl font-bold mb-6"
-            style={{
-              color: "var(--text-primary)",
-            }}
-          >
-            Customer Reviews
-          </h2>
-
-          <div
-            className="h-60 flex items-center justify-center"
-            style={{
-              borderRadius: "var(--radius-lg)",
-              background: "rgba(233,186,195,0.1)",
-            }}
-          >
-            Reviews Coming Soon
-          </div>
-        </div>
-
-      </div>
+      <TrustFooter />
     </div>
   );
 }

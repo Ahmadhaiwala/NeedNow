@@ -71,29 +71,30 @@ export default function UserReviewsModal({
       <div 
         className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative my-auto scrollbar-thin"
         style={{
-          background: 'var(--bg-surface)',
+          background: 'var(--surface-3)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-modal)',
+          border: '1px solid var(--border)',
         }}
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-[var(--radius-sm)] bg-[rgba(202,206,0,0.12)]">
-              <Star className="w-5 h-5 text-[#FFC107] fill-[#FFC107]" />
+            <div className="p-2.5 rounded-[var(--radius-sm)] bg-accent-muted">
+              <Star className="w-5 h-5 text-warning fill-warning" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">
+              <h3 className="text-lg font-bold text-foreground">
                 {myReviews ? 'My Ratings & Reviews' : `${userName}'s Reviews`}
               </h3>
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="text-xs text-muted">
                 Community feedback and deal reputation
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] transition-all cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-surface text-muted transition-all cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -103,7 +104,7 @@ export default function UserReviewsModal({
         <div className="p-4 mb-6 rounded-[var(--radius-md)] bg-[var(--bg-page)] border border-[rgba(31,54,53,0.06)] flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-black text-[var(--text-primary)]">{avgRating}</span>
+              <span className="text-2xl font-black text-foreground">{avgRating}</span>
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
@@ -111,34 +112,34 @@ export default function UserReviewsModal({
                     size={16}
                     className={
                       star <= Math.round(Number(avgRating))
-                        ? 'fill-[#FFC107] text-[#FFC107]'
+                        ? 'fill-warning text-warning'
                         : 'text-gray-300'
                     }
                   />
                 ))}
               </div>
             </div>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Overall rating score</p>
+            <p className="text-xs text-muted mt-0.5">Overall rating score</p>
           </div>
           <div className="text-right">
-            <span className="text-lg font-bold text-[var(--color-juice)]">{reviews.length}</span>
-            <p className="text-xs text-[var(--text-secondary)]">Total Reviews</p>
+            <span className="text-lg font-bold text-accent">{reviews.length}</span>
+            <p className="text-xs text-muted">Total Reviews</p>
           </div>
         </div>
 
         {/* Reviews List */}
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--color-juice)]" />
-            <p className="text-xs text-[var(--text-secondary)]">Loading reviews...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            <p className="text-xs text-muted">Loading reviews...</p>
           </div>
         ) : error ? (
           <div className="p-4 text-xs font-semibold rounded-[var(--radius-sm)] bg-[rgba(231,63,60,0.12)] text-[var(--color-heat)] text-center">
             {error}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="py-12 text-center text-[var(--text-secondary)]">
-            <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-40 text-[var(--color-sky)]" />
+          <div className="py-12 text-center text-muted">
+            <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-40 text-info" />
             <p className="text-sm font-semibold">No reviews yet</p>
             <p className="text-xs mt-1">Complete deals with neighbors to build community ratings!</p>
           </div>
@@ -159,7 +160,7 @@ export default function UserReviewsModal({
                         {rev.reviewer_details?.display_name || rev.reviewer_details?.first_name || 'Neighbor'}
                       </p>
                       <p className="text-[10px] text-[var(--text-secondary)]">
-                        {new Date(rev.created_at).toLocaleDateString()}
+                        {new Date(rev.created_at || Date.now()).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -169,7 +170,7 @@ export default function UserReviewsModal({
                         key={star}
                         size={14}
                         className={
-                          star <= rev.rating ? 'fill-[#FFC107] text-[#FFC107]' : 'text-gray-300'
+                          star <= rev.rating ? 'fill-warning text-warning' : 'text-gray-300'
                         }
                       />
                     ))}

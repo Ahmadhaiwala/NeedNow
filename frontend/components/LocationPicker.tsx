@@ -3,6 +3,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Search, Loader2, Info } from 'lucide-react';
 
+declare global {
+  interface Window {
+    google: any;
+    gm_authFailure: any;
+  }
+}
+
 interface LocationPickerProps {
   value: string;
   onChange: (address: string, lat: number, lng: number) => void;
@@ -146,10 +153,10 @@ export default function LocationPicker({
       // Draw Radius Circle if specified and coords valid
       if (radius && hasValidCoords) {
         circleRef.current = new window.google.maps.Circle({
-          strokeColor: '#CACE00',
+          strokeColor: 'var(--accent)',
           strokeOpacity: 0.8,
           strokeWeight: 2,
-          fillColor: '#CACE00',
+          fillColor: 'var(--accent)',
           fillOpacity: 0.15,
           map: googleMapRef.current,
           center: initialPosition,
@@ -164,7 +171,7 @@ export default function LocationPicker({
     if (isGoogleLoaded && window.google?.maps) {
       try {
         const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: targetLat, lng: targetLng } }, async (results, status) => {
+        geocoder.geocode({ location: { lat: targetLat, lng: targetLng } }, async (results: any, status: any) => {
           if (status === 'OK' && results && results[0]) {
             onChange(results[0].formatted_address, targetLat, targetLng);
             return;
@@ -255,7 +262,7 @@ export default function LocationPicker({
     if (window.google?.maps?.Geocoder) {
       try {
         const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: value }, (results, status) => {
+        geocoder.geocode({ address: value }, (results: any, status: any) => {
           setIsGeocoding(false);
           if (status === 'OK' && results && results[0]) {
             const loc = results[0].geometry.location;
@@ -299,7 +306,8 @@ export default function LocationPicker({
                   handleUniversalSearch();
                 }
               }}
-              className="w-full pl-11 pr-4 py-4 text-sm bg-[var(--bg-page)] text-[var(--text-primary)] rounded-[var(--radius-md)] border-0 focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
+              className="w-full pl-11 pr-4 py-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border outline-none font-medium"
+              style={{ borderColor: 'var(--border)' }}
             />
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">
               <MapPin size={18} />
@@ -310,7 +318,8 @@ export default function LocationPicker({
             type="button"
             onClick={handleUniversalSearch}
             disabled={isGeocoding || !value.trim()}
-            className="px-5 py-2 text-sm font-semibold rounded-[var(--radius-md)] border border-[rgba(31,54,53,0.15)] bg-[var(--bg-surface)] hover:bg-[rgba(31,54,53,0.05)] cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5 text-[var(--text-primary)]"
+            className="px-5 py-2 text-sm font-semibold rounded-[var(--radius-md)] border bg-[var(--surface-2)] cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5 text-[var(--text-primary)]"
+            style={{ borderColor: 'var(--border)' }}
           >
             {isGeocoding ? (
               <Loader2 size={16} className="animate-spin text-[var(--text-secondary)]" />

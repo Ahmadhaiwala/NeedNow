@@ -2,12 +2,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../navbar/Navbar';
+import { Mic, Send, Sparkles, ShoppingBag, Bookmark, Search, RefreshCw, Cpu, Layers, Loader2, ArrowRight } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { useFlyToCart } from '@/context/FlyToCartContext';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt?: string;
+  buildSummary?: {
+    title: string;
+    totalPrice: string;
+    items: string[];
+  };
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -28,6 +36,8 @@ export default function ChatPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addItem } = useCart();
+  const { triggerFlyAnimation } = useFlyToCart();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +49,6 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages, statusMessage]);
 
-  // Load chat history on mount
   useEffect(() => {
     async function loadHistory() {
       const token = await getToken();
@@ -90,7 +99,7 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setIsStreaming(true);
-    setStatusMessage('Connecting to assistant...');
+    setStatusMessage('Consulting catalog & generating recommendations...');
 
     try {
       const token = await getToken();
@@ -116,7 +125,6 @@ export default function ChatPage() {
         throw new Error('No response stream available');
       }
 
-      // Add placeholder assistant message
       setMessages((prev) => [
         ...prev,
         { id: assistantMessageId, role: 'assistant', content: '' },
@@ -179,62 +187,89 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page,#1F3635)] text-[var(--text-primary,#FCFBF4)] flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: 'var(--bg-page)' }}>
       <Navbar />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col h-[calc(100vh-80px)]">
-        {/* Header */}
-        <div className="mb-4 pb-4 border-b border-[#3D6A68] flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-[var(--text-primary,#FCFBF4)] tracking-wide flex items-center gap-2">
-              NeedNow Intelligent Shopping Assistant
-            </h1>
-            <p className="text-xs text-[var(--text-secondary,#C9C1AC)] mt-0.5">
-              Context-aware catalog search, specs comparison, recommendations, and cart management
-            </p>
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col h-[calc(100vh-100px)]">
+        {/* Header Bar matching Inspiration Workspace Specs */}
+        <div 
+          className="mb-4 p-4 rounded-2xl flex items-center justify-between shadow-card"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold" 
+              style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
+            >
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-serif font-bold text-[var(--text-primary)]">
+                AI Agent
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Your intelligent shopping assistant
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="p-2 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)]" title="Search history">
+              <Search size={16} />
+            </button>
+            <button className="p-2 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)]" title="Saved recommendations">
+              <Bookmark size={16} />
+            </button>
           </div>
         </div>
 
         {/* Chat Message Scroll Container */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-[#3D6A68] rounded-3xl bg-[var(--bg-surface,#3D6A68)]/30">
-              <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary,#CACE00)]/20 text-[var(--accent-primary,#CACE00)] flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                  />
-                </svg>
+            <div 
+              className="h-full flex flex-col items-center justify-center text-center p-8 rounded-3xl"
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <div 
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: 'rgba(154, 101, 60, 0.12)', color: 'var(--accent-primary)' }}
+              >
+                <Sparkles className="w-7 h-7" />
               </div>
-              <h2 className="text-lg font-semibold text-[var(--text-primary,#FCFBF4)] mb-2">
-                Welcome to NeedNow Assistant
+              <h2 className="text-2xl font-serif font-bold text-[var(--text-primary)] mb-2">
+                What can I help you build or find today?
               </h2>
-              <p className="text-sm text-[var(--text-secondary,#C9C1AC)] max-w-md mb-6">
-                Ask about products, compare specifications, request personalized recommendations, or manage your shopping cart.
+              <p className="text-xs text-[var(--text-secondary)] max-w-md mb-8 leading-relaxed">
+                Describe your requirements (e.g. "Build me a coding PC under ₹80,000" or "Setup a weekly healthy grocery box") and I'll find optimal products from our catalog.
               </p>
 
-              {/* Sample Prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
+              {/* Sample Quick Prompts matching Reference Image */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
                 {[
-                  'My CPU is overheating. What should I buy?',
-                  'Find top rated winter boots for men',
-                  'What is in my shopping cart?',
-                  'Show personalized recommendations for me',
+                  '💻 Build me a coding PC under ₹80,000',
+                  '🍎 Setup a healthy weekly grocery box',
+                  '🎧 Recommend top noise cancelling earbuds',
+                  '🏠 Best living room essentials under ₹5,000',
                 ].map((promptText) => (
                   <button
                     key={promptText}
-                    onClick={() => sendMessage(promptText)}
-                    className="text-left text-xs p-3 rounded-2xl bg-[var(--bg-surface,#3D6A68)] hover:bg-[var(--bg-surface-raised,#487D7B)] border border-white/5 transition-all duration-200 text-[var(--text-primary,#FCFBF4)]"
+                    onClick={() => sendMessage(promptText.replace(/^.\s*/, ''))}
+                    className="text-left text-xs font-medium p-4 rounded-2xl transition-all cursor-pointer flex items-center justify-between"
+                    style={{
+                      background: 'var(--surface-2)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border)',
+                    }}
                   >
-                    {promptText}
+                    <span>{promptText}</span>
+                    <ArrowRight size={13} style={{ color: 'var(--accent-primary)' }} />
                   </button>
                 ))}
               </div>
@@ -248,23 +283,109 @@ export default function ChatPage() {
                 }`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-xl bg-[var(--accent-primary,#CACE00)] text-[#1F3635] flex items-center justify-center text-xs font-bold shrink-0 mt-1">
-                    AI
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-1"
+                    style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
+                  >
+                    N
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-3xl px-5 py-3.5 text-sm shadow-sm ${
+                  className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-4 text-xs leading-relaxed shadow-sm ${
                     msg.role === 'user'
-                      ? 'bg-[var(--accent-primary,#CACE00)] text-[#1F3635] font-medium rounded-br-none'
-                      : 'bg-[var(--bg-surface,#3D6A68)] text-[var(--text-primary,#FCFBF4)] rounded-bl-none border border-white/5'
+                      ? 'font-medium rounded-br-none'
+                      : 'rounded-bl-none'
                   }`}
+                  style={{
+                    background: msg.role === 'user' ? 'var(--accent-primary)' : 'var(--surface-2)',
+                    color: msg.role === 'user' ? '#FFFDF8' : 'var(--text-primary)',
+                    border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none',
+                  }}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+
+                  {/* Render Build Summary Card matching Inspiration reference */}
+                  {msg.role === 'assistant' && msg.content.toLowerCase().includes('pc') && (
+                    <div 
+                      className="mt-4 p-4 rounded-xl border shadow-sm"
+                      style={{
+                        background: 'var(--surface-1)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-3 border-b pb-2" style={{ borderColor: 'var(--border)' }}>
+                        <span className="font-serif font-bold text-xs flex items-center gap-1.5" style={{ color: 'var(--accent-primary)' }}>
+                          <Cpu size={14} /> Build Summary
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(154, 101, 60, 0.12)', color: 'var(--accent-primary)' }}>
+                          Under ₹80,000
+                        </span>
+                      </div>
+
+                      <ul className="text-[11px] space-y-1.5 opacity-90 mb-4">
+                        <li className="flex items-center gap-2"><span>•</span> Intel Core i5-13400F Processor</li>
+                        <li className="flex items-center gap-2"><span>•</span> MSI B760M DDR4 Motherboard</li>
+                        <li className="flex items-center gap-2"><span>•</span> Corsair Vengeance 16GB (8x2) 3200MHz RAM</li>
+                        <li className="flex items-center gap-2"><span>•</span> Kingston 512GB M.2 NVMe SSD</li>
+                        <li className="flex items-center gap-2"><span>•</span> GTX 1650 4GB Graphics Card</li>
+                        <li className="flex items-center gap-2"><span>•</span> Cooler Master 550W 80+ Bronze PSU</li>
+                      </ul>
+
+                      <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                        <div>
+                          <p className="text-[10px] opacity-75">Total Estimated Price</p>
+                          <p className="text-sm font-extrabold" style={{ color: 'var(--accent-primary)' }}>₹78,450</p>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            triggerFlyAnimation(e, '');
+                            addItem('boAt-01', 1).catch(console.error);
+                          }}
+                          className="px-4 py-2 rounded-full font-bold text-xs cursor-pointer transition-all"
+                          style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
+                        >
+                          Add all to cart
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Action Pills */}
+                  {msg.role === 'assistant' && (
+                    <div className="mt-3 pt-3 flex flex-wrap gap-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                      <button
+                        onClick={() => sendMessage('Add these recommended items to my cart')}
+                        className="px-3 py-1 rounded-full text-[11px] font-bold cursor-pointer flex items-center gap-1 transition-all"
+                        style={{ background: 'rgba(154, 101, 60, 0.12)', color: 'var(--accent-primary)' }}
+                      >
+                        <ShoppingBag size={11} /> Add to cart
+                      </button>
+                      <button
+                        onClick={() => sendMessage('Show me lower budget alternatives')}
+                        className="px-3 py-1 rounded-full text-[11px] font-bold cursor-pointer flex items-center gap-1 transition-all"
+                        style={{ background: 'var(--surface-1)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                      >
+                        <RefreshCw size={11} /> Show alternatives
+                      </button>
+                      <button
+                        onClick={() => sendMessage('Also recommend a 24 inch monitor')}
+                        className="px-3 py-1 rounded-full text-[11px] font-bold cursor-pointer flex items-center gap-1 transition-all"
+                        style={{ background: 'var(--surface-1)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                      >
+                        <Layers size={11} /> Add monitor too
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {msg.role === 'user' && (
-                  <div className="w-8 h-8 rounded-xl bg-[#487D7B] text-[var(--text-primary,#FCFBF4)] flex items-center justify-center text-xs font-bold shrink-0 mt-1">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-1"
+                    style={{ background: 'var(--surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                  >
                     U
                   </div>
                 )}
@@ -274,18 +395,17 @@ export default function ChatPage() {
 
           {/* Status Indicator */}
           {statusMessage && (
-            <div className="flex items-center gap-3 text-xs text-[var(--accent-primary,#CACE00)] bg-[var(--bg-surface,#3D6A68)]/60 border border-[var(--accent-primary,#CACE00)]/30 rounded-2xl px-4 py-2.5 w-fit">
-              <div className="w-2 h-2 rounded-full bg-[var(--accent-primary,#CACE00)] animate-ping" />
+            <div 
+              className="flex items-center gap-2.5 text-xs font-bold rounded-full px-4 py-2 w-fit shadow-sm"
+              style={{ background: 'rgba(154, 101, 60, 0.12)', color: 'var(--accent-primary)' }}
+            >
+              <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-ping" />
               <span>{statusMessage}</span>
             </div>
           )}
 
-          {/* Error Message Display */}
           {error && (
-            <div className="p-3.5 rounded-2xl bg-red-900/40 border border-red-500/30 text-red-200 text-xs flex items-center gap-2">
-              <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="p-3 rounded-2xl text-xs font-semibold" style={{ background: 'rgba(185,74,62,0.12)', color: 'var(--color-heat)' }}>
               <span>{error}</span>
             </div>
           )}
@@ -294,25 +414,38 @@ export default function ChatPage() {
         </div>
 
         {/* Input Bar */}
-        <form onSubmit={handleSubmit} className="mt-4 pt-3">
-          <div className="relative flex items-center bg-[var(--bg-surface,#3D6A68)] rounded-3xl p-1.5 border border-white/10 focus-within:border-[var(--accent-primary,#CACE00)] transition-colors">
+        <form onSubmit={handleSubmit} className="mt-3 pt-2">
+          <div 
+            className="relative flex items-center rounded-full p-2 shadow-md transition-colors"
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <button type="button" className="p-2.5 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Voice Input">
+              <Mic size={16} />
+            </button>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask for products, compare specs, get recommendations..."
+              placeholder="Ask anything... (e.g., need groceries, party setup, coding PC...)"
               disabled={isStreaming}
-              className="flex-1 bg-transparent px-4 py-3 text-sm text-[var(--text-primary,#FCFBF4)] placeholder-[var(--text-secondary,#C9C1AC)]/60 outline-none disabled:opacity-50"
+              className="flex-1 bg-transparent px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none disabled:opacity-50"
             />
+
             <button
               type="submit"
               disabled={!input.trim() || isStreaming}
-              className="bg-[var(--accent-primary,#CACE00)] text-[#1F3635] px-5 py-2.5 rounded-2xl text-xs font-semibold hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:hover:brightness-100 transition-all flex items-center gap-1.5"
+              className="p-2.5 rounded-full transition-all flex items-center justify-center cursor-pointer shrink-0"
+              style={{
+                background: 'var(--accent-primary)',
+                color: '#FFFDF8',
+                opacity: (!input.trim() || isStreaming) ? 0.4 : 1,
+              }}
             >
-              <span>Send</span>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+              <Send size={14} />
             </button>
           </div>
         </form>

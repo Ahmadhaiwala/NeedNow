@@ -29,7 +29,7 @@ export function LoadingSpinner({ size = 24, text }: LoadingSpinnerProps) {
         <Package size={size} style={{ color: 'var(--accent-primary)' }} />
       </div>
       {text && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm text-muted">
           {text}
         </p>
       )}

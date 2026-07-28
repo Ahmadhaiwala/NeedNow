@@ -77,16 +77,16 @@ export default function PostDetailModal({
 
   useEffect(() => {
     if (isOpen && post) {
-      setLocalStatus(post.status);
+      setLocalStatus(post.status || 'active');
       getMarketplacePost(post.id)
         .then((fresh) => {
-          if (fresh) setLocalStatus(fresh.status);
+          if (fresh) setLocalStatus(fresh.status || 'active');
         })
         .catch(() => {});
       fetchOffers();
       setError(null);
       setSuccessMsg(null);
-      setOfferPrice(post.post_type === 'sell' && post.price ? post.price : post.budget || '');
+      setOfferPrice(String(post.post_type === 'sell' && post.price ? post.price : post.budget || ''));
       setOfferMessage('');
     }
   }, [isOpen, post]);
@@ -187,7 +187,7 @@ export default function PostDetailModal({
     } catch (err: any) {
       console.error('Error completing post:', err);
       setError(err.message || 'Failed to complete post.');
-      setLocalStatus(post.status); // revert on failure
+      if (post) setLocalStatus(post.status || 'active'); // revert on failure
     } finally {
       setSubmitLoading(false);
     }
@@ -202,15 +202,16 @@ export default function PostDetailModal({
       <div 
         className="w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative my-auto scrollbar-thin flex flex-col gap-6"
         style={{
-          background: 'var(--bg-surface)',
+          background: 'var(--surface-3)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-card)',
+          boxShadow: 'var(--shadow-modal)',
+          border: '1px solid var(--border)',
         }}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--bg-page)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+          className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
         >
           <X size={20} />
         </button>
@@ -279,6 +280,23 @@ export default function PostDetailModal({
           </div>
         </div>
 
+        {/* Post Image Banner */}
+        {post.images && post.images.length > 0 && post.images[0] && (
+          <div 
+            className="w-full max-h-72 rounded-2xl overflow-hidden border p-2 flex items-center justify-center"
+            style={{ background: 'var(--surface-1)', borderColor: 'var(--border)' }}
+          >
+            <img 
+              src={post.images[0]} 
+              alt={post.title} 
+              className="w-full max-h-64 object-contain rounded-xl"
+              onError={(e) => {
+                (e.target as HTMLElement).parentElement!.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
         {/* Description */}
         <div className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-page)]">
           <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-1">
@@ -307,7 +325,7 @@ export default function PostDetailModal({
 
           {!isOwner && (
             <button
-              onClick={() => onOpenChat(post.owner, post.owner_details?.display_name || 'Owner', post.id)}
+              onClick={() => onOpenChat(post.owner || '', post.owner_details?.display_name || 'Owner', post.id)}
               className="px-4 py-2 text-xs font-bold rounded-[var(--radius-md)] bg-[var(--bg-page)] text-[var(--text-primary)] hover:bg-[rgba(31,54,53,0.08)] transition-all cursor-pointer flex items-center gap-1.5"
             >
               <MessageSquare size={14} />
@@ -439,15 +457,15 @@ export default function PostDetailModal({
                           setIsUserReviewsOpen(true);
                         }}
                         title="Click to view all reviews for this neighbor"
-                        className="flex items-center gap-1 text-[11px] font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full bg-[rgba(202,206,0,0.12)] border border-[rgba(202,206,0,0.25)] hover:bg-[rgba(202,206,0,0.25)] transition-all cursor-pointer"
+                        className="flex items-center gap-1 text-[11px] font-bold text-foreground px-2 py-0.5 rounded-full bg-accent-muted border border-default hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
                       >
-                        <Star size={11} className="fill-[#FFC107] text-[#FFC107]" />
+                        <Star size={11} className="fill-warning text-warning" />
                         {offer.user_details?.rating !== undefined && Number(offer.user_details.rating) > 0
                           ? Number(offer.user_details.rating).toFixed(1)
                           : 'New'}
                         <span className="text-[var(--text-secondary)] font-normal">({offer.user_details?.review_count || 0})</span>
                       </button>
-                      <span className="px-2.5 py-0.5 text-xs font-black rounded-md bg-[rgba(202,206,0,0.18)] text-[var(--color-juice)] border border-[rgba(202,206,0,0.3)]">
+                      <span className="px-2.5 py-0.5 text-xs font-black rounded-md bg-accent-muted text-accent border border-default">
                         Offered: ₹{offer.price}
                       </span>
                       <span
@@ -479,15 +497,15 @@ export default function PostDetailModal({
                           setReviewTarget({ userId: targetUser, userName: targetName });
                           setIsReviewModalOpen(true);
                         }}
-                        className="px-3 py-1.5 text-xs font-bold rounded-[var(--radius-sm)] bg-[rgba(202,206,0,0.2)] text-[var(--text-primary)] hover:opacity-90 transition-all cursor-pointer flex items-center gap-1 border border-[rgba(202,206,0,0.3)] shadow-xs"
+                        className="px-3 py-1.5 text-xs font-bold rounded-[var(--radius-sm)] bg-accent-muted text-foreground hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer flex items-center gap-1 border border-default shadow-xs"
                       >
-                        <Star size={12} className="fill-[#FFC107] text-[#FFC107]" /> Rate & Review
+                        <Star size={12} className="fill-warning text-warning" /> Rate & Review
                       </button>
                     )}
 
                     {/* Chat button for each offer */}
                     <button
-                      onClick={() => onOpenChat(offer.user, offer.user_details?.display_name || 'User', post.id)}
+                      onClick={() => onOpenChat(offer.user || '', offer.user_details?.display_name || 'User', post.id)}
                       className="p-2 rounded-[var(--radius-sm)] bg-[var(--bg-surface)] hover:bg-[rgba(31,54,53,0.08)] text-[var(--text-primary)] transition-all cursor-pointer"
                       title="Chat with offerer"
                     >

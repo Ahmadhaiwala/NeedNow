@@ -2,8 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Heart, Package, ArrowRight, Trash2 } from 'lucide-react';
+import { Heart, Package, ArrowRight, Trash2, ShoppingCart } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
+import { useCart } from '@/context/CartContext';
+import { useFlyToCart } from '@/context/FlyToCartContext';
+import Navbar from '../navbar/Navbar';
 
 function formatPrice(price: string | number | null | undefined): string {
   if (price == null) return '';
@@ -13,36 +16,38 @@ function formatPrice(price: string | number | null | undefined): string {
 
 export default function WishlistPage() {
   const { items, toggle, count } = useWishlist();
+  const { addItem } = useCart();
+  const { triggerFlyAnimation } = useFlyToCart();
 
   return (
-    <div className="min-h-screen px-6 py-10" style={{ background: 'var(--bg-page)' }}>
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: 'var(--bg-page)' }}>
+      <Navbar />
 
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-10">
+        <div className="flex items-center gap-4 mb-8">
           <div
-            className="flex items-center justify-center"
+            className="flex items-center justify-center rounded-2xl"
             style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(233,186,195,0.25)',
+              width: '48px',
+              height: '48px',
+              background: 'rgba(185,74,62,0.12)',
             }}
           >
-            <Heart size={24} style={{ color: '#025A5C', fill: count > 0 ? '#025A5C' : 'none' }} />
+            <Heart size={22} style={{ color: 'var(--color-heat)', fill: count > 0 ? 'var(--color-heat)' : 'none' }} />
           </div>
           <div>
             <h1
-              className="font-bold"
-              style={{ fontSize: '32px', color: 'var(--text-primary)', lineHeight: 1.2 }}
+              className="font-serif font-bold text-3xl"
+              style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}
             >
-              Wishlist
+              Saved for Later
             </h1>
             <p
-              className="mt-1 font-medium"
-              style={{ fontSize: '14px', color: 'var(--text-secondary)' }}
+              className="mt-0.5 text-xs font-medium"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              {count} {count === 1 ? 'item' : 'items'} saved
+              {count} {count === 1 ? 'item' : 'items'} saved in your wishlist
             </p>
           </div>
         </div>
@@ -52,60 +57,53 @@ export default function WishlistPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-24 text-center"
+            className="flex flex-col items-center justify-center py-20 text-center rounded-3xl"
             style={{
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border)',
               boxShadow: 'var(--shadow-card)',
             }}
           >
             <div
-              className="flex items-center justify-center mb-6"
+              className="flex items-center justify-center mb-4 rounded-2xl"
               style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: 'var(--radius-lg)',
-                background: 'rgba(233,186,195,0.18)',
+                width: '64px',
+                height: '64px',
+                background: 'rgba(185,74,62,0.12)',
               }}
             >
-              <Heart size={36} style={{ color: 'var(--color-pink)', opacity: 0.6 }} />
+              <Heart size={28} style={{ color: 'var(--color-heat)', opacity: 0.6 }} />
             </div>
             <h2
-              className="font-bold mb-3"
-              style={{ fontSize: '22px', color: 'var(--text-primary)' }}
+              className="font-serif font-bold text-xl mb-2"
+              style={{ color: 'var(--text-primary)' }}
             >
               Your wishlist is empty
             </h2>
             <p
-              className="mb-8 max-w-xs"
-              style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6 }}
+              className="mb-6 max-w-xs text-xs"
+              style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}
             >
               Tap the heart icon on any product to save it here for later.
             </p>
             <Link href="/">
               <button
-                className="flex items-center gap-2 font-semibold"
+                className="flex items-center gap-2 font-bold text-xs px-6 py-3 rounded-full cursor-pointer shadow-sm"
                 style={{
-                  padding: '14px 28px',
-                  borderRadius: 'var(--radius-full)',
                   background: 'var(--accent-primary)',
-                  color: 'var(--color-core)',
-                  border: 'none',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--shadow-button)',
+                  color: '#FFFDF8',
                 }}
               >
                 Discover Products
-                <ArrowRight size={16} />
+                <ArrowRight size={14} />
               </button>
             </Link>
           </motion.div>
         )}
 
-        {/* Item grid */}
+        {/* Item grid with layout animation */}
         {count > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence>
               {items.map((item) => (
                 <motion.div
@@ -113,20 +111,19 @@ export default function WishlistPage() {
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.18 } }}
-                  transition={{ duration: 0.28, ease: 'easeOut' }}
+                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="flex flex-col justify-between rounded-2xl overflow-hidden shadow-card"
                   style={{
-                    background: 'var(--bg-surface)',
-                    borderRadius: 'var(--radius-lg)',
-                    boxShadow: 'var(--shadow-card)',
-                    overflow: 'hidden',
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   {/* Image area */}
                   <Link href={`/product/${item.id}`}>
                     <div
-                      className="flex items-center justify-center p-6 cursor-pointer"
-                      style={{ background: 'rgba(233,186,195,0.18)', height: '160px' }}
+                      className="flex items-center justify-center p-6 cursor-pointer relative"
+                      style={{ background: 'var(--surface-1)', height: '160px' }}
                     >
                       {item.image_url ? (
                         <img
@@ -135,94 +132,76 @@ export default function WishlistPage() {
                           className="h-full w-full object-contain"
                         />
                       ) : (
-                        <Package size={40} style={{ color: 'var(--color-core)', opacity: 0.25 }} />
+                        <Package size={36} style={{ color: 'var(--text-secondary)', opacity: 0.3 }} />
                       )}
                     </div>
                   </Link>
 
                   {/* Info */}
-                  <div className="p-4">
+                  <div className="p-4 flex flex-col flex-1">
                     <span
-                      className="uppercase tracking-wider font-semibold"
-                      style={{ fontSize: '11px', color: 'var(--color-jade)' }}
+                      className="uppercase tracking-wider font-bold text-[10px]"
+                      style={{ color: 'var(--accent-primary)' }}
                     >
-                      {item.brand}
+                      {item.brand || 'Wishlist Item'}
                     </span>
                     <Link href={`/product/${item.id}`}>
                       <h3
-                        className="mt-1 font-semibold leading-snug line-clamp-2 cursor-pointer hover:underline"
-                        style={{ fontSize: '15px', color: 'var(--text-primary)' }}
+                        className="mt-1 font-semibold text-xs leading-snug line-clamp-2 cursor-pointer hover:underline"
+                        style={{ color: 'var(--text-primary)', minHeight: '32px' }}
                       >
                         {item.name}
                       </h3>
                     </Link>
 
-                    <div className="flex items-center justify-between mt-4">
-                      {/* Price */}
+                    <div className="flex items-center justify-between mt-4 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
                       <span
-                        className="font-bold"
-                        style={{ fontSize: '20px', color: 'var(--text-primary)' }}
+                        className="font-bold text-sm"
+                        style={{ color: 'var(--text-primary)' }}
                       >
                         {formatPrice(item.price) || '—'}
                       </span>
 
-                      {/* Remove from wishlist */}
+                      {/* Remove from wishlist button */}
                       <motion.button
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => toggle(item)}
-                        className="flex items-center justify-center"
+                        className="flex items-center justify-center p-2 rounded-full cursor-pointer transition-colors"
                         style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: 'var(--radius-md)',
-                          background: 'rgba(231,63,60,0.08)',
+                          background: 'rgba(185, 74, 62, 0.1)',
                           color: 'var(--color-heat)',
                           border: 'none',
-                          cursor: 'pointer',
-                          transition: 'background 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(231,63,60,0.16)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(231,63,60,0.08)';
                         }}
                         aria-label="Remove from wishlist"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </motion.button>
                     </div>
 
                     {/* Add to cart CTA */}
-                    <Link href={`/product/${item.id}`}>
-                      <button
-                        className="mt-3 w-full flex items-center justify-center gap-2 font-semibold"
-                        style={{
-                          padding: '11px 16px',
-                          borderRadius: 'var(--radius-full)',
-                          background: 'var(--accent-primary)',
-                          color: 'var(--color-core)',
-                          border: 'none',
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          boxShadow: 'var(--shadow-button)',
-                          transition: 'opacity 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
-                      >
-                        View Product
-                        <ArrowRight size={14} />
-                      </button>
-                    </Link>
+                    <button
+                      onClick={(e) => {
+                        triggerFlyAnimation(e, item.image_url || '');
+                        addItem(item.id, 1).catch(console.error);
+                      }}
+                      className="mt-3 w-full flex items-center justify-center gap-1.5 font-bold text-xs py-2.5 rounded-full cursor-pointer transition-all shadow-sm"
+                      style={{
+                        background: 'var(--accent-primary)',
+                        color: '#FFFDF8',
+                        border: 'none',
+                      }}
+                    >
+                      <ShoppingCart size={13} />
+                      Add to Cart
+                    </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

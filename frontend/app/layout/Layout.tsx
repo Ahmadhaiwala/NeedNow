@@ -3,6 +3,7 @@
 import Navbar from "../navbar/Navbar"
 import { CartProvider } from "@/context/CartContext"
 import { WishlistProvider } from "@/context/WishlistContext"
+import { FlyToCartProvider } from "@/context/FlyToCartContext"
 
 // Import cache debugging in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
@@ -14,11 +15,13 @@ export default function Layout({children}:{children : React.ReactNode}){
          <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-page)' }}>
               <CartProvider>
                 <WishlistProvider>
-                  <Navbar/>
-                  {/* pt-[120px] accounts for floating navbar height (76px) + top padding (24px) + gap */}
-                  <div className="pt-[120px] flex-grow">
-                     {children}
-                  </div>
+                  <FlyToCartProvider>
+                    <Navbar/>
+                    {/* pt-[120px] accounts for floating navbar height (76px) + top padding (24px) + gap */}
+                    <div className="pt-[120px] flex-grow">
+                       {children}
+                    </div>
+                  </FlyToCartProvider>
                 </WishlistProvider>
               </CartProvider>
          </div>

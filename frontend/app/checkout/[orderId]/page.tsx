@@ -178,9 +178,10 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             style={{
-              background: "var(--bg-surface)",
+              background: "var(--surface-2)",
               borderRadius: "var(--radius-lg)",
               boxShadow: "var(--shadow-card)",
+              border: "1px solid var(--border)",
               padding: 28,
               height: "fit-content",
             }}
@@ -198,7 +199,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
 
             {/* Items */}
             <div style={{
-              borderTop: "1px solid var(--bg-page)",
+              borderTop: "1px solid var(--border)",
               paddingTop: 16,
               marginBottom: 16,
               display: "flex",
@@ -227,7 +228,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
 
             {/* Total */}
             <div style={{
-              borderTop: "1px solid var(--bg-page)",
+              borderTop: "1px solid var(--border)",
               paddingTop: 16,
               display: "flex",
               justifyContent: "space-between",
@@ -235,8 +236,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
             }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Total</span>
               <span style={{
-                fontSize: 20, fontWeight: 800, color: "var(--color-juice)",
-                background: "var(--color-juice)" + "18",
+                fontSize: 20, fontWeight: 800, color: "var(--accent-primary)",
+                background: "rgba(154, 101, 60, 0.12)",
                 padding: "4px 12px", borderRadius: "var(--radius-sm)",
               }}>
                 ₹{order.total_amount}
@@ -249,9 +250,10 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             style={{
-              background: "var(--bg-surface)",
+              background: "var(--surface-2)",
               borderRadius: "var(--radius-lg)",
               boxShadow: "var(--shadow-card)",
+              border: "1px solid var(--border)",
               padding: 28,
             }}
           >
@@ -283,11 +285,11 @@ export default function CheckoutPage({ params }: { params: Promise<{ orderId: st
                             borderRadius: "var(--radius-md)",
                             cursor: "pointer",
                             border: isSelected
-                              ? "2px solid var(--color-juice)"
-                              : "2px solid var(--bg-page)",
+                              ? "2px solid var(--accent-primary)"
+                              : "1px solid var(--border)",
                             background: isSelected
-                              ? "var(--color-juice)" + "12"
-                              : "var(--bg-page)",
+                              ? "rgba(154, 101, 60, 0.12)"
+                              : "var(--surface-1)",
                             transition: "border 0.15s, background 0.15s",
                           }}
                         >

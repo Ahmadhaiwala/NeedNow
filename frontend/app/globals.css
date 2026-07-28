@@ -1,117 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
 
 /* Enable class-based dark variant for Tailwind utilities */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* ── 1. Color Tokens ── */
-  --color-core:  #1F3635;
-  --color-cloud: #FCFBF4;   /* card/surface in light; primary text in dark */
-  --color-sand:  #C9C1AC;   /* light-mode page bg only — 1.79:1 vs white cards */
-  --color-juice: #CACE00;
+  /* ── LIGHT MODE: Exact 4-Tier Surface Hierarchy ── */
+  --background: #E9DFC9;        /* Level 0: ONLY application/page canvas */
+  --surface-1: #F6EDDD;         /* Level 1: major content sections, navbar, large containers */
+  --surface-2: #FFF9EF;         /* Level 2: product cards, order cards, marketplace cards, AI surfaces, forms, panels */
+  --surface-3: #FFFFFF;         /* Level 3: dropdowns, modals, popovers, floating UI */
 
-  /* Signal colors — light shades */
-  --color-heat: #E73F3C;
-  --color-jade: #025A5C;
-  --color-sky:  #7BA3CE;
-  --color-pink: #E9BAC3;
-  --color-moss: #6E7A34;   /* new — muted olive, earthy/Juice-family, distinct from surface ramp */
-
-  /* ── Semantic — light mode ── */
-  --bg-page:           #C9C1AC;   /* --color-sand */
-  --bg-surface:        #FFFFFF;   /* fixed white, "or Cloud" variant removed */
-  --bg-surface-raised: #FFFFFF;
-  --bg-surface-alt:    #FCFBF4;   /* --color-cloud for subtle alternating surfaces */
-
-  --text-primary:   #1F3635;
-  --text-secondary: rgba(31, 54, 53, 0.55);
-  --accent-primary: #CACE00;
-
-  /* ── Row divider (inside cards — not a background swap) ── */
-  --divider-row: 1px solid rgba(31, 54, 53, 0.08);
-
-  /* ── Shadows — light mode ── */
-  --shadow-card:   0 4px 16px rgba(31, 54, 53, 0.08);
-  --shadow-hover:  0 8px 24px rgba(31, 54, 53, 0.14);
-  --shadow-button: 0 2px 8px rgba(31, 54, 53, 0.18);
-
-  /* ── Border Radius ── */
-  --radius-sm:   12px;
-  --radius-md:   20px;
-  --radius-lg:   28px;
-  --radius-full: 999px;
+  /* Legacy & Helper Aliases */
+  --surface: var(--surface-1);
+  --surface-elevated: var(--surface-2);
+  --surface-alt: var(--surface-1);
+  --bg-page: var(--background);
+  --bg-surface: var(--surface-2);
+  --bg-card: var(--surface-2);
 
   /* Typography */
-  --font-display: var(--font-geist-sans), system-ui, sans-serif;
-  --font-body:    var(--font-geist-sans), system-ui, sans-serif;
+  --foreground: #2B1F17;        /* espresso dark text */
+  --foreground-muted: #8B7B6E;  /* taupe muted text */
+  --text-primary: var(--foreground);
+  --text-secondary: var(--foreground-muted);
+  
+  /* Accent System - Leather/Cognac Primary */
+  --accent: #A0623C;            /* leather/cognac accent */
+  --accent-primary: var(--accent);
+  --accent-foreground: #FFFFFF; /* white on accent for better contrast */
+  --accent-hover: #8F5532;      /* darker leather hover */
+  --accent-muted: rgba(160, 98, 60, 0.12); /* subtle accent background */
+  
+  /* Border System - Standardized LIGHT Border */
+  --border: rgba(69, 43, 27, 0.16);
+  --border-muted: rgba(69, 43, 27, 0.08);
+  --border-subtle: var(--border);
 
-  /* Legacy */
-  --background: #C9C1AC;
-  --foreground: #1F3635;
+  /* Semantic Colors */
+  --destructive: #B85450;       /* warm muted red */
+  --destructive-foreground: #FFFFFF;
+  --success: #5A7A5E;          /* warm muted green */
+  --success-foreground: #FFFFFF;
+  --warning: #D4A574;          /* warm amber for stars/ratings */
+  --warning-foreground: #2B1F17;
+  --info: #6B8DA6;             /* warm blue-gray */
+  --info-foreground: #FFFFFF;
+
+  /* Shadow System - Sparingly used, subtle elevation */
+  --shadow-card: 0 2px 8px rgba(43, 31, 23, 0.04);
+  --shadow-hover: 0 4px 14px rgba(43, 31, 23, 0.08);
+  --shadow-button: 0 2px 8px rgba(43, 31, 23, 0.08);
+  --shadow-modal: 0 8px 24px rgba(43, 31, 23, 0.12);
+
+  /* Border Radius System */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Animation System */
+  --transition-fast: 150ms ease-out;
+  --transition-medium: 200ms ease-out;
+  --transition-slow: 300ms ease-out;
+
+  /* Typography Scale */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* ── Dark Mode — direct hex values (no var() forward refs) ── */
+/* ── DARK MODE: Exact 4-Tier Surface Hierarchy ── */
 .dark {
-  /* Signal colors → dark shades */
-  --color-heat: #B11E1B;
-  --color-jade: #014547;
-  --color-sky:  #51739A;
-  --color-pink: #CE9AA5;
-  --color-moss: #4A531E;   /* dark shade of moss */
+  --background: #0C0B0A;        /* Level 0: ONLY application/page canvas */
+  --surface-1: #171411;         /* Level 1: major content sections, navbar, large containers */
+  --surface-2: #211C18;         /* Level 2: product cards, order cards, marketplace cards, AI surfaces, forms, panels */
+  --surface-3: #2A231E;         /* Level 3: dropdowns, modals, popovers, floating UI */
 
-  /* Semantic → dark elevation ramp (§1a — 2.11:1 card vs page) */
-  --bg-page:           #1F3635;   /* surface-0 */
-  --bg-surface:        #3D6A68;   /* surface-1  +16% L — 2.11:1 */
-  --bg-surface-raised: #487D7B;   /* surface-2  +22% L */
-  --bg-surface-alt:    #3D6A68;
+  --surface: var(--surface-1);
+  --surface-elevated: var(--surface-2);
+  --surface-alt: var(--surface-1);
+  --bg-page: var(--background);
+  --bg-surface: var(--surface-2);
+  --bg-card: var(--surface-2);
 
-  --text-primary:   #FCFBF4;
-  --text-secondary: rgba(252, 251, 244, 0.65);
-  --accent-primary: #CACE00;
+  /* Typography */
+  --foreground: #F2E8D5;        /* warm ivory text */
+  --foreground-muted: #B8A898;  /* warm gray/taupe muted */
+  --text-primary: var(--foreground);
+  --text-secondary: var(--foreground-muted);
+  
+  /* Accent System - Warm Leather/Cognac */
+  --accent: #B8854F;            /* warm leather/cognac */
+  --accent-primary: var(--accent);
+  --accent-foreground: #0F0E0D; /* near-black on accent */
+  --accent-hover: #C49660;      /* lighter cognac hover */
+  --accent-muted: rgba(184, 133, 79, 0.12); /* subtle accent background */
+  
+  /* Border System - Standardized DARK Border */
+  --border: rgba(225, 193, 151, 0.13);
+  --border-muted: rgba(225, 193, 151, 0.06);
+  --border-subtle: var(--border);
 
-  /* Shadows — dark: elevation via lightness ramp, black for hover/float */
-  --shadow-card:   none;
-  --shadow-hover:  0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.40);
+  /* Semantic Colors - Adjusted for dark mode */
+  --destructive: #D16B66;       /* lighter warm red */
+  --destructive-foreground: #0F0E0D;
+  --success: #78A17C;          /* lighter warm green */
+  --success-foreground: #0F0E0D;
+  --warning: #E6B871;          /* lighter warm amber for stars/ratings */
+  --warning-foreground: #0F0E0D;
+  --info: #8BA7C4;             /* lighter warm blue-gray */
+  --info-foreground: #0F0E0D;
 
-  /* Divider — Cloud at 8% on dark surfaces */
-  --divider-row: 1px solid rgba(252, 251, 244, 0.08);
-
-  --background: #1F3635;
-  --foreground: #FCFBF4;
+  /* Shadow System - Subtle for dark mode */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-core:  #1F3635;
-  --color-cloud: #FCFBF4;
-  --color-juice: #CACE00;
-  --color-heat:  #E73F3C;
-  --color-jade:  #025A5C;
-  --color-sky:   #7BA3CE;
-  --color-pink:  #E9BAC3;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* ── BASE ELEMENTS ── */
 html {
-  background: var(--bg-page);
-  transition: background 0.3s ease, color 0.3s ease;
+  background: var(--background);
+  transition: background var(--transition-medium), color var(--transition-medium);
 }
 
 body {
-  background: var(--bg-page);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  transition: background 0.3s ease, color 0.3s ease;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background var(--transition-medium), color var(--transition-medium);
 }
 
-/* Thin scrollbar */
-.scrollbar-thin::-webkit-scrollbar { height: 4px; }
+/* ── SEMANTIC UTILITY CLASSES ── */
+.bg-background { background-color: var(--background); }
+.bg-surface-1 { background-color: var(--surface-1); }
+.bg-surface-2 { background-color: var(--surface-2); }
+.bg-surface-3 { background-color: var(--surface-3); }
+
+/* Compatibility utility classes */
+.bg-surface { background-color: var(--surface-1); }
+.bg-surface-elevated { background-color: var(--surface-2); }
+.bg-surface-alt { background-color: var(--surface-1); }
+
+.text-foreground { color: var(--foreground); }
+.text-muted { color: var(--foreground-muted); }
+
+.bg-accent { background-color: var(--accent); }
+.text-accent { color: var(--accent); }
+.text-accent-foreground { color: var(--accent-foreground); }
+.bg-accent-muted { background-color: var(--accent-muted); }
+
+.border-default { border-color: var(--border); }
+.border-muted { border-color: var(--border-muted); }
+
+.bg-destructive { background-color: var(--destructive); }
+.text-destructive { color: var(--destructive); }
+.text-destructive-foreground { color: var(--destructive-foreground); }
+
+.bg-success { background-color: var(--success); }
+.text-success { color: var(--success); }
+.text-success-foreground { color: var(--success-foreground); }
+
+.bg-warning { background-color: var(--warning); }
+.text-warning { color: var(--warning); }
+.text-warning-foreground { color: var(--warning-foreground); }
+
+.bg-info { background-color: var(--info); }
+.text-info { color: var(--info); }
+.text-info-foreground { color: var(--info-foreground); }
+
+.shadow-card { box-shadow: var(--shadow-card); }
+.shadow-hover { box-shadow: var(--shadow-hover); }
+.shadow-button { box-shadow: var(--shadow-button); }
+.shadow-modal { box-shadow: var(--shadow-modal); }
+
+/* ── COMPONENT ANIMATIONS ── */
+.transition-theme {
+  transition: background-color var(--transition-medium), 
+              color var(--transition-medium), 
+              border-color var(--transition-medium);
+}
+
+.transition-hover {
+  transition: all var(--transition-fast);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* ── NAVBAR GLASSMORPHISM ── */
+.navbar-glass {
+  background: var(--surface-1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: all var(--transition-medium);
+}
+
+.navbar-glass.scrolled {
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .navbar-glass {
+  background: var(--surface-1);
+}
+
+.dark .navbar-glass.scrolled {
+  background: var(--surface-1);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Scrollbar styling with design tokens */
+.scrollbar-thin::-webkit-scrollbar { height: 5px; width: 5px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-sky);
+  background: var(--accent);
+  opacity: 0.3;
   border-radius: var(--radius-full);
 }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--color-jade); }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { 
+  opacity: 0.6; 
+}

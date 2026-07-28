@@ -1,83 +1,56 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { useAuth } from "@/lib/auth";
-import { useOrders, Order, OrderSummary } from "@/lib/orders";
+import { useEffect, useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/lib/auth';
+import { useOrders, OrderSummary } from '@/lib/orders';
+import Navbar from '../navbar/Navbar';
 import {
   Package,
   Clock,
   CheckCircle,
   XCircle,
-  CreditCard,
   Truck,
   RotateCcw,
   AlertCircle,
   IndianRupee,
   ShoppingBag,
-} from "lucide-react";
+  Eye,
+  RefreshCw,
+} from 'lucide-react';
+import Link from 'next/link';
 
-/* ── Status maps aligned to design.md signal colors ── */
 const statusIcons = {
-  pending:    Clock,
-  placed:     Package,
-  confirmed:  CheckCircle,
+  pending: Clock,
+  placed: Package,
+  confirmed: CheckCircle,
   processing: Package,
-  shipped:    Truck,
-  delivered:  CheckCircle,
-  cancelled:  XCircle,
-  refunded:   RotateCcw,
+  shipped: Truck,
+  delivered: CheckCircle,
+  cancelled: XCircle,
+  refunded: RotateCcw,
 };
-
-const statusColors: Record<string, string> = {
-  pending:    "var(--color-sky)",
-  placed:     "var(--color-sky)",
-  confirmed:  "var(--color-jade)",
-  processing: "var(--color-sky)",
-  shipped:    "var(--color-jade)",
-  delivered:  "var(--color-jade)",
-  cancelled:  "var(--color-heat)",
-  refunded:   "var(--text-secondary)",
-};
-
-const paymentColors: Record<string, string> = {
-  pending:        "var(--color-sky)",
-  paid:           "var(--color-jade)",
-  failed:         "var(--color-heat)",
-  refunded:       "var(--text-secondary)",
-  partially_paid: "var(--color-sky)",
-};
-
-const statConfig: Array<{ key: string; label: string; icon: any; accent: string; rupee?: boolean }> = [
-  { key: "total_orders",     label: "Total Orders", icon: ShoppingBag,  accent: "var(--color-sky)"   },
-  { key: "pending_orders",   label: "Pending",       icon: Clock,         accent: "var(--color-juice)" },
-  { key: "completed_orders", label: "Completed",     icon: CheckCircle,   accent: "var(--color-jade)"  },
-  { key: "total_spent",      label: "Total Spent",   icon: IndianRupee,   accent: "var(--color-juice)", rupee: true },
-];
-
-function Spinner() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-      <div className="animate-spin" style={{
-        width: 36, height: 36, borderRadius: "50%",
-        border: "3px solid var(--bg-surface-alt)",
-        borderTopColor: "var(--color-juice)",
-      }} />
-    </div>
-  );
-}
 
 export default function OrdersPage() {
   const { user } = useAuth();
-  const { orders, loading, error, cancelOrder, reorder, getOrderSummary } = useOrders();
+  const { orders, cancelOrder, reorder, getOrderSummary } = useOrders();
   const [summary, setSummary] = useState<OrderSummary | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<'all' | 'pending' | 'completed' | 'cancelled'>('all');
 
   useEffect(() => {
     if (user) {
       getOrderSummary().then(setSummary).catch(console.error);
     }
   }, [user]);
+
+  const filteredOrders = useMemo(() => {
+    if (selectedStatusFilter === 'all') return orders;
+    if (selectedStatusFilter === 'pending') return orders.filter(o => ['pending', 'placed', 'processing'].includes(o.status));
+    if (selectedStatusFilter === 'completed') return orders.filter(o => ['delivered', 'confirmed'].includes(o.status));
+    if (selectedStatusFilter === 'cancelled') return orders.filter(o => ['cancelled', 'refunded'].includes(o.status));
+    return orders;
+  }, [orders, selectedStatusFilter]);
 
   const handleCancelOrder = async (orderId: number) => {
     setActionLoading(orderId);
@@ -90,364 +63,285 @@ export default function OrdersPage() {
     setActionLoading(orderId);
     try {
       const newOrder = await reorder(orderId);
-      alert(`New order created — #${newOrder.id}`);
+      alert(`Order #${orderId} items added again. New order created — #${newOrder.id}`);
     } catch (e) { console.error(e); }
     finally { setActionLoading(null); }
   };
 
   if (!user) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-page)", paddingTop: "96px" }}>
-        <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: "50%", margin: "0 auto 20px",
-            background: "var(--bg-surface)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "var(--shadow-card)",
-          }}>
-            <AlertCircle size={32} style={{ color: "var(--text-secondary)" }} />
+      <div className="min-h-screen" style={{ background: 'var(--bg-page)' }}>
+        <Navbar />
+        <div className="max-w-md mx-auto px-4 py-20 text-center">
+          <div 
+            className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}
+          >
+            <AlertCircle size={24} style={{ color: 'var(--text-secondary)' }} />
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
-            Sign In Required
-          </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: 15 }}>
-            Please sign in to view your orders.
-          </p>
+          <h1 className="text-xl font-serif font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Sign In Required</h1>
+          <p className="text-xs text-secondary mb-6">Please sign in to view and track your orders.</p>
         </div>
-      </div>
-    );
-  }
-
-  if (loading && !orders.length) {
-    return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-page)", paddingTop: "96px" }}>
-        <Spinner />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-page)", paddingTop: "96px" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px" }}>
+    <div className="min-h-screen flex flex-col justify-between" style={{ background: 'var(--bg-page)' }}>
+      <Navbar />
 
-        {/* ── Page Header ── */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl font-serif font-bold tracking-tight mb-1" style={{ color: 'var(--text-primary)' }}>
             My Orders
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+          <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
             Track and manage all your orders
           </p>
         </motion.div>
 
-        {/* ── Summary Stat Cards ── */}
-        {summary && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-            gap: 12,
-            marginBottom: 28,
-          }}>
-            {statConfig.map(({ key, label, icon: Icon, accent, rupee }, i) => (
-              <motion.div
-                key={key}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                whileHover={{ y: -2, boxShadow: "var(--shadow-hover)" }}
-                style={{
-                  background: "var(--bg-surface)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "18px 20px",
-                  boxShadow: "var(--shadow-card)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  transition: "box-shadow 0.2s, transform 0.2s",
-                  cursor: "default",
-                }}
-              >
-                <div style={{
-                  width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                  background: accent + "22",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <Icon size={18} style={{ color: accent }} />
-                </div>
-                <div>
-                  <p style={{
-                    fontSize: 11, fontWeight: 600,
-                    color: "var(--text-secondary)",
-                    textTransform: "uppercase", letterSpacing: "0.06em",
-                    marginBottom: 2,
-                  }}>
-                    {label}
-                  </p>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-                    {rupee ? `₹${summary[key as keyof OrderSummary]}` : String(summary[key as keyof OrderSummary] ?? '')}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+        {/* 4 Compact Stat Metrics matching Inspiration reference image */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
+            style={{
+              background: 'var(--bg-surface)',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(90, 123, 142, 0.12)' }}>
+              <ShoppingBag size={18} style={{ color: 'var(--color-sky)' }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Total Orders</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.total_orders ?? orders.length}</p>
+            </div>
           </div>
-        )}
 
-        {/* ── Orders List ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {orders.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
+            style={{
+              background: 'var(--bg-surface)',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(154, 101, 60, 0.12)' }}>
+              <Clock size={18} style={{ color: 'var(--accent-primary)' }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Pending</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.pending_orders ?? 0}</p>
+            </div>
+          </div>
+
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
+            style={{
+              background: 'var(--bg-surface)',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(78, 112, 85, 0.12)' }}>
+              <CheckCircle size={18} style={{ color: 'var(--color-jade)' }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Completed</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.completed_orders ?? 0}</p>
+            </div>
+          </div>
+
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3"
+            style={{
+              background: 'var(--surface-2)',
+              boxShadow: 'var(--shadow-card)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(217, 186, 131, 0.2)' }}>
+              <IndianRupee size={18} style={{ color: 'var(--accent-primary)' }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Total Spent</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>₹{summary?.total_spent ?? '0'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Status Chips */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          {(['all', 'pending', 'completed', 'cancelled'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedStatusFilter(filter)}
+              className="px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all cursor-pointer"
               style={{
-                textAlign: "center",
-                padding: "64px 24px",
-                background: "var(--bg-surface)",
-                borderRadius: "var(--radius-lg)",
-                boxShadow: "var(--shadow-card)",
+                background: selectedStatusFilter === filter ? 'var(--accent-primary)' : 'var(--surface-2)',
+                color: selectedStatusFilter === filter ? '#FFFDF8' : 'var(--text-secondary)',
+                border: '1px solid var(--border)',
               }}
             >
-              <div style={{
-                width: 72, height: 72, borderRadius: "50%", margin: "0 auto 18px",
-                background: "var(--bg-page)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Package size={32} style={{ color: "var(--text-secondary)" }} />
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6 }}>
-                No orders yet
-              </h3>
-              <p style={{ color: "var(--text-secondary)", marginBottom: 22, fontSize: 14 }}>
-                Start shopping to see your orders here!
-              </p>
-              <a
-                href="/products"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "11px 22px",
-                  background: "var(--color-juice)",
-                  color: "var(--color-core)",
-                  borderRadius: "var(--radius-full)",
-                  fontWeight: 600, fontSize: 14,
-                  textDecoration: "none",
-                  boxShadow: "var(--shadow-button)",
-                }}
-              >
-                Browse Products
-              </a>
-            </motion.div>
+              {filter}
+            </button>
+          ))}
+        </div>
+
+        {/* Orders List */}
+        <div className="flex flex-col gap-5">
+          {filteredOrders.length === 0 ? (
+            <div 
+              className="p-12 text-center rounded-3xl"
+              style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
+            >
+              <Package size={36} className="mx-auto mb-3 opacity-30 text-[var(--text-secondary)]" />
+              <h3 className="font-serif font-bold text-base mb-1" style={{ color: 'var(--text-primary)' }}>No orders found</h3>
+              <p className="text-xs text-secondary mb-6">Looks like you haven't placed any orders matching this status.</p>
+              <Link href="/">
+                <button 
+                  className="px-6 py-2.5 rounded-full font-bold text-xs cursor-pointer shadow-sm"
+                  style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
+                >
+                  Browse Products
+                </button>
+              </Link>
+            </div>
           ) : (
-            orders.map((order, i) => {
+            filteredOrders.map((order, i) => {
               const StatusIcon = statusIcons[order.status as keyof typeof statusIcons] || Package;
-              const statusColor = statusColors[order.status] || "var(--text-secondary)";
-              const paymentColor = paymentColors[order.payment_status] || "var(--text-secondary)";
-              const canCancel = order.status === "pending";
-              const canPay = order.payment_status === "pending";
 
               return (
-                /* ── Single white card per order — design.md §1b ── */
                 <motion.div
                   key={order.id}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="rounded-2xl p-6 shadow-card flex flex-col gap-5"
                   style={{
-                    background: "var(--bg-surface)",
-                    borderRadius: "var(--radius-lg)",
-                    boxShadow: "var(--shadow-card)",
-                    overflow: "hidden",
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
                   }}
                 >
-                  {/* ── Order header row — separated by divider, NOT background ── */}
-                  <div style={{
-                    padding: "18px 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{
-                        width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
-                        background: statusColor + "22",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <StatusIcon size={17} style={{ color: statusColor }} />
+                  {/* Order Top Header Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border-subtle)]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(154, 101, 60, 0.12)' }}>
+                        <StatusIcon size={16} style={{ color: 'var(--accent-primary)' }} />
                       </div>
                       <div>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>
+                        <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                           Order #{order.id}
                         </h3>
-                        <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                          {new Date(order.created_at).toLocaleDateString("en-IN", {
-                            day: "numeric", month: "short", year: "numeric",
-                          })}
+                        <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
 
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
+                    <div className="flex items-center gap-3">
+                      <span 
+                        className="px-3 py-1 rounded-full text-xs font-bold capitalize"
+                        style={{
+                          background: order.status === 'delivered' ? 'rgba(78, 112, 85, 0.12)' : 'rgba(154, 101, 60, 0.12)',
+                          color: order.status === 'delivered' ? 'var(--color-jade)' : 'var(--accent-primary)',
+                        }}
+                      >
+                        {order.status}
+                      </span>
+                      <span className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
                         ₹{order.total_amount}
-                      </p>
-                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                        <span style={{
-                          padding: "3px 10px", borderRadius: "var(--radius-sm)",
-                          fontSize: 11, fontWeight: 600,
-                          background: statusColor + "22", color: statusColor,
-                          textTransform: "capitalize",
-                        }}>
-                          {order.status}
-                        </span>
-                        <span style={{
-                          display: "inline-flex", alignItems: "center", gap: 4,
-                          padding: "3px 10px", borderRadius: "var(--radius-sm)",
-                          fontSize: 11, fontWeight: 600,
-                          background: paymentColor + "22", color: paymentColor,
-                          textTransform: "capitalize",
-                        }}>
-                          <CreditCard size={10} />
-                          {order.payment_status.replace("_", " ")}
-                        </span>
-                      </div>
+                      </span>
                     </div>
                   </div>
 
-                  {/* ── Item rows — plain divider, no background swap ── */}
-                  <div style={{ borderTop: "var(--divider-row)", padding: "12px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
-                    {order.items.map((item, idx) => (
-                      <div key={item.id}>
-                        {idx > 0 && (
-                          <div style={{ borderTop: "var(--divider-row)", marginBottom: 12 }} />
-                        )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{
-                            width: 52, height: 52, borderRadius: "var(--radius-md)",
-                            background: "var(--bg-page)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0, overflow: "hidden",
-                          }}>
-                            {item.product_image ? (
-                              <img
-                                src={item.product_image}
-                                alt={item.product_name}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                              />
-                            ) : (
-                              <Package size={20} style={{ color: "var(--text-secondary)" }} />
-                            )}
+                  {/* Order Status Timeline matching Inspiration requirements */}
+                  <div className="px-2 py-1">
+                    <div className="flex items-center justify-between relative text-[11px] font-bold">
+                      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-stone-200 dark:bg-stone-800 z-0" />
+                      {['Placed', 'Confirmed', 'Shipped', 'Delivered'].map((stepName, idx) => {
+                        const stepLower = stepName.toLowerCase();
+                        const isDone = ['delivered', 'shipped', 'confirmed', 'placed'].indexOf(order.status) >= (3 - idx);
+                        return (
+                          <div key={stepName} className="relative z-10 flex flex-col items-center gap-1 bg-[var(--bg-surface)] px-2">
+                            <div 
+                              className="w-3.5 h-3.5 rounded-full border-2 transition-all"
+                              style={{
+                                background: isDone ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                                borderColor: 'var(--accent-primary)',
+                              }}
+                            />
+                            <span style={{ color: isDone ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                              {stepName}
+                            </span>
                           </div>
-                          <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)" }}>
-                              {item.product_name}
-                            </p>
-                            <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>
-                              {item.quantity} × ₹{item.unit_price}
-                            </p>
-                          </div>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
-                            ₹{item.total_price}
-                          </p>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Order Items Preview */}
+                  <div className="flex flex-col gap-3">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4">
+                        <div 
+                          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                          style={{ background: 'rgba(240, 232, 216, 0.4)' }}
+                        >
+                          {item.product_image ? (
+                            <img src={item.product_image} alt={item.product_name} className="w-full h-full object-contain p-1" />
+                          ) : (
+                            <Package size={18} className="opacity-30" />
+                          )}
                         </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>{item.product_name}</h4>
+                          <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>Qty: {item.quantity} • ₹{item.unit_price}</p>
+                        </div>
+                        <p className="font-bold text-xs" style={{ color: 'var(--text-primary)' }}>₹{item.total_price}</p>
                       </div>
                     ))}
                   </div>
 
-                  {/* ── Action row — plain divider, no background swap ── */}
-                  {(canCancel || canPay || true) && (
-                    <div style={{
-                      borderTop: "var(--divider-row)",
-                      padding: "12px 24px",
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      gap: 8,
-                      flexWrap: "wrap",
-                    }}>
-                      {canCancel && (
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
+                  {/* Order Action Buttons */}
+                  <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between flex-wrap gap-3">
+                    <button
+                      onClick={() => alert(`Showing tracking details for Order #${order.id}`)}
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer border text-[var(--text-primary)]"
+                      style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-page)' }}
+                    >
+                      <Eye size={13} /> View Details
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {order.status === 'pending' && (
+                        <button
                           onClick={() => handleCancelOrder(order.id)}
                           disabled={actionLoading === order.id}
-                          style={{
-                            padding: "8px 16px",
-                            borderRadius: "var(--radius-full)",
-                            fontSize: 13, fontWeight: 600,
-                            border: "none", cursor: actionLoading === order.id ? "not-allowed" : "pointer",
-                            opacity: actionLoading === order.id ? 0.5 : 1,
-                            background: "var(--color-heat)" + "22",
-                            color: "var(--color-heat)",
-                          }}
+                          className="px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer text-red-600 bg-red-50 dark:bg-red-950/20"
                         >
-                          {actionLoading === order.id ? "Cancelling…" : "Cancel Order"}
-                        </motion.button>
+                          {actionLoading === order.id ? 'Cancelling...' : 'Cancel Order'}
+                        </button>
                       )}
 
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
+                      <button
                         onClick={() => handleReorder(order.id)}
                         disabled={actionLoading === order.id}
-                        style={{
-                          padding: "8px 16px",
-                          borderRadius: "var(--radius-full)",
-                          fontSize: 13, fontWeight: 600,
-                          border: "none", cursor: actionLoading === order.id ? "not-allowed" : "pointer",
-                          opacity: actionLoading === order.id ? 0.5 : 1,
-                          background: "var(--color-jade)" + "22",
-                          color: "var(--color-jade)",
-                        }}
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold cursor-pointer transition-all shadow-sm"
+                        style={{ background: 'var(--accent-primary)', color: '#FFFDF8' }}
                       >
-                        {actionLoading === order.id ? "Reordering…" : "Reorder"}
-                      </motion.button>
-
-                      {canPay && (
-                        <motion.a
-                          href={`/checkout/${order.id}`}
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          style={{
-                            display: "inline-flex", alignItems: "center", gap: 6,
-                            padding: "8px 18px",
-                            borderRadius: "var(--radius-full)",
-                            fontSize: 13, fontWeight: 700,
-                            textDecoration: "none",
-                            background: "var(--color-juice)",
-                            color: "var(--color-core)",
-                            boxShadow: "var(--shadow-button)",
-                          }}
-                        >
-                          <CreditCard size={13} />
-                          Pay Now
-                        </motion.a>
-                      )}
+                        <RefreshCw size={12} /> {actionLoading === order.id ? 'Reordering...' : 'Buy Again'}
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </motion.div>
               );
             })
           )}
         </div>
-
-        {/* ── Error Banner ── */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              marginTop: 20,
-              padding: "14px 18px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--color-heat)" + "18",
-              border: "1px solid var(--color-heat)" + "44",
-              display: "flex", alignItems: "flex-start", gap: 10,
-            }}
-          >
-            <AlertCircle size={16} style={{ color: "var(--color-heat)", flexShrink: 0, marginTop: 1 }} />
-            <p style={{ fontSize: 13, color: "var(--color-heat)" }}>{error}</p>
-          </motion.div>
-        )}
-      </div>
+      </main>
     </div>
   );
 }
