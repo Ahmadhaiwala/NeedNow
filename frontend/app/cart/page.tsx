@@ -93,7 +93,7 @@ export default function CartPage() {
     <div className="min-h-screen flex flex-col justify-between" style={{ background: 'var(--bg-page)' }}>
       <Navbar />
 
-      <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
+      <main className="app-container w-full px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between py-4 mb-6">
           <div>

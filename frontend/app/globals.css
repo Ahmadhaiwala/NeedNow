@@ -19,6 +19,12 @@
   --bg-surface: var(--surface-2);
   --bg-card: var(--surface-2);
 
+  /* AI Agent Surface Hierarchy (Light Mode) */
+  --agent-conversation: #F4E8D4;    /* Conversation workspace background */
+  --agent-content: #FBF4E8;         /* Content cards/messages */
+  --agent-sidebar: #E4D2B8;         /* Context sidebar */
+  --agent-card-elevated: #FFF9EF;   /* Elevated cards */
+
   /* Typography */
   --foreground: #2B1F17;        /* espresso dark text */
   --foreground-muted: #8B7B6E;  /* taupe muted text */
@@ -83,6 +89,12 @@
   --bg-page: var(--background);
   --bg-surface: var(--surface-2);
   --bg-card: var(--surface-2);
+
+  /* AI Agent Surface Hierarchy (Dark Mode) */
+  --agent-conversation: #12100E;    /* Conversation workspace background */
+  --agent-content: #1B1713;         /* Content cards/messages */
+  --agent-sidebar: #1B1713;         /* Context sidebar */
+  --agent-card-elevated: #251E19;   /* Elevated cards */
 
   /* Typography */
   --foreground: #F2E8D5;        /* warm ivory text */
@@ -232,4 +244,49 @@ body {
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { 
   opacity: 0.6; 
+}
+
+/* ── RESPONSIVE CONTAINER SYSTEM ── */
+.app-container {
+  width: 100%;
+  max-width: min(94vw, 1560px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Specific container widths for different viewports */
+@media (min-width: 1440px) {
+  .app-container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+/* Agent workspace variant - slightly wider */
+.app-container-agent {
+  width: 100%;
+  max-width: min(96vw, 1600px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1440px) {
+  .app-container-agent {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container-agent {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
 }

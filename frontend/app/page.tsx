@@ -35,7 +35,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen flex flex-col justify-between" style={{ background: "var(--bg-page)" }}>
       <main
-        className="max-w-7xl mx-auto w-full"
+        className="app-container w-full"
         style={{ padding: "24px", paddingTop: "16px" }}
       >
         {/* ── Editorial Hero Section ── */}

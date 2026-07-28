@@ -86,7 +86,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: index * 0.04, ease: "easeOut" }}
-        className="group relative flex flex-col min-w-[200px] max-w-[230px] snap-start cursor-pointer transition-all duration-300"
+        className="group relative flex flex-col min-w-[180px] w-[200px] sm:w-[210px] lg:w-[220px] xl:w-[230px] snap-start cursor-pointer transition-all duration-300"
         style={{
           background: "var(--bg-surface)",
           borderRadius: "var(--radius-lg)",

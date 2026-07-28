@@ -176,7 +176,7 @@ useEffect(() => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4 pb-3">
       <div
-        className={`w-full max-w-7xl flex items-center justify-between gap-4 px-5 py-3 transition-theme navbar-glass ${scrolled ? 'scrolled' : ''}`}
+        className={`app-container flex items-center justify-between gap-4 px-5 py-3 transition-theme navbar-glass ${scrolled ? 'scrolled' : ''}`}
         style={{
           borderRadius: "var(--radius-lg)",
           minHeight: "66px",
