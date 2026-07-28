@@ -310,66 +310,14 @@ and directly finds the best available offers.
 The shopping experience becomes conversational instead of repetitive.
 
 ---
+ ## for practical I already implemended these feature 
 
-# 🤝 9. Collaborative Shopping
+ <img width="1917" height="951" alt="image" src="https://github.com/user-attachments/assets/737db7ca-04c8-4764-9a89-0515f2b1e572" />
 
-Shopping is often done in groups.
 
-NeedNow allows multiple users to participate in the same order.
 
-Examples:
 
-- Hostel roommates
-- Family grocery shopping
-- Birthday parties
-- Office lunches
 
-Each participant can:
-
-- Add products
-- Remove products
-- Vote on alternatives
-- Chat inside the order
-
----
-
-# 💳 Smart Bill Splitting
-
-For shared orders, NeedNow automatically manages payments.
-
-Example:
-
-Total Order:
-
-₹1800
-
-Friends:
-
-Alex
-Rahul
-Priya
-
-NeedNow can split the payment in multiple ways:
-
-• Equal Split
-
-₹600 each
-
-• Custom Split
-
-Alex ₹900
-
-Rahul ₹500
-
-Priya ₹400
-
-• Item-wise Split
-
-Each person only pays for the products they selected.
-
-No manual calculations are required.
-
----
 
 # 🧠 Long-Term AI Memory
 
@@ -463,3 +411,5 @@ docker compose up --build
 > 💡 **Note**: The backend Docker container automatically pre-caches the sentence-transformers `all-MiniLM-L6-v2` embedding model during image build so startup is instant!
 
 docker compose up --build
+
+
