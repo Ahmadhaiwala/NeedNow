@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'order',
     'asset',
     'recommendations',
+    'agent',
+    'marketplace',
 ]
 
 MIDDLEWARE = [
@@ -239,8 +241,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # JWT Settings for Neon Auth
-NEON_AUTH_BASE_URL = os.getenv('NEON_AUTH_BASE_URL')
-NEON_AUTH_JWKS_URL = os.getenv('NEON_AUTH_JWKS_URL')
+NEON_AUTH_BASE_URL = os.getenv('NEON_AUTH_BASE_URL', 'https://ep-bitter-fire-adbc4vum.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth')
+NEON_AUTH_JWKS_URL = os.getenv('NEON_AUTH_JWKS_URL', 'https://ep-bitter-fire-adbc4vum.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json')
+
 
 # Legacy JWT settings (keep for fallback)
 JWT_SECRET_KEY = 'your-jwt-secret-key'  # Set this in production

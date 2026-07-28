@@ -342,7 +342,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
             )}
 
             {/* Low Stock Items */}
-            {dashboard?.low_stock_items?.length > 0 && (
+            {(dashboard?.low_stock_items?.length ?? 0) > 0 && (
               <div className="p-6 rounded-3xl" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-card)' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle size={20} style={{ color: 'var(--color-heat)' }} />
@@ -350,7 +350,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                 </div>
                 
                 <div className="space-y-3">
-                  {dashboard.low_stock_items.slice(0, 5).map((asset) => (
+                  {dashboard?.low_stock_items?.slice(0, 5).map((asset) => (
                     <div key={asset.id} className="flex items-center justify-between p-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.05)' }}>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center" style={{ background: 'rgba(123,163,206,0.1)' }}>
@@ -538,8 +538,9 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Recommendations View */}
         {view === 'recommendations' && (

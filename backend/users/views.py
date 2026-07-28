@@ -90,11 +90,48 @@ def me(request):
 @api_view(['POST'])
 def sync_neon_user(request):
     """
-    Manually sync user data from Neon Auth token
-    Useful for testing or ensuring user data is up to date
+    Sync user data from Neon Auth token or request body
     """
     user = get_user_from_neon_auth(request)
     
+    if not user and request.data:
+        data = request.data
+        email = data.get('email')
+        neon_auth_id = data.get('neon_auth_id')
+        name = data.get('name', '')
+        image = data.get('image', '')
+        
+        if email:
+            try:
+                name_parts = name.strip().split(' ') if name else []
+                first_name = name_parts[0] if name_parts else ''
+                last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+                
+                user, created = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'neon_auth_id': neon_auth_id,
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'profile_image_url': image or '',
+                        'provider': 'neon-auth',
+                    }
+                )
+                if not created:
+                    if neon_auth_id:
+                        user.neon_auth_id = neon_auth_id
+                    if first_name and not user.first_name:
+                        user.first_name = first_name
+                    if last_name and not user.last_name:
+                        user.last_name = last_name
+                    if image and not user.profile_image_url:
+                        user.profile_image_url = image
+                    user.save()
+            except Exception as e:
+                print(f"Error syncing user from body data: {e}")
+                import traceback
+                traceback.print_exc()
+
     if not user:
         return Response(
             {'error': 'User not authenticated or not found'}, 
@@ -104,4 +141,4 @@ def sync_neon_user(request):
     return Response({
         'message': f'User {user.display_name} synced successfully',
         'user': UserSerializer(user).data
-    })
+    })

@@ -1,15 +1,29 @@
 import json
+import logging
 
 from agent.llm import (
     call_llm_with_tools,
+    stream_llm_with_tools,
     analyze_user_context,
 )
 
+logger = logging.getLogger(__name__)
+
+
+from agent.models import ChatMessage
 from agent.tools import (
+    _is_authenticated_user,
     hybrid_search_products,
     get_product_details,
+    compare_products,
+    get_recommendations,
+    get_cart,
+    add_to_cart,
+    get_recent_orders,
+    get_order_status,
 )
 from agent.tool_schemas import AGENT_TOOLS
+
 
 
 AGENT_SYSTEM_PROMPT = """
@@ -60,9 +74,12 @@ Rules:
 """
 
 
-def execute_tool(tool_name, arguments):
+def execute_tool(tool_name, arguments, user=None):
     """
     Execute an agent tool requested by the LLM.
+
+    The authenticated user context is injected by the backend dispatcher,
+    never trusted from model arguments.
     """
 
     if tool_name == "search_products":
@@ -81,6 +98,58 @@ def execute_tool(tool_name, arguments):
 
         return get_product_details(
             product_id=product_id,
+        )
+
+    if tool_name == "compare_products":
+
+        product_ids = arguments.get("product_ids", [])
+
+        return compare_products(
+            product_ids=product_ids,
+        )
+
+    if tool_name == "get_recommendations":
+
+        limit = arguments.get("limit", 5)
+
+        return get_recommendations(
+            user=user,
+            limit=limit,
+        )
+
+    if tool_name == "get_cart":
+
+        return get_cart(
+            user=user,
+        )
+
+    if tool_name == "add_to_cart":
+
+        product_id = arguments.get("product_id")
+        quantity = arguments.get("quantity", 1)
+
+        return add_to_cart(
+            user=user,
+            product_id=product_id,
+            quantity=quantity,
+        )
+
+    if tool_name == "get_recent_orders":
+
+        limit = arguments.get("limit", 5)
+
+        return get_recent_orders(
+            user=user,
+            limit=limit,
+        )
+
+    if tool_name == "get_order_status":
+
+        order_id = arguments.get("order_id")
+
+        return get_order_status(
+            user=user,
+            order_id=order_id,
         )
 
     raise ValueError(
@@ -189,6 +258,7 @@ def run_agent(user, message):
         result = execute_tool(
             tool_name,
             arguments,
+            user=user,
         )
 
         messages.append(
@@ -216,3 +286,149 @@ def run_agent(user, message):
     print("=========================\n")
 
     return final_message.get("content") or ""
+
+
+TOOL_STATUS_MESSAGES = {
+    "search_products": "Searching products...",
+    "get_product_details": "Checking product details...",
+    "compare_products": "Comparing products...",
+    "get_recommendations": "Finding recommendations for you...",
+    "get_cart": "Checking your cart...",
+    "add_to_cart": "Updating your cart...",
+    "get_recent_orders": "Checking your recent orders...",
+    "get_order_status": "Checking your order...",
+}
+
+
+def stream_event(event):
+    """
+    Format a dictionary as a newline-delimited JSON string event.
+    """
+    return json.dumps(event) + "\n"
+
+
+def run_agent_stream(user, message):
+    """
+    Streaming NeedNow agent pipeline generator.
+    Yields NDJSON strings: json.dumps(event) + "\n"
+    """
+    try:
+        # ----------------------------------
+        # 1. Understand user context
+        # ----------------------------------
+        user_context = analyze_user_context(user)
+        context_text = json.dumps(user_context, indent=2)
+
+        system_content = f"""
+{AGENT_SYSTEM_PROMPT}
+
+USER SHOPPING CONTEXT:
+
+The following context is inferred from the user's shopping
+history and behavior.
+
+Treat it as supporting context, not guaranteed fact.
+The user's current request always has priority.
+
+{context_text}
+"""
+
+        # Retrieve up to 5 recent historical chat messages for model context
+        history_messages = []
+        if _is_authenticated_user(user):
+            recent_qs = (
+                ChatMessage.objects
+                .filter(user=user)
+                .order_by("-created_at")[:5]
+            )
+            for h in reversed(list(recent_qs)):
+                history_messages.append({
+                    "role": h.role,
+                    "content": h.content,
+                })
+
+            # Save incoming user message
+            ChatMessage.objects.create(
+                user=user,
+                role=ChatMessage.Role.USER,
+                content=message,
+            )
+
+        messages = [
+            {"role": "system", "content": system_content},
+            *history_messages,
+            {"role": "user", "content": message},
+        ]
+
+        max_iterations = 5
+        full_assistant_response = ""
+
+        for _iteration in range(max_iterations):
+            assistant_message = None
+
+            # Stream OpenRouter assistant turn
+            for chunk in stream_llm_with_tools(messages=messages, tools=AGENT_TOOLS):
+                chunk_type = chunk.get("type")
+
+                if chunk_type == "content":
+                    full_assistant_response += chunk["content"]
+                    yield stream_event({"type": "token", "content": chunk["content"]})
+
+                elif chunk_type == "message_complete":
+                    assistant_message = chunk["message"]
+
+            if not assistant_message:
+                break
+
+            messages.append(assistant_message)
+
+            tool_calls = assistant_message.get("tool_calls", [])
+            if not tool_calls:
+                # Turn completed without tool calls (final answer completed)
+                break
+
+            # Execute tool calls
+            for tool_call in tool_calls:
+                function_data = tool_call.get("function", {})
+                tool_name = function_data.get("name", "")
+
+                status_msg = TOOL_STATUS_MESSAGES.get(
+                    tool_name, f"Executing {tool_name}..."
+                )
+                yield stream_event({"type": "status", "message": status_msg})
+
+                raw_args = function_data.get("arguments", "{}")
+                try:
+                    arguments = json.loads(raw_args) if raw_args else {}
+                except json.JSONDecodeError:
+                    arguments = {}
+
+                result = execute_tool(
+                    tool_name=tool_name,
+                    arguments=arguments,
+                    user=user,
+                )
+
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.get("id", ""),
+                        "name": tool_name,
+                        "content": json.dumps(result, default=str),
+                    }
+                )
+
+        # Save assistant response to chat history
+        if _is_authenticated_user(user) and full_assistant_response.strip():
+            ChatMessage.objects.create(
+                user=user,
+                role=ChatMessage.Role.ASSISTANT,
+                content=full_assistant_response.strip(),
+            )
+
+        yield stream_event({"type": "done"})
+
+    except Exception as exc:
+        logger.exception("Agent streaming failed for user=%s: %s", getattr(user, "pk", None), exc)
+        yield stream_event({"type": "error", "message": "Unable to generate response."})
+

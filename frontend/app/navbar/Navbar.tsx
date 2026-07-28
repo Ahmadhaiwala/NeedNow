@@ -27,15 +27,17 @@ import {
   Sun,
   Moon,
   Search,
+  Store,
 } from "lucide-react";
 
 const navItems = [
   { name: "Discover", icon: Compass, href: "/" },
+  { name: "Marketplace", icon: Store, href: "/marketplace" },
+  { name: "AI Agent", icon: Sparkles, href: "/chat" },
   { name: "Assets", icon: Package, href: "/assets" },
   { name: "Orders", icon: ShoppingCart, href: "/orders" },
-  { name: "Shared Orders", icon: Users, href: "/groups" },
+
   { name: "History", icon: Clock, href: "/history" },
-  { name: "AI Memory", icon: BrainCircuit, href: "/memory" },
 ];
 
 const placeholders = [
@@ -1085,6 +1087,24 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Floating AI Agent Chat Button ── */}
+      <Link href="/chat" aria-label="Open NeedNow AI Agent Chat">
+        <motion.div
+          whileHover={{ scale: 1.06, y: -2 }}
+          whileTap={{ scale: 0.94 }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4.5 py-3 rounded-full cursor-pointer"
+          style={{
+            background: "#CACE00",
+            color: "#1F3635",
+            border: "1px solid rgba(31, 54, 53, 0.15)",
+            boxShadow: "0 10px 30px -5px rgba(202, 206, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15)",
+          }}
+        >
+          <Sparkles size={18} strokeWidth={2.5} />
+          <span className="font-bold text-xs tracking-wider uppercase">AI Agent</span>
+        </motion.div>
+      </Link>
     </>
   );
 }

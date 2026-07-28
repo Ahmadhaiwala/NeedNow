@@ -10,7 +10,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Call your Django backend to create or update user
-    const backendUrl = 'http://localhost:8000';
+    // Use 127.0.0.1 instead of localhost for Node.js server-side fetch compatibility
+    const rawBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+    const backendUrl = rawBackendUrl.replace('localhost', '127.0.0.1');
     
     const response = await fetch(`${backendUrl}/api/users/sync/`, {
       method: 'POST',
@@ -27,15 +29,22 @@ export async function POST(request: NextRequest) {
     });
     
     if (!response.ok) {
-      console.error('Backend sync failed:', response.status);
-      return NextResponse.json({ error: 'Backend sync failed' }, { status: 500 });
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Backend sync failed:', response.status, errorData);
+      return NextResponse.json(
+        { error: 'Backend sync failed', status: response.status, details: errorData },
+        { status: response.status }
+      );
     }
     
     const userData = await response.json();
     return NextResponse.json({ success: true, user: userData });
     
-  } catch (error) {
-    console.error('User sync error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('User sync error in Next API route:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error?.message || String(error) },
+      { status: 500 }
+    );
   }
-}
+}

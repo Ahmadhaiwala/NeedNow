@@ -48,12 +48,12 @@ const paymentColors: Record<string, string> = {
   partially_paid: "var(--color-sky)",
 };
 
-const statConfig = [
+const statConfig: Array<{ key: string; label: string; icon: any; accent: string; rupee?: boolean }> = [
   { key: "total_orders",     label: "Total Orders", icon: ShoppingBag,  accent: "var(--color-sky)"   },
   { key: "pending_orders",   label: "Pending",       icon: Clock,         accent: "var(--color-juice)" },
   { key: "completed_orders", label: "Completed",     icon: CheckCircle,   accent: "var(--color-jade)"  },
   { key: "total_spent",      label: "Total Spent",   icon: IndianRupee,   accent: "var(--color-juice)", rupee: true },
-] as const;
+];
 
 function Spinner() {
   return (
@@ -184,7 +184,7 @@ export default function OrdersPage() {
                     {label}
                   </p>
                   <p style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-                    {rupee ? `₹${summary[key as keyof OrderSummary]}` : summary[key as keyof OrderSummary]}
+                    {rupee ? `₹${summary[key as keyof OrderSummary]}` : String(summary[key as keyof OrderSummary] ?? '')}
                   </p>
                 </div>
               </motion.div>

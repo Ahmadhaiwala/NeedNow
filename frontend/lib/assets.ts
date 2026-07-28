@@ -46,7 +46,7 @@ export async function getCollections() {
   let userId: string | null = null;
   for (let attempt = 0; attempt < 4; attempt++) {
     const session = await authClient.getSession();
-    userId = session?.data?.session?.user?.id ?? null;
+    userId = session?.data?.user?.id ?? null;
     if (userId) break;
     if (attempt < 3) await new Promise((r) => setTimeout(r, 300 * Math.pow(2, attempt)));
   }
@@ -85,7 +85,7 @@ export async function createCollection(data: {
   // Invalidate collections cache
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     invalidateCache.collection('', userId);
   }
@@ -127,7 +127,7 @@ export async function getLocations(collectionId?: string) {
 
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id ?? '';
+  const userId = session?.data?.user?.id ?? '';
 
   const params = new URLSearchParams();
   if (collectionId) params.append('collection', collectionId);
@@ -267,7 +267,7 @@ export async function createAsset(data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     invalidateCache.asset(data.collection, userId);
   }
@@ -294,7 +294,7 @@ export async function updateAsset(id: string, data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     // Use the result data to find collection ID
     const collectionId = result.collection || result.collection?.id;
@@ -316,7 +316,7 @@ export async function deleteAsset(id: string) {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     // We can't get the collection ID after deletion, so invalidate all caches
     invalidateCache.all();
@@ -342,7 +342,7 @@ export async function consumeAsset(id: string, data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     // Get asset data to invalidate related caches
     try {
@@ -378,7 +378,7 @@ export async function restockAsset(id: string, data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     try {
       const assetData = await getAsset(id);
@@ -412,7 +412,7 @@ export async function adjustAsset(id: string, data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     try {
       const assetData = await getAsset(id);
@@ -446,7 +446,7 @@ export async function moveAsset(id: string, data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     try {
       const assetData = await getAsset(id);
@@ -484,7 +484,7 @@ export async function bulkConsume(data: {
   // Invalidate related caches
   const { authClient } = await import('./auth');
   const session = await authClient.getSession();
-  const userId = session?.data?.session?.user?.id;
+  const userId = session?.data?.user?.id;
   if (userId) {
     invalidateCache.asset(data.collection_id, userId);
   }

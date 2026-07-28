@@ -110,6 +110,9 @@ class RecommendationService:
         If no UserEmbedding record exists in DB, attempts on-the-fly generation
         via UserEmbeddingService. Returns None if there is insufficient interaction/preference data.
         """
+        if not user or not getattr(user, "pk", None):
+            return None
+
         try:
             ue = UserEmbedding.objects.get(user=user)
             return np.array(ue.embedding, dtype=np.float32)
@@ -122,7 +125,7 @@ class RecommendationService:
             except Exception as exc:
                 logger.warning(
                     "On-the-fly UserEmbedding generation failed for user_id=%s: %s",
-                    user.pk,
+                    getattr(user, "pk", None),
                     exc,
                 )
             return None
@@ -231,6 +234,9 @@ class RecommendationService:
         Views, clicks, wishlists, ratings etc. remain eligible so the user can still
         be recommended products they have browsed but not bought.
         """
+        if not user or not getattr(user, "pk", None):
+            return set()
+
         ids = (
             UserInteraction.objects
             .filter(

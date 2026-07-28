@@ -166,9 +166,9 @@ export const warmCache = {
   // Warm dashboard and assets for a collection
   collection: async (collectionId: string) => {
     try {
+      const { getAssets, getShoppingRecommendations } = await import('./assets');
       // Warm in parallel
       await Promise.allSettled([
-        getDashboard(collectionId),
         getAssets({ collection: collectionId }),
         getShoppingRecommendations(collectionId, 10)
       ]);
@@ -180,6 +180,7 @@ export const warmCache = {
   // Warm collections on app load
   collections: async () => {
     try {
+      const { getCollections } = await import('./assets');
       const collections = await getCollections();
       // Warm the most recently used collection
       if (collections.length > 0) {

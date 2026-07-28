@@ -111,7 +111,7 @@ def my_interactions(request):
     GET /api/recommendations/interactions/me/
 
     Returns the last 100 interactions for the authenticated user.
-    Useful for debugging the tracking pipeline.
+    Useful for debugging the tracking pipeline and building user history.
     """
     user = get_user_from_neon_auth(request)
     if not user:
@@ -123,7 +123,7 @@ def my_interactions(request):
     interactions = (
         UserInteraction.objects
         .filter(user=user)
-        .select_related("product")
+        .select_related("product", "product__category")
         .order_by("-created_at")[:100]
     )
 
@@ -132,6 +132,10 @@ def my_interactions(request):
             "id": i.id,
             "product_id": str(i.product.id) if i.product else None,
             "product_name": i.product.name if i.product else None,
+            "product_image": i.product.image_url if i.product and i.product.image_url else None,
+            "product_price": float(i.product.price) if i.product and i.product.price else None,
+            "product_category": i.product.category.name if i.product and i.product.category else None,
+            "product_brand": i.product.brand if i.product and i.product.brand else None,
             "interaction_type": i.interaction_type,
             "value": i.value,
             "metadata": i.metadata,
@@ -141,6 +145,7 @@ def my_interactions(request):
     ]
 
     return Response({"interactions": data, "count": len(data)})
+
 
 
 @api_view(["GET"])

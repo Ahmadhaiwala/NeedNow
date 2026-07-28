@@ -36,17 +36,11 @@ export default async function Home() {
         className="max-w-7xl mx-auto"
         style={{ padding: "24px", paddingTop: "32px" }}
       >
-        {/* ── Hero Bento Grid ── */}
-        <div
-          className="grid gap-4 mb-8"
-          style={{
-            gridTemplateColumns: "1fr 1fr",
-            gridTemplateRows: "auto auto",
-          }}
-        >
-          {/* Large hero card — spans full width */}
+        {/* ── Hero Banner ── */}
+        <div className="mb-8">
+          {/* Large hero card */}
           <div
-            className="relative overflow-hidden col-span-2"
+            className="relative overflow-hidden"
             style={{
               background: "var(--color-core)",
               borderRadius: "var(--radius-lg)",
@@ -147,66 +141,6 @@ export default async function Home() {
               </div>
             </div>
           </div>
-
-          {/* Stats row */}
-          {[
-            {
-              label: "Categories",
-              value: totalCategories.toString(),
-              bg: "var(--bg-surface)",
-              textColor: "var(--text-primary)",
-              subColor: "var(--text-secondary)",
-            },
-            {
-              label: "Products",
-              value: `${totalProducts}+`,
-              bg: "var(--color-jade)",
-              textColor: "var(--color-cloud)",
-              subColor: "rgba(252,251,244,0.7)",
-            },
-            {
-              label: "Delivery",
-              value: "30 min",
-              bg: "var(--color-core)",
-              textColor: "var(--color-juice)",
-              subColor: "rgba(252,251,244,0.6)",
-            },
-            {
-              label: "Brands",
-              value: "50+",
-              bg: "var(--color-moss)",
-              textColor: "var(--color-cloud)",
-              subColor: "rgba(252,251,244,0.65)",
-            },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="col-span-2 sm:col-span-1"
-              style={{
-                background: stat.bg,
-                borderRadius: "var(--radius-lg)",
-                boxShadow: "var(--shadow-card)",
-                padding: "20px 24px",
-              }}
-            >
-              <p
-                className="font-bold"
-                style={{
-                  fontSize: "28px",
-                  color: stat.textColor,
-                  lineHeight: 1.2,
-                }}
-              >
-                {stat.value}
-              </p>
-              <p
-                className="mt-1 font-medium"
-                style={{ fontSize: "13px", color: stat.subColor }}
-              >
-                {stat.label}
-              </p>
-            </div>
-          ))}
         </div>
 
         {/* ── Feed Sections ── */}

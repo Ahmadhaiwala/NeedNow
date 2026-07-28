@@ -57,7 +57,155 @@ GET_PRODUCT_DETAILS_TOOL = {
 }
 
 
+COMPARE_PRODUCTS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "compare_products",
+        "description": (
+            "Retrieve structured details and specifications for up to 4 products side-by-side. "
+            "Use this when the user asks to compare multiple products, evaluate differences, "
+            "or decide between two or more items."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "product_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
+                    "description": (
+                        "List of product UUID strings to compare (maximum 4)."
+                    ),
+                },
+            },
+            "required": ["product_ids"],
+        },
+    },
+}
+
+
+GET_RECOMMENDATIONS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_recommendations",
+        "description": (
+            "Retrieve personalized product recommendations for the user based on "
+            "their shopping history, preferences, and activity context. "
+            "Use this when the user asks for recommendations, suggestions, or 'what should I buy'."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": (
+                        "Number of recommendations to retrieve (default 5, max 10)."
+                    ),
+                    "default": 5,
+                },
+            },
+            "required": [],
+        },
+    },
+}
+
+
+GET_CART_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_cart",
+        "description": (
+            "Retrieve the current user's active shopping cart items, quantities, "
+            "unit prices, line totals, and subtotal."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+}
+
+ADD_TO_CART_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "add_to_cart",
+        "description": (
+            "Add a product to the user's shopping cart or increase its quantity. "
+            "Validates product stock before adding."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "string",
+                    "description": "The unique UUID string of the product to add.",
+                },
+                "quantity": {
+                    "type": "integer",
+                    "description": "Quantity to add (default 1).",
+                    "default": 1,
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
+}
+
+GET_RECENT_ORDERS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_recent_orders",
+        "description": (
+            "Retrieve recent orders placed by the user, including status, payment status, "
+            "totals, dates, and order items."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of recent orders to return (default 5).",
+                    "default": 5,
+                },
+            },
+            "required": [],
+        },
+    },
+}
+
+GET_ORDER_STATUS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_order_status",
+        "description": (
+            "Retrieve the detailed status, payment status, and items for a specific order ID."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string",
+                    "description": "The order ID to check.",
+                },
+            },
+            "required": ["order_id"],
+        },
+    },
+}
+
+
 AGENT_TOOLS = [
     PRODUCT_SEARCH_TOOL,
     GET_PRODUCT_DETAILS_TOOL,
-]
+    COMPARE_PRODUCTS_TOOL,
+    GET_RECOMMENDATIONS_TOOL,
+    GET_CART_TOOL,
+    ADD_TO_CART_TOOL,
+    GET_RECENT_ORDERS_TOOL,
+    GET_ORDER_STATUS_TOOL,
+]
+
+
+
