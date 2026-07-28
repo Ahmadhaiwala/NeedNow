@@ -21,6 +21,7 @@ from agent.tools import (
     add_to_cart,
     get_recent_orders,
     get_order_status,
+    search_external_products,
 )
 from agent.tool_schemas import AGENT_TOOLS
 
@@ -150,6 +151,20 @@ def execute_tool(tool_name, arguments, user=None):
         return get_order_status(
             user=user,
             order_id=order_id,
+        )
+
+    if tool_name == "search_external_products":
+
+        query = arguments.get("query", "")
+        min_price = arguments.get("min_price")
+        max_price = arguments.get("max_price")
+        limit = arguments.get("limit", 8)
+
+        return search_external_products(
+            query=query,
+            min_price=min_price,
+            max_price=max_price,
+            limit=limit,
         )
 
     raise ValueError(
@@ -297,6 +312,7 @@ TOOL_STATUS_MESSAGES = {
     "add_to_cart": "Updating your cart...",
     "get_recent_orders": "Checking your recent orders...",
     "get_order_status": "Checking your order...",
+    "search_external_products": "Searching external marketplace...",
 }
 
 
@@ -431,4 +447,4 @@ The user's current request always has priority.
     except Exception as exc:
         logger.exception("Agent streaming failed for user=%s: %s", getattr(user, "pk", None), exc)
         yield stream_event({"type": "error", "message": "Unable to generate response."})
-
+

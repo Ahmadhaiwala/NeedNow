@@ -7,6 +7,7 @@ from pgvector.django import CosineDistance
 from catalog.models import Product
 from recommendations.models import ProductEmbedding
 from agent.embeddings import embed_query
+from agent.services.shopping_search import search_external_products
 
 
 
@@ -633,4 +634,4 @@ def get_order_status(user=None, order_id=None):
 
 
 
-
+

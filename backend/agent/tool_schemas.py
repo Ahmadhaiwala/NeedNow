@@ -196,6 +196,46 @@ GET_ORDER_STATUS_TOOL = {
 }
 
 
+SEARCH_EXTERNAL_PRODUCTS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "search_external_products",
+        "description": (
+            "Search current external shopping listings using Google Shopping. "
+            "Use this when the user asks for real-world products, current marketplace prices, "
+            "products from external stores like Amazon/Walmart/etc, price comparisons, "
+            "or wants to compare NeedNow products against other retailers. "
+            "Returns real shopping results with prices, ratings, and merchant information."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "Product search query (e.g., 'RTX 4060 gaming laptop', 'AirPods Pro')."
+                    ),
+                },
+                "min_price": {
+                    "type": "number",
+                    "description": "Minimum price filter (optional).",
+                },
+                "max_price": {
+                    "type": "number",
+                    "description": "Maximum price filter (optional).",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results to return (default 8, max 15).",
+                    "default": 8,
+                },
+            },
+            "required": ["query"],
+        },
+    },
+}
+
+
 AGENT_TOOLS = [
     PRODUCT_SEARCH_TOOL,
     GET_PRODUCT_DETAILS_TOOL,
@@ -205,7 +245,8 @@ AGENT_TOOLS = [
     ADD_TO_CART_TOOL,
     GET_RECENT_ORDERS_TOOL,
     GET_ORDER_STATUS_TOOL,
+    SEARCH_EXTERNAL_PRODUCTS_TOOL,
 ]
 
 
-
+
