@@ -1,3 +1,4 @@
+currently designing market place tommorow going to be fire!! right now due to working in main branch not commiting anything may be I gonna need to fallback
 # 🚀 NeedNow - AI Life Shopping Assistant
 
 > **Need it? Just say it.**
