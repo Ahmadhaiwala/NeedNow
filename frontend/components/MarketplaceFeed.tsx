@@ -490,7 +490,8 @@ export default function MarketplaceFeed({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {posts.map((post) => {
             const isNeed = post.post_type === 'need';
-            const postImage = post.images && post.images.length > 0 ? post.images[0] : null;
+            const rawImg = post.images && post.images.length > 0 ? post.images[0] : null;
+            const postImage = typeof rawImg === 'string' ? rawImg : (rawImg as any)?.image_url || (rawImg as any)?.image || null;
 
             return (
               <div

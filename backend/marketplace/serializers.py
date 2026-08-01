@@ -1,17 +1,27 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import MarketplaceProfile, MarketplacePost, MarketplaceOffer, ChatMessage, MarketplaceReview
+from .models import (
+    MarketplaceProfile,
+    MarketplacePost,
+    MarketplacePostImage,
+    MarketplaceOffer,
+    MarketplaceComment,
+    ChatMessage,
+    MarketplaceReview,
+)
 
 User = get_user_model()
+
 
 class MarketplaceUserSerializer(serializers.ModelSerializer):
     """Lightweight read-only serializer for nested user profile contexts in the marketplace."""
     rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'profile_image_url', 'display_name', 'rating', 'review_count']
+        fields = ['id', 'email', 'first_name', 'last_name', 'avatar', 'rating', 'review_count']
         read_only_fields = fields
 
     def get_rating(self, obj):
@@ -26,34 +36,77 @@ class MarketplaceUserSerializer(serializers.ModelSerializer):
         except Exception:
             return 0
 
+    def get_avatar(self, obj):
+        try:
+            profile = getattr(obj, 'marketplace_profile', None)
+            if profile and profile.avatar:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(profile.avatar.url)
+                return profile.avatar.url
+        except Exception:
+            pass
+        return None
+
 
 class MarketplaceProfileSerializer(serializers.ModelSerializer):
-    """Serializer for managing a user's marketplace-specific bio and location coordinates."""
+    """Serializer for managing a user's marketplace-specific bio and profile details."""
     user_details = MarketplaceUserSerializer(source='user', read_only=True)
 
     class Meta:
         model = MarketplaceProfile
         fields = [
-            'id', 'user', 'user_details', 'bio', 'location_name', 
-            'latitude', 'longitude', 'rating', 'review_count', 
-            'created_at', 'updated_at'
+            'id', 'user', 'user_details', 'bio', 'avatar', 'location_name',
+            'latitude', 'longitude', 'seller_type', 'rating', 'review_count',
+            'trust_score', 'is_verified', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user', 'rating', 'review_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'rating', 'review_count', 'trust_score', 'is_verified', 'created_at', 'updated_at']
+
+
+class MarketplacePostImageSerializer(serializers.ModelSerializer):
+    """Serializer for images linked to marketplace posts."""
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MarketplacePostImage
+        fields = ['id', 'post', 'image', 'image_url', 'display_order']
+        read_only_fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
+class MarketplaceCommentSerializer(serializers.ModelSerializer):
+    """Serializer for comments posted on marketplace listings."""
+    user_details = MarketplaceUserSerializer(source='user', read_only=True)
+
+    class Meta:
+        model = MarketplaceComment
+        fields = ['id', 'post', 'user', 'user_details', 'comment', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
 
 
 class MarketplacePostSerializer(serializers.ModelSerializer):
-    """Serializer for Need and Sell posts. Handles validation of conditional fields."""
+    """Serializer for marketplace posts."""
     owner_details = MarketplaceUserSerializer(source='owner', read_only=True)
+    images = MarketplacePostImageSerializer(many=True, read_only=True)
     offers_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     distance = serializers.FloatField(read_only=True, required=False)
 
     class Meta:
         model = MarketplacePost
         fields = [
-            'id', 'owner', 'owner_details', 'post_type', 'title', 'description', 
-            'category', 'images', 'location_name', 'latitude', 'longitude', 
-            'radius', 'urgency', 'budget', 'condition', 'price', 'status', 
-            'offers_count', 'distance', 'created_at', 'updated_at'
+            'id', 'owner', 'owner_details', 'post_type', 'title', 'description',
+            'category', 'images', 'location_name', 'latitude', 'longitude',
+            'visibility_radius', 'urgency', 'budget', 'condition', 'price',
+            'expires_at', 'status', 'offers_count', 'comments_count',
+            'distance', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'owner', 'distance', 'created_at', 'updated_at']
 
@@ -62,27 +115,10 @@ class MarketplacePostSerializer(serializers.ModelSerializer):
             return obj.annotated_offers_count
         return obj.offers.count()
 
-    def validate(self, data):
-        """Validate type-specific parameters for Needs and Sells."""
-        post_type = data.get('post_type')
-        
-        if post_type == 'need':
-            if not data.get('urgency'):
-                raise serializers.ValidationError({"urgency": "Urgency field is required for Need posts."})
-            # Condition and Price should be blank/null for Need posts
-            data['condition'] = ''
-            data['price'] = None
-            
-        elif post_type == 'sell':
-            if not data.get('condition'):
-                raise serializers.ValidationError({"condition": "Condition field is required for Sell posts."})
-            if data.get('price') is None or data.get('price') <= 0:
-                raise serializers.ValidationError({"price": "A positive selling price is required for Sell posts."})
-            # Urgency and Budget should be blank/null for Sell posts
-            data['urgency'] = ''
-            data['budget'] = None
-            
-        return data
+    def get_comments_count(self, obj):
+        if hasattr(obj, 'annotated_comments_count'):
+            return obj.annotated_comments_count
+        return obj.comments.count()
 
 
 class MarketplaceOfferSerializer(serializers.ModelSerializer):
@@ -96,25 +132,35 @@ class MarketplaceOfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarketplaceOffer
         fields = [
-            'id', 'post', 'post_title', 'post_type', 'post_details', 'user', 'user_details', 
-            'price', 'message', 'images', 'status', 'created_at', 'updated_at'
+            'id', 'post', 'post_title', 'post_type', 'post_details', 'user', 'user_details',
+            'price', 'message', 'status', 'created_at'
         ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at']
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
-    """Serializer for messages in polling chat threads."""
+    """Serializer for messages in marketplace chat threads."""
     sender_details = MarketplaceUserSerializer(source='sender', read_only=True)
     recipient_details = MarketplaceUserSerializer(source='recipient', read_only=True)
+    post_details = MarketplacePostSerializer(source='post', read_only=True)
     post = serializers.PrimaryKeyRelatedField(queryset=MarketplacePost.objects.all(), required=False, allow_null=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
         fields = [
-            'id', 'post', 'sender', 'sender_details', 'recipient', 'recipient_details', 
-            'content', 'image_url', 'is_read', 'created_at'
+            'id', 'post', 'post_details', 'sender', 'sender_details', 'recipient', 'recipient_details',
+            'content', 'image', 'image_url', 'is_read', 'created_at'
         ]
-        read_only_fields = ['id', 'sender', 'recipient', 'is_read', 'created_at']
+        read_only_fields = ['id', 'sender', 'recipient', 'is_read', 'created_at', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class MarketplaceReviewSerializer(serializers.ModelSerializer):
@@ -129,31 +175,3 @@ class MarketplaceReviewSerializer(serializers.ModelSerializer):
             'rating', 'comment', 'created_at'
         ]
         read_only_fields = ['id', 'reviewer', 'created_at']
-
-    def validate(self, data):
-        post = data.get('post')
-        reviewee = data.get('reviewee')
-        request = self.context.get('request')
-        
-        if not request:
-            return data
-            
-        reviewer = request.user
-
-        # 1. Reviewer cannot review themselves
-        if reviewer == reviewee:
-            raise serializers.ValidationError("You cannot rate yourself.")
-
-        # 2. Must be part of the transaction (post owner or accepted offer maker)
-        is_owner = (post.owner == reviewer and reviewee != reviewer)
-        accepted_offer = post.offers.filter(status='accepted').first()
-        is_accepted_buyer_seller = (accepted_offer and accepted_offer.user == reviewer)
-
-        if not (is_owner or is_accepted_buyer_seller):
-            raise serializers.ValidationError("You can only review users you have completed a deal with.")
-
-        # 3. Post must be completed to leave review
-        if post.status != 'completed':
-            raise serializers.ValidationError("Reviews can only be left after a deal is marked as completed.")
-
-        return data

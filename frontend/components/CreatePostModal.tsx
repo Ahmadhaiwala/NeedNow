@@ -1,31 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  createMarketplacePost, 
-  MarketplacePost 
-} from '@/lib/marketplace';
-import LocationPicker from './LocationPicker';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
-  HeartHandshake, 
-  ShoppingBag, 
-  Flame, 
-  Clock, 
+  Upload, 
+  Trash2, 
+  MapPin, 
   Tag, 
-  IndianRupee, 
-  Loader2, 
+  Check, 
+  ArrowLeft, 
+  ArrowRight, 
+  Sparkles,
   Info,
-  Sparkles
+  DollarSign,
+  Compass
 } from 'lucide-react';
+import { createMarketplacePost, uploadPostImages } from '@/lib/marketplace';
+import LocationPicker from '@/components/LocationPicker';
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultLocationName: string;
-  defaultLat: number;
-  defaultLng: number;
   onPostCreated: () => void;
+  userLat?: number | null;
+  userLng?: number | null;
+  userLocationName?: string;
 }
 
 const CATEGORIES = [
@@ -38,420 +38,473 @@ const CATEGORIES = [
   'Others',
 ];
 
+const POST_TYPES = [
+  { id: 'sell', label: 'For Sale', desc: 'List an item you want to sell' },
+  { id: 'need', label: 'Want / Need', desc: 'Post what you are looking to buy or borrow' },
+  { id: 'rent', label: 'For Rent', desc: 'Rent out an item or property' },
+  { id: 'exchange', label: 'Trade & Swap', desc: 'Exchange items or skills with neighbors' },
+  { id: 'donate', label: 'Free / Donate', desc: 'Give away items for free' },
+  { id: 'service', label: 'Service', desc: 'Offer a skill or favor' },
+];
+
 export default function CreatePostModal({
   isOpen,
   onClose,
-  defaultLocationName,
-  defaultLat,
-  defaultLng,
   onPostCreated,
+  userLat,
+  userLng,
+  userLocationName,
 }: CreatePostModalProps) {
-  const [postType, setPostType] = useState<'need' | 'sell'>('need');
-  
-  // Common Form Fields with draft persistence
-  const [title, setTitle] = useState(() => {
-    if (typeof window !== 'undefined') return sessionStorage.getItem('draft_title') || '';
-    return '';
-  });
-  const [description, setDescription] = useState(() => {
-    if (typeof window !== 'undefined') return sessionStorage.getItem('draft_desc') || '';
-    return '';
-  });
-  const [category, setCategory] = useState('Books & Education');
-  const [locationName, setLocationName] = useState(defaultLocationName);
-  const [latitude, setLatitude] = useState(defaultLat);
-  const [longitude, setLongitude] = useState(defaultLng);
-  const [radius, setRadius] = useState(10); // default 10km radius for post
-
-  // Need Specific Fields
-  const [urgency, setUrgency] = useState<'today' | 'week' | 'flexible'>('today');
-  const [budget, setBudget] = useState(() => {
-    if (typeof window !== 'undefined') return sessionStorage.getItem('draft_budget') || '';
-    return '';
-  });
-
-  // Sell Specific Fields
-  const [condition, setCondition] = useState<'new' | 'like_new' | 'good' | 'fair' | 'poor'>('good');
-  const [price, setPrice] = useState(() => {
-    if (typeof window !== 'undefined') return sessionStorage.getItem('draft_price') || '';
-    return '';
-  });
-
-  // Optional Image URL
-  const [imageUrl, setImageUrl] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('draft_title', title);
-      sessionStorage.setItem('draft_desc', description);
-      sessionStorage.setItem('draft_budget', budget);
-      sessionStorage.setItem('draft_price', price);
-    }
-  }, [title, description, budget, price]);
-
-  // Status & Error
+  const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Form State
+  const [postType, setPostType] = useState<any>('sell');
+  const [category, setCategory] = useState<string>('Electronics & Gadgets');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [budget, setBudget] = useState('');
+  const [condition, setCondition] = useState('Like New');
+  const [urgency, setUrgency] = useState('Flexible');
+  const [locationName, setLocationName] = useState(userLocationName || 'Downtown');
+  const [latitude, setLatitude] = useState<number>(userLat || 40.7128);
+  const [longitude, setLongitude] = useState<number>(userLng || -74.0060);
+  const [visibilityRadius, setVisibilityRadius] = useState<number>(5);
+
+  // Image Upload State
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const newFiles = [...imageFiles, ...filesArray].slice(0, 10);
+      setImageFiles(newFiles);
 
-    if (!title.trim()) {
-      setError('Please provide a title for your post.');
-      return;
+      const previews = newFiles.map((file) => URL.createObjectURL(file));
+      setImagePreviews(previews);
     }
+  };
 
-    if (!description.trim()) {
-      setError('Please provide a description.');
-      return;
-    }
+  const removeImage = (index: number) => {
+    const newFiles = imageFiles.filter((_, i) => i !== index);
+    setImageFiles(newFiles);
+    const previews = newFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
 
-    if (!locationName.trim() || !latitude || !longitude) {
-      setError('Please select and verify a location for this post.');
+  const handleSubmit = async () => {
+    if (!title.trim() || !description.trim()) {
+      setError('Title and description are required.');
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
-      const payload: Partial<MarketplacePost> = {
-        post_type: postType,
-        title: title.trim(),
-        description: description.trim(),
-        category,
-        location_name: locationName,
-        latitude: parseFloat(String(latitude)),
-        longitude: parseFloat(String(longitude)),
-        radius,
-        images: imageUrl.trim() ? [imageUrl.trim()] : [],
-      };
+      const formData = new FormData();
+      formData.append('post_type', postType);
+      formData.append('category', category);
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('location_name', locationName);
+      formData.append('latitude', String(latitude));
+      formData.append('longitude', String(longitude));
+      formData.append('visibility_radius', String(visibilityRadius));
+      if (price) formData.append('price', price);
+      if (budget) formData.append('budget', budget);
+      if (condition) formData.append('condition', condition);
+      if (urgency) formData.append('urgency', urgency);
 
-      if (postType === 'need') {
-        payload.urgency = urgency;
-        payload.budget = budget.trim() ? budget.trim() : undefined;
-      } else {
-        if (!price.trim()) {
-          setError('Please provide a selling price.');
-          setLoading(false);
-          return;
-        }
-        payload.condition = condition;
-        payload.price = price.trim();
-      }
+      imageFiles.forEach((file) => {
+        formData.append('images', file);
+      });
 
-      await createMarketplacePost(payload);
-      setTitle('');
-      setDescription('');
-      setBudget('');
-      setPrice('');
-      setImageUrl('');
+      const newPost = await createMarketplacePost(formData);
+
+      setLoading(false);
       onPostCreated();
       onClose();
     } catch (err: any) {
-      console.error('Error creating post:', err);
-      setError(err.message || 'Failed to create post. Please try again.');
-    } finally {
       setLoading(false);
+      setError(err.message || 'Failed to create listing');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
-      <div 
-        className="w-full max-w-xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative my-auto scrollbar-thin"
-        style={{
-          background: 'var(--surface-3)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-modal)',
-          border: '1px solid var(--border)',
-        }}
-      >
-        {/* Close Button */}
-        <button
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+        />
+
+        {/* Modal Window */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 16 }}
+          className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl flex flex-col z-10 shadow-modal"
+          style={{
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border)',
+          }}
         >
-          <X size={20} />
-        </button>
+          {/* Header */}
+          <div className="p-6 border-b border-[var(--border-muted)] flex items-center justify-between shrink-0">
+            <div>
+              <h2 className="font-serif font-extrabold text-2xl" style={{ color: 'var(--foreground)' }}>
+                Create a New Listing
+              </h2>
+              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
+                Step {step} of 5 — {step === 1 ? 'Type & Category' : step === 2 ? 'Details & Pricing' : step === 3 ? 'Location & Radius' : step === 4 ? 'Photos' : 'Preview & Publish'}
+              </p>
+            </div>
 
-        {/* Modal Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-extrabold text-[var(--text-primary)] flex items-center gap-2">
-            <Sparkles size={22} className="text-[var(--color-juice)]" />
-            Create Marketplace Post
-          </h2>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Request an item you need or list something to sell nearby
-          </p>
-        </div>
-
-        {/* Post Type Selector Tabs */}
-        <div className="grid grid-cols-2 gap-3 mb-6 p-1.5 bg-[var(--surface-2)] rounded-[var(--radius-md)] border" style={{ borderColor: 'var(--border)' }}>
-          <button
-            type="button"
-            onClick={() => setPostType('need')}
-            className={`py-3 px-4 rounded-[var(--radius-sm)] font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              postType === 'need'
-                ? 'bg-[rgba(231,63,60,0.15)] text-[var(--color-heat)] border border-[rgba(231,63,60,0.3)] shadow-sm'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            <HeartHandshake size={18} />
-            Need Something
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPostType('sell')}
-            className={`py-3 px-4 rounded-[var(--radius-sm)] font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              postType === 'sell'
-                ? 'bg-[rgba(2,90,92,0.15)] text-[var(--color-jade)] border border-[rgba(2,90,92,0.3)] shadow-sm'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            <ShoppingBag size={18} />
-            Sell Something
-          </button>
-        </div>
-
-        {/* Error Banner */}
-        {error && (
-          <div 
-            className="p-4 mb-6 text-xs font-semibold rounded-[var(--radius-sm)] flex gap-2 items-center"
-            style={{
-              background: 'rgba(231,63,60,0.12)',
-              color: 'var(--color-heat)',
-              border: '1px solid rgba(231,63,60,0.2)'
-            }}
-          >
-            <Info size={16} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* TITLE INPUT */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-              Post Title *
-            </label>
-            <input
-              type="text"
-              placeholder={
-                postType === 'need'
-                  ? "e.g. Need a power drill for 2 hours today"
-                  : "e.g. Selling Logitech Wireless Mouse (Like New)"
-              }
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
-              style={{ borderColor: 'var(--border)' }}
-            />
-          </div>
-
-          {/* CATEGORY SELECTOR */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-              Category *
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
-              style={{ borderColor: 'var(--border)' }}
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-[var(--surface-2)]"
+              style={{ color: 'var(--foreground-muted)' }}
             >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              <X size={18} />
+            </button>
           </div>
 
-          {/* NEED SPECIFIC: URGENCY & BUDGET */}
-          {postType === 'need' && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1">
-                  <Flame size={14} className="text-[var(--color-heat)]" />
-                  Urgency *
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { id: 'today', label: '🔥 Today' },
-                    { id: 'week', label: '⚡ This Week' },
-                    { id: 'flexible', label: 'Flexible' },
-                  ].map((u) => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => setUrgency(u.id as any)}
-                      className={`flex-1 py-3 text-xs font-bold rounded-[var(--radius-md)] border transition-all cursor-pointer ${
-                        urgency === u.id
-                          ? 'bg-[var(--text-primary)] text-[var(--surface-3)]'
-                          : 'bg-[var(--surface-2)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                      }`}
-                      style={{ borderColor: 'var(--border)' }}
-                    >
-                      {u.label}
-                    </button>
-                  ))}
+          {/* Stepper Progress Bar */}
+          <div className="px-6 py-3 bg-[var(--surface-2)] border-b border-[var(--border-muted)] flex items-center justify-between gap-2 shrink-0">
+            {['1. Type', '2. Details', '3. Location', '4. Photos', '5. Preview'].map((lbl, idx) => {
+              const stepNum = idx + 1;
+              const isActive = step === stepNum;
+              const isCompleted = step > stepNum;
+              return (
+                <div key={lbl} className="flex-1 flex items-center gap-2">
+                  <div
+                    className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
+                      isActive ? 'bg-[var(--accent)] text-white' : isCompleted ? 'bg-[var(--success)] text-white' : 'bg-[var(--surface-1)] text-[var(--foreground-muted)]'
+                    }`}
+                  >
+                    {isCompleted ? <Check size={12} /> : stepNum}
+                  </div>
+                  <span className={`text-xs font-medium hidden sm:inline ${isActive ? 'text-[var(--foreground)] font-bold' : 'text-[var(--foreground-muted)]'}`}>
+                    {lbl.split('. ')[1]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Step Body Container */}
+          <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+            {error && (
+              <div className="p-3.5 rounded-xl text-xs font-semibold bg-red-500/10 text-red-600 border border-red-500/20">
+                {error}
+              </div>
+            )}
+
+            {/* Step 1: Type & Category */}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--foreground-muted)' }}>
+                    Select Listing Type
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {POST_TYPES.map((pt) => (
+                      <div
+                        key={pt.id}
+                        onClick={() => setPostType(pt.id)}
+                        className={`p-4 rounded-2xl cursor-pointer border transition-all ${
+                          postType === pt.id ? 'border-[var(--accent)] bg-[var(--accent-muted)]' : 'border-[var(--border)] bg-[var(--surface-2)]'
+                        }`}
+                      >
+                        <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{pt.label}</h4>
+                        <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{pt.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--foreground-muted)' }}>
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+            )}
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1">
-                  <IndianRupee size={14} />
-                  Max Budget (Optional)
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 500 (or leave blank for free)"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
-                  style={{ borderColor: 'var(--border)' }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* SELL SPECIFIC: CONDITION & PRICE */}
-          {postType === 'sell' && (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                  Item Condition *
-                </label>
-                <select
-                  value={condition}
-                  onChange={(e) => setCondition(e.target.value as any)}
-                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none cursor-pointer"
-                  style={{ borderColor: 'var(--border)' }}
-                >
-                  <option value="new">New (Unopened)</option>
-                  <option value="like_new">Like New (Barely used)</option>
-                  <option value="good">Good (Fully functional)</option>
-                  <option value="fair">Fair (Visible wear)</option>
-                  <option value="poor">Poor (Needs repair)</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1">
-                  <IndianRupee size={14} />
-                  Selling Price (₹) *
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 1200"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none"
-                  style={{ borderColor: 'var(--border)' }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* DESCRIPTION */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-              Description *
-            </label>
-            <textarea
-              placeholder="Add details, condition, availability, or preferred pickup times..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full min-h-[90px] p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border focus:ring-2 focus:ring-[var(--color-juice)] outline-none resize-none"
-              style={{ borderColor: 'var(--border)' }}
-            />
-          </div>
-
-          {/* IMAGE URL */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center justify-between">
-              <span>Item Image URL (Optional)</span>
-              <span className="text-[10px] text-[var(--text-secondary)] font-normal">Direct HTTP/HTTPS link</span>
-            </label>
-            <input
-              type="url"
-              placeholder="https://images.unsplash.com/photo-... or item image link"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full p-4 text-sm bg-[var(--surface-2)] text-[var(--text-primary)] rounded-[var(--radius-md)] border outline-none"
-              style={{ borderColor: 'var(--border)' }}
-            />
-
-            {imageUrl.trim() && (
-              <div className="mt-2 p-2 rounded-xl border flex items-center gap-3 bg-[var(--surface-1)]" style={{ borderColor: 'var(--border)' }}>
-                <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: 'var(--border)' }}>
-                  <img 
-                    src={imageUrl.trim()} 
-                    alt="Preview" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
+            {/* Step 2: Details & Pricing */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. MacBook Air M2 256GB - Mint Condition"
+                    className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-[var(--text-primary)]">Image Attached</p>
-                  <p className="text-[10px] text-[var(--text-secondary)] truncate">{imageUrl.trim()}</p>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your item, features, reason for selling, or specific requirements..."
+                    className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                  />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setImageUrl('')}
-                  className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-[rgba(231,63,60,0.12)] text-[var(--color-heat)] cursor-pointer"
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {postType === 'need' ? (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                        Budget (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={budget}
+                        onChange={(e) => setBudget(e.target.value)}
+                        placeholder="e.g. 50000"
+                        className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                        Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="e.g. 58000"
+                        className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                      Condition
+                    </label>
+                    <select
+                      value={condition}
+                      onChange={(e) => setCondition(e.target.value)}
+                      className="w-full p-3 rounded-xl text-sm outline-none font-medium"
+                      style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                    >
+                      <option value="New">Brand New</option>
+                      <option value="Like New">Like New</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Location & Radius */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--foreground-muted)' }}>
+                    Location Name
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={locationName}
+                      onChange={(e) => setLocationName(e.target.value)}
+                      className="flex-1 p-3 rounded-xl text-sm outline-none font-medium"
+                      style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                    />
+                    <button
+                      onClick={() => setIsPickerOpen(true)}
+                      className="px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer"
+                      style={{ background: 'var(--accent)', color: 'var(--accent-foreground)' }}
+                    >
+                      <MapPin size={15} /> Pick on Map
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--foreground-muted)' }}>
+                      Visibility Radius
+                    </label>
+                    <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{visibilityRadius} km</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={50}
+                    value={visibilityRadius}
+                    onChange={(e) => setVisibilityRadius(Number(e.target.value))}
+                    className="w-full accent-[var(--accent)]"
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Your listing will be highlighted to users within this geographical distance.
+                  </p>
+                </div>
+
+                <LocationPicker
+                  value={locationName}
+                  onChange={(name: string, lat: number, lng: number) => {
+                    setLatitude(lat);
+                    setLongitude(lng);
+                    setLocationName(name);
+                  }}
+                  lat={latitude}
+                  lng={longitude}
+                />
+              </div>
+            )}
+
+            {/* Step 4: Multi-Image Uploader */}
+            {step === 4 && (
+              <div className="space-y-4">
+                <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--foreground-muted)' }}>
+                  Add Photos (Up to 10 photos)
+                </label>
+
+                {/* Drag-and-drop Dropzone */}
+                <div
+                  className="p-8 border-2 border-dashed rounded-2xl text-center flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-[var(--surface-2)]"
+                  style={{ borderColor: 'var(--border)' }}
+                  onClick={() => document.getElementById('photo-input')?.click()}
                 >
-                  Remove
-                </button>
+                  <Upload size={32} className="mb-2 text-[var(--accent)]" />
+                  <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                    Drag & drop or click to upload
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                    PNG, JPG, WEBP up to 10MB each
+                  </p>
+                  <input
+                    id="photo-input"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Preview Grid */}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 pt-4">
+                    {imagePreviews.map((src, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-[var(--border)]">
+                        <img src={src} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 5: Final Preview */}
+            {step === 5 && (
+              <div className="space-y-4">
+                <h3 className="font-serif font-bold text-lg" style={{ color: 'var(--foreground)' }}>
+                  Listing Preview
+                </h3>
+                <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-black/5 shrink-0">
+                    <img
+                      src={imagePreviews[0] || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200'}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ background: 'var(--accent-muted)', color: 'var(--accent)' }}>
+                      {postType}
+                    </span>
+                    <h4 className="font-bold text-base mt-1" style={{ color: 'var(--foreground)' }}>{title || 'Untitled Listing'}</h4>
+                    <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{locationName} • Within {visibilityRadius} km</p>
+                    <p className="font-serif font-bold text-sm mt-1" style={{ color: 'var(--foreground)' }}>
+                      ₹{price || budget || 'Free'}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
 
-          {/* LOCATION & RADIUS */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-              Post Location
-            </label>
-            <LocationPicker
-              value={locationName}
-              onChange={(address, lat, lng) => {
-                setLocationName(address);
-                setLatitude(lat);
-                setLongitude(lng);
-              }}
-              lat={latitude}
-              lng={longitude}
-              radius={radius}
-            />
-          </div>
-
-          {/* SUBMIT BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-3 py-4 font-bold text-center text-sm rounded-[var(--radius-md)] hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
-            style={{
-              background: postType === 'need' ? 'var(--color-heat)' : 'var(--accent-primary)',
-              color: postType === 'need' ? '#FFFFFF' : 'var(--color-core)',
-            }}
-          >
-            {loading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Publishing Post...
-              </>
+          {/* Footer Controls */}
+          <div className="p-6 border-t border-[var(--border-muted)] flex items-center justify-between shrink-0">
+            {step > 1 ? (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+              >
+                <ArrowLeft size={15} /> Back
+              </button>
             ) : (
-              `Publish ${postType === 'need' ? 'Need Request' : 'Sell Listing'}`
+              <div />
             )}
-          </button>
-        </form>
+
+            {step < 5 ? (
+              <button
+                onClick={() => setStep(step + 1)}
+                className="px-6 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer"
+                style={{ background: 'var(--accent)', color: 'var(--accent-foreground)' }}
+              >
+                Next <ArrowRight size={15} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-7 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                style={{ background: 'var(--accent)', color: 'var(--accent-foreground)' }}
+              >
+                {loading ? 'Publishing...' : 'Publish Listing'}
+              </button>
+            )}
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

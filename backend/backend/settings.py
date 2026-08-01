@@ -59,7 +59,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -68,7 +67,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -150,7 +148,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -186,14 +186,13 @@ REST_FRAMEWORK = {
 }
 
 # Caching Configuration
+# Default cache is DummyCache (no-op) so marketplace API responses are never
+# silently served from cache. Named caches (assets, dashboard) keep LocMemCache
+# for data that is safe to cache.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes default
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-        },
+        # DummyCache: no-op, every cache.get() returns None, never caches anything
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     },
     'assets': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -213,23 +212,9 @@ CACHES = {
     }
 }
 
-# Cache middleware for full page caching
-MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
-]
-
-# Cache timeout settings
+# Cache middleware settings (not active — no CacheMiddleware in MIDDLEWARE)
 CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 300  # 5 minutes
+CACHE_MIDDLEWARE_SECONDS = 0
 CACHE_MIDDLEWARE_KEY_PREFIX = 'neednow'
 
 # CORS settings for frontend communication

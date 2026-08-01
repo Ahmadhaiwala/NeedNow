@@ -3,34 +3,27 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Search, 
-  MapPin, 
-  Tag, 
-  Lightbulb, 
-  HeartHandshake, 
-  Compass, 
-  SlidersHorizontal, 
+  Sparkles, 
   ShieldCheck, 
-  Users, 
-  ChevronDown,
-  Sparkles
+  MapPin, 
+  Search, 
+  ChevronDown, 
+  SlidersHorizontal,
+  Users,
+  HeartHandshake
 } from 'lucide-react';
 
-interface HeroSectionProps {
-  searchQuery?: string;
-  onSearchChange?: (q: string) => void;
-  selectedCategory?: string;
-  onCategoryChange?: (cat: string) => void;
-  selectedType?: string;
-  onTypeChange?: (type: string) => void;
-  selectedRadius?: number;
-  onRadiusChange?: (r: number) => void;
-  locationName?: string;
-  onOpenLocationPicker?: () => void;
-  onQuickAction?: (action: 'sell' | 'need' | 'service' | 'nearby') => void;
-  totalActiveCount?: number;
-  totalCategories?: number;
-  totalProducts?: number;
+interface CommunityHeroProps {
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (cat: string) => void;
+  selectedType: string;
+  onTypeChange: (type: string) => void;
+  selectedRadius: number;
+  onRadiusChange: (r: number) => void;
+  locationName: string;
+  onOpenLocationPicker: () => void;
 }
 
 const CATEGORIES = [
@@ -51,23 +44,24 @@ const RADII = [
   { label: 'Within 50 km', value: 50 },
 ];
 
-export default function HeroSection({
-  searchQuery = '',
+export default function CommunityHero({
+  searchQuery,
   onSearchChange,
-  selectedCategory = 'All',
+  selectedCategory,
   onCategoryChange,
-  selectedType = 'all',
+  selectedType,
   onTypeChange,
-  selectedRadius = 10,
+  selectedRadius,
   onRadiusChange,
-  locationName = 'Downtown',
+  locationName,
   onOpenLocationPicker,
-  onQuickAction,
-}: HeroSectionProps) {
+}: CommunityHeroProps) {
   return (
     <div className="mb-10">
-      {/* Top Banner */}
+      {/* Top Hero Section: People-Centric Community Headline */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-6">
+        
+        {/* Left Column: Editorial Headline & Subtitle */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,6 +74,7 @@ export default function HeroSection({
           }}
         >
           <div>
+            {/* Community Pill Badge */}
             <div className="flex items-center gap-2 mb-4">
               <span
                 className="px-3.5 py-1 font-semibold rounded-full uppercase tracking-wider text-[11px] flex items-center gap-1.5"
@@ -88,8 +83,8 @@ export default function HeroSection({
                   color: 'var(--accent)',
                 }}
               >
-                <Sparkles size={12} />
-                NeedNow Community Marketplace
+                <Users size={12} />
+                NeedNow Local Community
               </span>
             </div>
 
@@ -99,7 +94,7 @@ export default function HeroSection({
             >
               Buy. Sell. Trade.<br />
               <span className="italic font-normal" style={{ color: 'var(--accent)' }}>
-                Connect.
+                Connect locally.
               </span>
             </h1>
 
@@ -107,20 +102,21 @@ export default function HeroSection({
               className="font-serif italic text-xl sm:text-2xl mb-4 font-normal"
               style={{ color: 'var(--foreground-muted)' }}
             >
-              Everything around you, all in one marketplace.
+              Everything around you, directly from your neighbors.
             </p>
 
             <p
               className="text-sm sm:text-base max-w-lg leading-relaxed mb-6"
               style={{ color: 'var(--foreground-muted)' }}
             >
-              Join thousands of neighbors buying, selling, renting, and sharing skills locally with 100% verified trust scores.
+              Join thousands of verified neighbors buying, selling, renting, and sharing skills locally with 100% trust scores.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 border-t border-[var(--border-muted)]">
+          {/* Location Badge & Distance Selector */}
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[var(--border-muted)]">
             <button
-              onClick={() => onOpenLocationPicker?.()}
+              onClick={onOpenLocationPicker}
               className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold cursor-pointer transition-all hover:scale-[1.02]"
               style={{
                 background: 'var(--surface-2)',
@@ -141,6 +137,7 @@ export default function HeroSection({
           </div>
         </motion.div>
 
+        {/* Right Column: Warm People-Centric Community Photo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -149,17 +146,18 @@ export default function HeroSection({
           style={{ border: '1px solid var(--border)' }}
         >
           <img
-            src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
-            alt="NeedNow Marketplace Lifestyle"
+            src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80"
+            alt="NeedNow Local Community Members"
             className="w-full h-full object-cover"
           />
           <div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(to top, rgba(27, 21, 16, 0.75) 0%, rgba(27, 21, 16, 0.1) 60%)',
+              background: 'linear-gradient(to top, rgba(27, 21, 16, 0.8) 0%, rgba(27, 21, 16, 0.15) 60%)',
             }}
           />
 
+          {/* Floating Trusted Community Badge Overlay */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -177,7 +175,7 @@ export default function HeroSection({
                   <ShieldCheck size={15} />
                   <span>Trusted Community</span>
                 </div>
-                <p className="text-sm font-bold">100% Verified Profiles</p>
+                <p className="text-sm font-bold">100% Verified Neighbor Profiles</p>
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end -space-x-2 mb-1">
@@ -186,7 +184,7 @@ export default function HeroSection({
                   <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" className="w-6 h-6 rounded-full border-2 border-[#1F1712]" alt="User" />
                 </div>
                 <span className="text-[11px] opacity-80" style={{ color: '#E5DED5' }}>
-                  2K+ Active Members
+                  2,400+ Active Neighbors
                 </span>
               </div>
             </div>
@@ -194,90 +192,7 @@ export default function HeroSection({
         </motion.div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('sell')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(160, 98, 60, 0.12)', color: 'var(--accent)' }}>
-            <Tag size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Sell Something</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>List your item for sale</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('need')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(90, 123, 142, 0.12)', color: 'var(--info)' }}>
-            <Lightbulb size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Need Something</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Post what you're looking for</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('service')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(90, 122, 94, 0.12)', color: 'var(--success)' }}>
-            <HeartHandshake size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Offer a Service</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Share your skills locally</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('nearby')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(212, 165, 116, 0.15)', color: 'var(--warning)' }}>
-            <Compass size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Browse Nearby</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>See items near you</p>
-          </div>
-        </motion.button>
-      </div>
-
-      {/* Control Bar */}
+      {/* Community Search & Filter Bar */}
       <div
         className="p-3 sm:p-4 rounded-2xl flex flex-wrap lg:flex-nowrap items-center gap-3"
         style={{
@@ -286,13 +201,14 @@ export default function HeroSection({
           boxShadow: 'var(--shadow-hover)',
         }}
       >
+        {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--foreground-muted)' }} />
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            placeholder="Search listings, people, or categories..."
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search local listings, neighbors, or needs..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
             style={{
               background: 'var(--surface-1)',
@@ -302,8 +218,9 @@ export default function HeroSection({
           />
         </div>
 
+        {/* Location Trigger */}
         <button
-          onClick={() => onOpenLocationPicker?.()}
+          onClick={onOpenLocationPicker}
           className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-medium cursor-pointer transition-all"
           style={{
             background: 'var(--surface-1)',
@@ -316,9 +233,10 @@ export default function HeroSection({
           <ChevronDown size={14} className="opacity-60" />
         </button>
 
+        {/* Category Select */}
         <select
           value={selectedCategory}
-          onChange={(e) => onCategoryChange?.(e.target.value)}
+          onChange={(e) => onCategoryChange(e.target.value)}
           className="px-3.5 py-2.5 rounded-xl text-xs font-medium outline-none cursor-pointer"
           style={{
             background: 'var(--surface-1)',
@@ -333,9 +251,10 @@ export default function HeroSection({
           ))}
         </select>
 
+        {/* Distance Select */}
         <select
           value={selectedRadius}
-          onChange={(e) => onRadiusChange?.(Number(e.target.value))}
+          onChange={(e) => onRadiusChange(Number(e.target.value))}
           className="px-3.5 py-2.5 rounded-xl text-xs font-medium outline-none cursor-pointer"
           style={{
             background: 'var(--surface-1)',
@@ -350,9 +269,10 @@ export default function HeroSection({
           ))}
         </select>
 
+        {/* Post Type Selector */}
         <select
           value={selectedType}
-          onChange={(e) => onTypeChange?.(e.target.value)}
+          onChange={(e) => onTypeChange(e.target.value)}
           className="px-3.5 py-2.5 rounded-xl text-xs font-medium outline-none cursor-pointer"
           style={{
             background: 'var(--surface-1)',
@@ -360,15 +280,16 @@ export default function HeroSection({
             color: 'var(--foreground)',
           }}
         >
-          <option value="all">All Post Types</option>
+          <option value="all">All Intent Types</option>
           <option value="sell">For Sale</option>
           <option value="need">Wants / Needs</option>
           <option value="rent">For Rent</option>
-          <option value="exchange">Trade & Exchange</option>
+          <option value="exchange">Trade & Swap</option>
           <option value="donate">Free / Donate</option>
           <option value="service">Services Offered</option>
         </select>
 
+        {/* Filters Badge */}
         <div
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer"
           style={{
