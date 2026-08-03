@@ -1,0 +1,12 @@
+{
+  "Simple className": {
+    "prefix": "className",
+    "body": ["className=\"$1\""],
+    "description": "Simple className attribute without clsx"
+  },
+  "Div with className": {
+    "prefix": "divclass",
+    "body": ["<div className=\"$1\">$2</div>"],
+    "description": "Div element with simple className"
+  }
+}
