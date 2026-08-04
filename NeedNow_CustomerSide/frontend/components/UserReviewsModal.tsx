@@ -44,9 +44,13 @@ export default function UserReviewsModal({
   const fetchUserReviews = async (cacheKey: string) => {
     setError(null);
     try {
+      // CORRECT LOGIC:
+      // - Profile pages (mine or others) show reviews RECEIVED (reputation)
+      // - Never use myReviews flag to show reviews written
+      // - Reviews written should only appear in order history, not profiles
       const data = await getReviews({
         user_id: userId,
-        my_reviews: myReviews,
+        as_reviewee: true,  // Always show reviews RECEIVED for profile display
       });
       setReviews(data || []);
       if (data && typeof window !== 'undefined') {
@@ -85,10 +89,10 @@ export default function UserReviewsModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-foreground">
-                {myReviews ? 'My Ratings & Reviews' : `${userName}'s Reviews`}
+                {myReviews ? 'My Reputation & Reviews' : `${userName}'s Reviews`}
               </h3>
               <p className="text-xs text-muted">
-                Community feedback and deal reputation
+                Reviews received from buyers and neighbors
               </p>
             </div>
           </div>
@@ -150,37 +154,40 @@ export default function UserReviewsModal({
                 key={rev.id} 
                 className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-page)] border border-[rgba(31,54,53,0.06)] flex flex-col gap-2"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[rgba(31,54,53,0.08)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
-                      {rev.reviewer_details?.first_name ? rev.reviewer_details.first_name[0].toUpperCase() : 'U'}
+                {/* VIEW MODE - Reviews RECEIVED (reputation) */}
+                <>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[rgba(31,54,53,0.08)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
+                        {rev.reviewer_details?.first_name ? rev.reviewer_details.first_name[0].toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[var(--text-primary)]">
+                          {rev.reviewer_details?.display_name || rev.reviewer_details?.first_name || 'Neighbor'}
+                        </p>
+                        <p className="text-[10px] text-[var(--text-secondary)]">
+                          {new Date(rev.created_at || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-[var(--text-primary)]">
-                        {rev.reviewer_details?.display_name || rev.reviewer_details?.first_name || 'Neighbor'}
-                      </p>
-                      <p className="text-[10px] text-[var(--text-secondary)]">
-                        {new Date(rev.created_at || Date.now()).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={14}
+                          className={
+                            star <= rev.rating ? 'fill-warning text-warning' : 'text-gray-300'
+                          }
+                        />
+                      ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        size={14}
-                        className={
-                          star <= rev.rating ? 'fill-warning text-warning' : 'text-gray-300'
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-                {rev.comment && (
-                  <p className="text-xs leading-relaxed text-[var(--text-primary)] italic bg-[var(--bg-surface)] p-2.5 rounded-[var(--radius-sm)] border border-[rgba(31,54,53,0.04)]">
-                    "{rev.comment}"
-                  </p>
-                )}
+                  {rev.comment && (
+                    <p className="text-xs leading-relaxed text-[var(--text-primary)] italic bg-[var(--bg-surface)] p-2.5 rounded-[var(--radius-sm)] border border-[rgba(31,54,53,0.04)]">
+                      "{rev.comment}"
+                    </p>
+                  )}
+                </>
               </div>
             ))}
           </div>

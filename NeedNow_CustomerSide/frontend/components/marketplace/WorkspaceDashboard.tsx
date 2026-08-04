@@ -29,6 +29,7 @@ import {
 import {
   getUserPosts,
   getMyOffers,
+  getIncomingOffers,
   getChatConversations,
   acceptOffer,
   rejectOffer,
@@ -39,6 +40,7 @@ import {
   ConversationSummary,
   MarketplaceProfile,
 } from '@/lib/marketplace';
+import ReviewModal from '@/components/ReviewModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -623,6 +625,9 @@ export default function WorkspaceDashboard({
   const [offers, setOffers] = useState<SectionState<MarketplaceOffer[]>>({
     data: [], loading: true, error: null,
   });
+  const [incomingOffersState, setIncomingOffersState] = useState<SectionState<MarketplaceOffer[]>>({
+    data: [], loading: true, error: null,
+  });
   const [conversations, setConversations] = useState<SectionState<ConversationSummary[]>>({
     data: [], loading: true, error: null,
   });
@@ -630,6 +635,15 @@ export default function WorkspaceDashboard({
   // ── Verification Banner ───────────────────────────────────────────────────────
   const [verificationDismissed, setVerificationDismissed] = useState(false);
   const showVerificationBanner = !profile?.is_verified && !verificationDismissed;
+
+  // ── Review Modal State (shown after accepting an offer) ───────────────────────
+  const [reviewModal, setReviewModal] = useState<{
+    open: boolean;
+    postId: number;
+    postTitle: string;
+    revieweeId: string;
+    revieweeName: string;
+  } | null>(null);
 
   // ── Fetch Functions ───────────────────────────────────────────────────────────
 
@@ -663,6 +677,16 @@ export default function WorkspaceDashboard({
     }
   }, []);
 
+  const fetchIncomingOffers = useCallback(async () => {
+    setIncomingOffersState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const data = await getIncomingOffers();
+      setIncomingOffersState({ data, loading: false, error: null });
+    } catch {
+      setIncomingOffersState({ data: [], loading: false, error: 'Failed to load incoming offers.' });
+    }
+  }, []);
+
   const fetchConversations = useCallback(async () => {
     setConversations((s) => ({ ...s, loading: true, error: null }));
     try {
@@ -677,45 +701,45 @@ export default function WorkspaceDashboard({
     fetchActivePosts();
     fetchDraftPosts();
     fetchOffers();
+    fetchIncomingOffers();
     fetchConversations();
-  }, [fetchActivePosts, fetchDraftPosts, fetchOffers, fetchConversations]);
+  }, [fetchActivePosts, fetchDraftPosts, fetchOffers, fetchIncomingOffers, fetchConversations]);
 
   // ── Derived Counts ────────────────────────────────────────────────────────────
 
   const allOffers = offers.data;
 
-  // Outgoing = offers placed by the current user on other people's posts
-  // Incoming = offers on the current user's own posts (owner of the post)
-  // getMyOffers returns ALL offers associated with the current user:
-  // — offers they submitted (user matches)
-  // — offers received on their posts
-  // We differentiate by checking if the offer's post is in activePosts
-  const myPostIds = new Set(activePosts.data.map((p) => p.id));
+  // Outgoing = offers submitted by the current user on OTHER people's posts
+  const outgoingOffers = allOffers;
 
-  const incomingOffers = allOffers.filter(
-    (o) => myPostIds.has(o.post) && o.status === 'pending'
-  );
-  const outgoingOffers = allOffers.filter(
-    (o) => !myPostIds.has(o.post)
-  );
+  // Incoming = from the dedicated incoming endpoint (offers on user's own posts)
+  const incomingOffers = incomingOffersState.data;
 
   const unreadCount = conversations.data.reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
   // ── Offer Actions ─────────────────────────────────────────────────────────────
 
   const handleAcceptOffer = async (offerId: number) => {
+    const offer = incomingOffers.find((o) => o.id === offerId);
     await acceptOffer(offerId);
-    setOffers((s) => ({
+    setIncomingOffersState((s) => ({
       ...s,
-      data: s.data.map((o) => (o.id === offerId ? { ...o, status: 'accepted' } : o)),
+      data: s.data.filter((o) => o.id !== offerId),
     }));
+    
+    // CORRECT FLOW: After seller accepts offer, the BUYER should review the SELLER
+    // Do NOT open review modal here - the buyer will review from their "My Offers" section
+    // The seller should not review the buyer in a marketplace transaction
+    
+    // TODO: Notify buyer that their offer was accepted and they can now leave a review
+    // This should be handled through notifications or the buyer's offer status page
   };
 
   const handleRejectOffer = async (offerId: number) => {
     await rejectOffer(offerId);
-    setOffers((s) => ({
+    setIncomingOffersState((s) => ({
       ...s,
-      data: s.data.map((o) => (o.id === offerId ? { ...o, status: 'rejected' } : o)),
+      data: s.data.filter((o) => o.id !== offerId),
     }));
   };
 
@@ -789,6 +813,7 @@ export default function WorkspaceDashboard({
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div className="space-y-5">
 
       {/* ── Verification Banner ── */}
@@ -1010,10 +1035,10 @@ export default function WorkspaceDashboard({
             badge={incomingOffers.length || undefined}
             action={{ label: 'All offers', onClick: onOpenOffers }}
           >
-            {offers.loading ? (
+            {incomingOffersState.loading ? (
               Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} />)
-            ) : offers.error ? (
-              <ErrorCard message={offers.error} onRetry={fetchOffers} />
+            ) : incomingOffersState.error ? (
+              <ErrorCard message={incomingOffersState.error} onRetry={fetchIncomingOffers} />
             ) : incomingOffers.length === 0 ? (
               <EmptyState
                 icon={Inbox}
@@ -1125,5 +1150,19 @@ export default function WorkspaceDashboard({
         </div>
       </div>
     </div>
+
+      {/* Review Modal — opens after post owner accepts an offer */}
+      {reviewModal?.open && (
+        <ReviewModal
+          isOpen={reviewModal.open}
+          onClose={() => setReviewModal(null)}
+          postId={reviewModal.postId}
+          postTitle={reviewModal.postTitle}
+          revieweeId={reviewModal.revieweeId}
+          revieweeName={reviewModal.revieweeName}
+          onReviewSubmitted={() => setReviewModal(null)}
+        />
+      )}
+    </>
   );
 }

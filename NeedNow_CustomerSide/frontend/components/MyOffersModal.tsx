@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, XCircle, ArrowUpRight, DollarSign, Clock } from 'lucide-react';
+import { X, CheckCircle2, XCircle, ArrowUpRight, DollarSign, Clock, Star } from 'lucide-react';
 import { MarketplaceOffer, getMyOffers, acceptOffer, rejectOffer, withdrawOffer } from '@/lib/marketplace';
+import ReviewModal from '@/components/ReviewModal';
 
 interface MyOffersModalProps {
   isOpen: boolean;
@@ -14,6 +15,12 @@ export default function MyOffersModal({ isOpen, onClose }: MyOffersModalProps) {
   const [offers, setOffers] = useState<MarketplaceOffer[]>([]);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'withdrawn'>('all');
   const [loading, setLoading] = useState(true);
+  const [reviewModal, setReviewModal] = useState<{
+    postId: number;
+    postTitle: string;
+    sellerId: string;
+    sellerName: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,6 +53,24 @@ export default function MyOffersModal({ isOpen, onClose }: MyOffersModalProps) {
   const handleWithdraw = async (id: number) => {
     await withdrawOffer(id);
     setOffers(offers.map((o) => (o.id === id ? { ...o, status: 'withdrawn' } : o)));
+  };
+
+  const handleLeaveReview = (offer: MarketplaceOffer) => {
+    // CORRECT FLOW: Buyer reviews the SELLER (post owner)
+    const postId = typeof offer.post === 'number' ? offer.post : offer.post_details?.id;
+    const sellerId = offer.post_details?.owner;
+    const sellerName = offer.post_details?.owner_details?.first_name 
+      ? `${offer.post_details.owner_details.first_name} ${offer.post_details.owner_details.last_name || ''}`.trim()
+      : offer.post_details?.owner_details?.email?.split('@')[0] || 'Seller';
+
+    if (postId && sellerId) {
+      setReviewModal({
+        postId,
+        postTitle: offer.post_title || offer.post_details?.title || `Post #${offer.post}`,
+        sellerId: String(sellerId),
+        sellerName,
+      });
+    }
   };
 
   return (
@@ -137,11 +162,40 @@ export default function MyOffersModal({ isOpen, onClose }: MyOffersModalProps) {
                       </button>
                     </div>
                   )}
+
+                  {of.status === 'accepted' && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleLeaveReview(of)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--accent)] text-white hover:opacity-90 flex items-center gap-1.5"
+                      >
+                        <Star size={14} />
+                        Leave Review
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))
             )}
           </div>
         </motion.div>
+
+        {/* Review Modal - Buyer reviews the SELLER */}
+        {reviewModal && (
+          <ReviewModal
+            isOpen={!!reviewModal}
+            onClose={() => setReviewModal(null)}
+            postId={reviewModal.postId}
+            postTitle={reviewModal.postTitle}
+            revieweeId={reviewModal.sellerId}
+            revieweeName={reviewModal.sellerName}
+            onReviewSubmitted={() => {
+              setReviewModal(null);
+              // Refresh offers to show updated state
+              getMyOffers().then(setOffers);
+            }}
+          />
+        )}
       </div>
     </AnimatePresence>
   );

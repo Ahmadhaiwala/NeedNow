@@ -344,7 +344,11 @@ export default function PostDetailModal({
                       <h4 className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>{ownerName}</h4>
                       <div className="flex items-center gap-1 text-xs text-[var(--warning)] font-semibold">
                         <Star size={12} className="fill-current" />
-                        <span>4.8 (32 reviews)</span>
+                        <span>
+                          {post.owner_details?.rating
+                            ? `${Number(post.owner_details.rating).toFixed(1)} (${post.owner_details.review_count ?? 0} reviews)`
+                            : 'No reviews yet'}
+                        </span>
                       </div>
                     </div>
                   </div>

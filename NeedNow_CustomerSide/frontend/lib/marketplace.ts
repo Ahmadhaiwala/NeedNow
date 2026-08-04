@@ -471,6 +471,16 @@ export async function getMyOffers(): Promise<MarketplaceOffer[]> {
   return unwrapResponse<MarketplaceOffer[]>(json) || [];
 }
 
+export async function getIncomingOffers(): Promise<MarketplaceOffer[]> {
+  const authHeaders = await getAuthHeader();
+  const res = await fetch(`${BASE_URL}/api/marketplace/my-offers/?incoming=true`, {
+    headers: { ...authHeaders },
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return unwrapResponse<MarketplaceOffer[]>(json) || [];
+}
+
 export async function acceptOffer(offerId: number): Promise<MarketplaceOffer> {
   const authHeaders = await getAuthHeader();
   const res = await fetch(`${BASE_URL}/api/marketplace/offers/${offerId}/accept/`, {
@@ -602,18 +612,38 @@ export async function getChatConversations(): Promise<ConversationSummary[]> {
 // ── Reviews Endpoints ────────────────────────────────────────────────────────
 
 export async function getReviews(
-  param?: string | { user_id?: string; post_id?: number; my_reviews?: boolean; by_reviewer?: boolean }
+  param?: string | { 
+    user_id?: string; 
+    post_id?: number; 
+    as_reviewee?: boolean;  // Reviews RECEIVED by this user (for profile display) - default true
+    as_reviewer?: boolean;  // Reviews WRITTEN by this user (for order history) - opposite of as_reviewee
+  }
 ): Promise<MarketplaceReview[]> {
   const authHeaders = await getAuthHeader();
   const query = new URLSearchParams();
 
   if (typeof param === 'string') {
+    // Simple string param = user_id, default to showing reviews received
     if (param) query.append('user_id', param);
+    query.append('as_reviewee', 'true');
   } else if (param && typeof param === 'object') {
     if (param.user_id) query.append('user_id', param.user_id);
     if (param.post_id) query.append('post_id', String(param.post_id));
-    if (param.my_reviews) query.append('my_reviews', 'true');
-    if (param.by_reviewer) query.append('by_reviewer', 'true');
+    
+    // Handle as_reviewee/as_reviewer logic
+    if (param.as_reviewer !== undefined) {
+      // If explicitly requesting reviews written, set as_reviewee=false
+      query.append('as_reviewee', param.as_reviewer ? 'false' : 'true');
+    } else if (param.as_reviewee !== undefined) {
+      // If explicitly setting as_reviewee
+      query.append('as_reviewee', param.as_reviewee ? 'true' : 'false');
+    } else {
+      // Default: show reviews received (for profile display)
+      query.append('as_reviewee', 'true');
+    }
+  } else {
+    // No params: show current user's reviews received
+    query.append('as_reviewee', 'true');
   }
 
   const queryString = query.toString() ? `?${query.toString()}` : '';
@@ -658,3 +688,42 @@ export async function submitReview(data: {
   const json = await res.json();
   return unwrapResponse<MarketplaceReview>(json);
 }
+
+export async function updateReview(
+  reviewId: number,
+  data: {
+    rating?: number;
+    comment?: string;
+  }
+): Promise<MarketplaceReview> {
+  const authHeaders = await getAuthHeader();
+  const res = await fetch(`${BASE_URL}/api/marketplace/reviews/${reviewId}/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.detail || 'Failed to update review');
+  }
+  const json = await res.json();
+  return unwrapResponse<MarketplaceReview>(json);
+}
+
+export async function deleteReview(reviewId: number): Promise<void> {
+  const authHeaders = await getAuthHeader();
+  const res = await fetch(`${BASE_URL}/api/marketplace/reviews/${reviewId}/`, {
+    method: 'DELETE',
+    headers: {
+      ...authHeaders,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.detail || 'Failed to delete review');
+  }
+}
+

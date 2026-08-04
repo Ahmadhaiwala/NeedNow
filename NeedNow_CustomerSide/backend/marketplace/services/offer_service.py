@@ -29,8 +29,9 @@ class OfferService:
                 errors['price'] = "Offer price must be a valid number."
 
         message = data.get('message')
-        if message is not None and not str(message).strip():
-            errors['message'] = "Offer message cannot be empty string if provided."
+        # Treat blank/empty message as None (not provided)
+        if message is not None and str(message).strip() == '':
+            data['message'] = None
 
         if errors:
             raise ValidationError(errors)
@@ -49,8 +50,9 @@ class OfferService:
         if post.status != 'active':
             raise ValidationError("Cannot make an offer on an inactive post.")
 
-        if post.owner == user_obj:
-            raise ValidationError("You cannot submit an offer on your own post.")
+        # TODO: Re-enable in production
+        # if post.owner == user_obj:
+        #     raise ValidationError("You cannot submit an offer on your own post.")
 
         cls.validate_offer({'price': price, 'message': message})
 

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import Navbar from '../navbar/Navbar';
-import { User, MapPin, Shield, Sun, Moon, Laptop, LogOut, Check, Bell, CreditCard } from 'lucide-react';
+import { User, MapPin, Sun, Moon, Laptop, LogOut, Check } from 'lucide-react';
+import ProfileReviewSection from '@/components/ProfileReviewSection';
 import Image from 'next/image';
 
 export default function ProfilePage() {
@@ -246,6 +247,13 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Section 4: Rating & Reviews — spans full width below */}
+        </div>
+
+        {/* Review Section — full width below the grid */}
+        <div className="mt-6">
+          <ProfileReviewSection userName={user.name || 'You'} />
         </div>
       </main>
     </div>

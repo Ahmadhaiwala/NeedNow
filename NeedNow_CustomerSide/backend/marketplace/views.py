@@ -5,6 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.core.exceptions import ValidationError, PermissionDenied
 
+from .models import MarketplaceReview
+
 from .services import (
     FeedService,
     PostService,
@@ -488,8 +490,15 @@ class MarketplacePostOffersView(APIView):
             return api_response(success=False, message=str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, post_id):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         price = request.data.get('price')
-        message = request.data.get('message', '')
+        raw_message = request.data.get('message', '')
+        message = str(raw_message).strip() if raw_message is not None else ''
+        
+        logger.error(f"Creating offer for post {post_id}: price={price} (type={type(price).__name__}), message={message}")
+        logger.error(f"Full request data: {request.data}")
 
         try:
             offer = OfferService.create_offer(post_id, request.user, price, message)
@@ -497,24 +506,41 @@ class MarketplacePostOffersView(APIView):
             return api_response(success=True, message="Offer submitted successfully.", data=serializer.data, status_code=status.HTTP_201_CREATED)
         except ValidationError as e:
             err_detail = e.message_dict if hasattr(e, 'message_dict') else (e.messages if hasattr(e, 'messages') else str(e))
+            logger.error(f"Offer validation error: {err_detail}")
             return api_response(success=False, message="Validation error", errors=err_detail, status_code=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            logger.error(f"Offer creation error: {str(e)}")
             return api_response(success=False, message=str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
 
 class UserOffersView(APIView):
     """
-    GET: Retrieves all offers created by current authenticated user.
+    GET: Retrieves offers by or for the current authenticated user.
+    - Default (outgoing): offers the user submitted on other posts.
+    - ?incoming=true: offers received on the user's own posts (for post owners).
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         try:
-            offers = OfferService.get_my_offers(request.user)
+            incoming = request.query_params.get('incoming', 'false').lower() == 'true'
+            if incoming:
+                # Return all pending offers on posts owned by this user
+                from .models import MarketplaceOffer
+                offers = MarketplaceOffer.objects.filter(
+                    post__owner=request.user,
+                    status='pending'
+                ).select_related(
+                    'user', 'user__marketplace_profile',
+                    'post', 'post__owner', 'post__owner__marketplace_profile'
+                ).order_by('-created_at')
+            else:
+                offers = OfferService.get_my_offers(request.user)
             serializer = MarketplaceOfferSerializer(offers, many=True, context={'request': request})
             return api_response(success=True, message="User offers retrieved.", data=serializer.data)
         except Exception as e:
             return api_response(success=False, message=str(e), status_code=status.HTTP_400_BAD_REQUEST)
+
 
 
 class OfferDetailView(APIView):
@@ -787,9 +813,25 @@ class MarketplaceReviewView(APIView):
 
     def get(self, request):
         target_user = request.query_params.get('user_id', request.user.id)
+        post_id = request.query_params.get('post_id')
         as_reviewee = request.query_params.get('as_reviewee', 'true').lower() == 'true'
+        
         try:
-            reviews = ReviewService.get_user_reviews(target_user, as_reviewee=as_reviewee)
+            if post_id:
+                # Filter reviews for a specific post
+                reviews = MarketplaceReview.objects.filter(post_id=post_id).select_related(
+                    'reviewer', 'reviewer__marketplace_profile',
+                    'reviewee', 'reviewee__marketplace_profile',
+                    'post'
+                )
+                # If as_reviewee=false, filter by current user as reviewer
+                if not as_reviewee:
+                    reviews = reviews.filter(reviewer=request.user)
+                reviews = reviews.order_by('-created_at')
+            else:
+                # Filter reviews by user
+                reviews = ReviewService.get_user_reviews(target_user, as_reviewee=as_reviewee)
+            
             serializer = MarketplaceReviewSerializer(reviews, many=True, context={'request': request})
             return api_response(success=True, message="Reviews retrieved.", data=serializer.data)
         except Exception as e:

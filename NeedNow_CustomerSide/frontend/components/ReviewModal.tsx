@@ -44,7 +44,9 @@ export default function ReviewModal({
     setFetchingExisting(true);
     setError(null);
     try {
-      const reviews = await getReviews({ post_id: postId, by_reviewer: true });
+      // Check if current user has already reviewed this post
+      // We want reviews WRITTEN by current user (as_reviewer=true)
+      const reviews = await getReviews({ post_id: postId, as_reviewer: true });
       if (reviews && reviews.length > 0) {
         const existing = reviews[0];
         setRating(existing.rating);

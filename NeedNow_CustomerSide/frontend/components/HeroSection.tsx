@@ -5,10 +5,6 @@ import { motion } from 'framer-motion';
 import { 
   Search, 
   MapPin, 
-  Tag, 
-  Lightbulb, 
-  HeartHandshake, 
-  Compass, 
   SlidersHorizontal, 
   ShieldCheck, 
   Users, 
@@ -194,88 +190,7 @@ export default function HeroSection({
         </motion.div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('sell')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(160, 98, 60, 0.12)', color: 'var(--accent)' }}>
-            <Tag size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Sell Something</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>List your item for sale</p>
-          </div>
-        </motion.button>
 
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('need')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(90, 123, 142, 0.12)', color: 'var(--info)' }}>
-            <Lightbulb size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Need Something</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Post what you're looking for</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('service')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(90, 122, 94, 0.12)', color: 'var(--success)' }}>
-            <HeartHandshake size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Offer a Service</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Share your skills locally</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ y: -3, scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onQuickAction?.('nearby')}
-          className="flex items-center gap-3.5 p-4 rounded-2xl text-left cursor-pointer transition-all"
-          style={{
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-            boxShadow: 'var(--shadow-card)',
-          }}
-        >
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(212, 165, 116, 0.15)', color: 'var(--warning)' }}>
-            <Compass size={20} />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Browse Nearby</h4>
-            <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>See items near you</p>
-          </div>
-        </motion.button>
-      </div>
 
       {/* Control Bar */}
       <div

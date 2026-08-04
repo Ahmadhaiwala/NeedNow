@@ -50,13 +50,39 @@ class ReviewService:
     ) -> MarketplaceReview:
         """
         Creates or updates review for a user, then recalculates target profile stats.
+        
+        Business Rule: Only the buyer (offer maker) can review the seller (post owner).
         """
         reviewer_obj = get_user(reviewer)
         reviewee_obj = get_user(reviewee_or_id)
         post = get_instance(MarketplacePost, post_or_id)
 
+        # Validation 1: Cannot review yourself
         if reviewer_obj == reviewee_obj:
             raise ValidationError("You cannot review yourself.")
+
+        # Validation 2: Seller cannot review buyer - only buyer reviews seller
+        # The reviewee should be the post owner (seller)
+        if post.owner != reviewee_obj:
+            raise ValidationError("You can only review the seller (post owner) of this listing.")
+        
+        # Validation 3: Reviewer should be a buyer who made an offer (not the post owner)
+        if post.owner == reviewer_obj:
+            raise ValidationError("Sellers cannot review their own posts. Only buyers can leave reviews.")
+        
+        # Validation 4: Reviewer should have an accepted offer on this post
+        from ..models import MarketplaceOffer
+        buyer_offer = MarketplaceOffer.objects.filter(
+            post=post,
+            user=reviewer_obj,
+            status='accepted'
+        ).exists()
+        
+        if not buyer_offer:
+            raise ValidationError(
+                "You can only review sellers after your offer has been accepted. "
+                "Only buyers with accepted offers can leave reviews."
+            )
 
         if rating < 1 or rating > 5:
             raise ValidationError("Rating must be between 1 and 5.")
