@@ -72,80 +72,9 @@ Only after understanding the user's intent does the AI recommend products.
 
 This single engine powers almost every feature in the application.
 
----
 
-## 🏠 2. Smart Pantry & Inventory
 
-Users maintain a digital inventory of household items.
 
-The first version is completely manual.
-
-Users add products they own.
-
-Example:
-
-- Eggs (12)
-- Milk (2L)
-- Rice (5kg)
-- Bread (2)
-
-The AI keeps track of inventory automatically.
-
-Examples:
-
-User:
-
-> Today I cooked pasta.
-
-NeedNow estimates what ingredients were used and asks for confirmation.
-
-After confirmation:
-
-- Milk decreases
-- Cheese decreases
-- Butter decreases
-
-Inventory updates automatically.
-
-NeedNow can also understand direct commands.
-
-Examples:
-
-> I ate two eggs today.
-
-↓
-
-Egg inventory becomes
-
-12 → 10
-
-Later the AI reminds users:
-
-"You're almost out of eggs."
-
-or
-
-"Milk will probably finish tomorrow based on your usage."
-
----
-
-## 🎤 3. Voice Shopping
-
-Everything available through text is also available through voice.
-
-Users simply speak naturally.
-
-Examples:
-
-"I need groceries for five days."
-
-"I'm building my first PC."
-
-"I need a birthday gift."
-
-Speech is converted into structured shopping requests before being processed by the AI.
-
----
 
 ## 💰 4. Smart Shopping Optimizer
 
@@ -184,25 +113,7 @@ Luxury:
 
 ---
 
-## 📅 5. Predictive Household Assistant
 
-NeedNow learns household consumption patterns over time.
-
-Examples:
-
-"I usually eat one egg every day."
-
-NeedNow automatically predicts future inventory.
-
-If today passes without any update, it may ask:
-
-"Did you eat your usual egg today?"
-
-After confirmation, inventory updates automatically.
-
-The AI also predicts when products will run out and recommends reordering before that happens.
-
----
 
 ## 🚨 6. Smart Shopping Scenarios
 
